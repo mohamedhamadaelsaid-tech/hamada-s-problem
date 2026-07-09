@@ -1,0 +1,44 @@
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {1.1}{\ignorespaces GreenLab Monthly Project Timeline (October--June)}}{6}{table.1.1}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {2.1}{\ignorespaces Comprehensive Feature Comparison Matrix}}{23}{table.2.1}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {3.1}{\ignorespaces GreenLab four-tier architecture and tier responsibilities.}}{28}{table.3.1}%
+\contentsline {table}{\numberline {3.2}{\ignorespaces Feature dependency chain across the four-tier architecture.}}{29}{table.3.2}%
+\contentsline {table}{\numberline {3.3}{\ignorespaces Business Model Canvas blocks traced to their chapter basis.}}{33}{table.3.3}%
+\contentsline {table}{\numberline {3.4}{\ignorespaces Stakeholder analysis summary.}}{34}{table.3.4}%
+\contentsline {table}{\numberline {3.5}{\ignorespaces Use case descriptions and traceability to functional requirements --- UC-01 to UC-06.}}{37}{table.3.5}%
+\contentsline {table}{\numberline {3.6}{\ignorespaces Use case descriptions and traceability to functional requirements --- UC-07 to UC-13.}}{37}{table.3.6}%
+\contentsline {table}{\numberline {3.7}{\ignorespaces Area: System Initialisation and Startup.}}{38}{table.3.7}%
+\contentsline {table}{\numberline {3.8}{\ignorespaces Area: Entry and Exit Detection.}}{38}{table.3.8}%
+\contentsline {table}{\numberline {3.9}{\ignorespaces Area: Occupancy Detection and Classification.}}{39}{table.3.9}%
+\contentsline {table}{\numberline {3.10}{\ignorespaces Area: Lighting Control.}}{39}{table.3.10}%
+\contentsline {table}{\numberline {3.11}{\ignorespaces Area: Ventilation Control.}}{40}{table.3.11}%
+\contentsline {table}{\numberline {3.12}{\ignorespaces Area: Monitoring and Dashboard.}}{40}{table.3.12}%
+\contentsline {table}{\numberline {3.13}{\ignorespaces Area: Manual Override.}}{40}{table.3.13}%
+\contentsline {table}{\numberline {3.14}{\ignorespaces Area: Fault Handling and Safety.}}{41}{table.3.14}%
+\contentsline {table}{\numberline {3.15}{\ignorespaces Area: Authentication and Access Control.}}{41}{table.3.15}%
+\contentsline {table}{\numberline {3.16}{\ignorespaces Non-functional requirements --- Performance.}}{42}{table.3.16}%
+\contentsline {table}{\numberline {3.17}{\ignorespaces Non-functional requirements --- Reliability.}}{42}{table.3.17}%
+\contentsline {table}{\numberline {3.18}{\ignorespaces Non-functional requirements --- Security.}}{42}{table.3.18}%
+\contentsline {table}{\numberline {3.19}{\ignorespaces Non-functional requirements --- Usability.}}{43}{table.3.19}%
+\contentsline {table}{\numberline {3.20}{\ignorespaces Non-functional requirements --- Maintainability.}}{43}{table.3.20}%
+\contentsline {table}{\numberline {3.21}{\ignorespaces Non-functional requirements --- Scalability.}}{43}{table.3.21}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {4.1}{\ignorespaces GreenLab four-tier architecture --- tiers, responsibilities, and technologies.}}{54}{table.4.1}%
+\contentsline {table}{\numberline {4.2}{\ignorespaces ESP32 pin assignments and sensor specifications.}}{56}{table.4.2}%
+\contentsline {table}{\numberline {4.3}{\ignorespaces Python AI service inference configuration parameters.}}{59}{table.4.3}%
+\contentsline {table}{\numberline {4.4}{\ignorespaces GreenLab database table definitions and key columns.}}{61}{table.4.4}%
+\contentsline {table}{\numberline {4.5}{\ignorespaces Occupancy classification thresholds.}}{65}{table.4.5}%
+\contentsline {table}{\numberline {4.6}{\ignorespaces Lighting decision matrix (LDR Zone x Occupancy Classification $\rightarrow $ lightOn).}}{65}{table.4.6}%
+\contentsline {table}{\numberline {4.7}{\ignorespaces Fan activation table (Temperature Zone x Occupancy Classification $\rightarrow $ fanOn).}}{66}{table.4.7}%
+\contentsline {table}{\numberline {4.8}{\ignorespaces Full GreenLab REST API endpoint catalogue.}}{67}{table.4.8}%
+\contentsline {table}{\numberline {4.9}{\ignorespaces Role definitions and permitted endpoint groups.}}{69}{table.4.9}%
+\contentsline {table}{\numberline {4.10}{\ignorespaces Angular dashboard views, their authorised roles, and primary data sources.}}{70}{table.4.10}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {5.1}{\ignorespaces Firmware constants and their alignment with the Add Lab form defaults.}}{79}{table.caption.36}%
+\contentsline {table}{\numberline {5.2}{\ignorespaces Local HTTP server routes for direct relay control.}}{84}{table.caption.37}%
+\contentsline {table}{\numberline {5.3}{\ignorespaces Example inputs to resolve\_source() and their resolved output.}}{108}{table.caption.39}%
+\contentsline {table}{\numberline {5.4}{\ignorespaces Add Lab form elds and their backend/rmware connections.}}{126}{table.caption.41}%
+\contentsline {table}{\numberline {5.5}{\ignorespaces Implementation traceability matrix.}}{130}{table.5.5}%
+\addvspace {10\p@ }

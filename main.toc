@@ -1,21 +1,24 @@
+\contentsline {chapter}{Acknowledgment}{v}{chapter*.2}%
+\contentsline {chapter}{List of Tables}{xii}{chapter*.4}%
+\contentsline {chapter}{List of Figures}{xiii}{chapter*.5}%
 \contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}%
 \contentsline {section}{\numberline {1.1}Background and Motivation}{1}{section.1.1}%
 \contentsline {section}{\numberline {1.2}Problem Statement}{2}{section.1.2}%
 \contentsline {section}{\numberline {1.3}Project Aim}{3}{section.1.3}%
-\contentsline {section}{\numberline {1.4}Project Objectives}{3}{section.1.4}%
-\contentsline {section}{\numberline {1.5}Project Timeline}{5}{section.1.5}%
+\contentsline {section}{\numberline {1.4}Project Objectives}{4}{section.1.4}%
+\contentsline {section}{\numberline {1.5}Project Timeline}{6}{section.1.5}%
 \contentsline {section}{\numberline {1.6}Scope}{6}{section.1.6}%
 \contentsline {section}{\numberline {1.7}Project Organisation}{7}{section.1.7}%
 \contentsline {chapter}{\numberline {2}Literature Review}{9}{chapter.2}%
 \contentsline {section}{\numberline {2.1}Review Strategy}{9}{section.2.1}%
-\contentsline {section}{\numberline {2.2}Related Work}{9}{section.2.2}%
-\contentsline {subsection}{\numberline {2.2.1}Challa et al. (2025) --- Multimodal Classroom Occupancy for HVAC}{9}{subsection.2.2.1}%
+\contentsline {section}{\numberline {2.2}Related Work}{10}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}Challa et al. (2025) --- Multimodal Classroom Occupancy for HVAC}{10}{subsection.2.2.1}%
 \contentsline {subsection}{\numberline {2.2.2}Chaudhari et al. (2024) --- Occupancy Detection Survey for Smart}{11}{subsection.2.2.2}%
 \contentsline {subsection}{\numberline {2.2.3}Zhang et al. (2026) --- Modiﬁed Lightweight YOLOv8 for Indoor}{13}{subsection.2.2.3}%
 \contentsline {subsection}{\numberline {2.2.4}Waghchoure et al. (2025) --- IoT Classroom Appliance Control}{15}{subsection.2.2.4}%
-\contentsline {subsection}{\numberline {2.2.5}Wibowo et al. (2023) --- IoT Energy Management in a University}{16}{subsection.2.2.5}%
+\contentsline {subsection}{\numberline {2.2.5}Wibowo et al. (2023) --- IoT Energy Management in a University}{17}{subsection.2.2.5}%
 \contentsline {subsection}{\numberline {2.2.6}Ahmed et al. (2020) --- IoT Classroom Automation with Sensor-}{18}{subsection.2.2.6}%
-\contentsline {subsection}{\numberline {2.2.7}Ingole et al. (2024) --- ESP32 Classroom Automation}{19}{subsection.2.2.7}%
+\contentsline {subsection}{\numberline {2.2.7}Ingole et al. (2024) --- ESP32 Classroom Automation}{20}{subsection.2.2.7}%
 \contentsline {subsection}{\numberline {2.2.8}SmartHaus --- Angular and REST API IoT Dashboard}{21}{subsection.2.2.8}%
 \contentsline {section}{\numberline {2.3}Comparative Analysis}{23}{section.2.3}%
 \contentsline {section}{\numberline {2.4}Literature Gap Addressed by GreenLab}{24}{section.2.4}%
@@ -23,14 +26,14 @@
 \contentsline {section}{\numberline {3.1}Introduction to the Chapter}{27}{section.3.1}%
 \contentsline {section}{\numberline {3.2}System Context}{28}{section.3.2}%
 \contentsline {subsection}{\numberline {3.2.1}Temporal Dimension}{29}{subsection.3.2.1}%
-\contentsline {subsection}{\numberline {3.2.2}Governance Dimension}{29}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.2}Governance Dimension}{30}{subsection.3.2.2}%
 \contentsline {subsection}{\numberline {3.2.3}Resilience and Safe Defaults}{30}{subsection.3.2.3}%
 \contentsline {section}{\numberline {3.3}Business Model}{30}{section.3.3}%
-\contentsline {subsection}{\numberline {3.3.1}Value Proposition and Customer Focus}{30}{subsection.3.3.1}%
-\contentsline {subsection}{\numberline {3.3.2}Key Partners, Activities, and Resources}{31}{subsection.3.3.2}%
+\contentsline {subsection}{\numberline {3.3.1}Value Proposition and Customer Focus}{31}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Key Partners, Activities, and Resources}{32}{subsection.3.3.2}%
 \contentsline {subsection}{\numberline {3.3.3}Channels}{32}{subsection.3.3.3}%
-\contentsline {subsection}{\numberline {3.3.4}Cost Structure and Revenue Streams}{32}{subsection.3.3.4}%
-\contentsline {section}{\numberline {3.4}Stakeholder Analysis}{33}{section.3.4}%
+\contentsline {subsection}{\numberline {3.3.4}Cost Structure and Revenue Streams}{33}{subsection.3.3.4}%
+\contentsline {section}{\numberline {3.4}Stakeholder Analysis}{34}{section.3.4}%
 \contentsline {section}{\numberline {3.5}Use Case Analysis}{34}{section.3.5}%
 \contentsline {subsection}{\numberline {3.5.1}Actors}{35}{subsection.3.5.1}%
 \contentsline {subsection}{\numberline {3.5.2}Human-Triggered Use Cases}{35}{subsection.3.5.2}%
@@ -39,15 +42,15 @@
 \contentsline {section}{\numberline {3.6}Functional Requirements}{37}{section.3.6}%
 \contentsline {subsection}{\numberline {3.6.1}Area: System Initialisation and Startup}{38}{subsection.3.6.1}%
 \contentsline {subsection}{\numberline {3.6.2}Area: Entry and Exit Detection}{38}{subsection.3.6.2}%
-\contentsline {subsection}{\numberline {3.6.3}Area: Occupancy Detection and Classification}{38}{subsection.3.6.3}%
+\contentsline {subsection}{\numberline {3.6.3}Area: Occupancy Detection and Classification}{39}{subsection.3.6.3}%
 \contentsline {subsection}{\numberline {3.6.4}Area: Lighting Control}{39}{subsection.3.6.4}%
 \contentsline {subsection}{\numberline {3.6.5}Area: Ventilation Control}{39}{subsection.3.6.5}%
 \contentsline {subsection}{\numberline {3.6.6}Area: Monitoring and Dashboard}{40}{subsection.3.6.6}%
 \contentsline {subsection}{\numberline {3.6.7}Area: Manual Override}{40}{subsection.3.6.7}%
-\contentsline {subsection}{\numberline {3.6.8}Area: Fault Handling and Safety}{40}{subsection.3.6.8}%
+\contentsline {subsection}{\numberline {3.6.8}Area: Fault Handling and Safety}{41}{subsection.3.6.8}%
 \contentsline {subsection}{\numberline {3.6.9}Area: Authentication and Access Control}{41}{subsection.3.6.9}%
 \contentsline {section}{\numberline {3.7}Non-Functional Requirements}{41}{section.3.7}%
-\contentsline {subsection}{\numberline {3.7.1}Performance}{41}{subsection.3.7.1}%
+\contentsline {subsection}{\numberline {3.7.1}Performance}{42}{subsection.3.7.1}%
 \contentsline {subsection}{\numberline {3.7.2}Reliability}{42}{subsection.3.7.2}%
 \contentsline {subsection}{\numberline {3.7.3}Security}{42}{subsection.3.7.3}%
 \contentsline {subsection}{\numberline {3.7.4}Usability}{43}{subsection.3.7.4}%
@@ -56,7 +59,7 @@
 \contentsline {section}{\numberline {3.8}Sequence Diagram Analysis}{44}{section.3.8}%
 \contentsline {subsection}{\numberline {3.8.1}Occupancy-Triggered Automation Workflow}{44}{subsection.3.8.1}%
 \contentsline {subsection}{\numberline {3.8.2}Live Camera Streaming Workflow}{45}{subsection.3.8.2}%
-\contentsline {subsection}{\numberline {3.8.3}Manual Override (Relay Control) Workflow}{46}{subsection.3.8.3}%
+\contentsline {subsection}{\numberline {3.8.3}Manual Override (Relay Control) Workflow}{47}{subsection.3.8.3}%
 \contentsline {subsection}{\numberline {3.8.4}Laboratory Transfer Request Workflow}{48}{subsection.3.8.4}%
 \contentsline {section}{\numberline {3.9}Chapter Summary}{50}{section.3.9}%
 \contentsline {chapter}{\numberline {4}System Design}{53}{chapter.4}%
@@ -90,42 +93,43 @@
 \contentsline {section}{\numberline {4.9}Angular Dashboard Design}{70}{section.4.9}%
 \contentsline {subsection}{\numberline {4.9.1}View Architecture}{70}{subsection.4.9.1}%
 \contentsline {subsection}{\numberline {4.9.2}View Inventory}{70}{subsection.4.9.2}%
-\contentsline {subsection}{\numberline {4.9.3}Real-Time Update Strategy}{71}{subsection.4.9.3}%
+\contentsline {subsection}{\numberline {4.9.3}Real-Time Update Strategy}{72}{subsection.4.9.3}%
 \contentsline {section}{\numberline {4.10}Chapter Summary}{72}{section.4.10}%
-\contentsline {chapter}{\numberline {5}Implementation}{73}{chapter.5}%
-\contentsline {section}{\numberline {5.1}Introduction}{73}{section.5.1}%
-\contentsline {section}{\numberline {5.2}Hardware Layer Implementation ESP32 Firmware}{74}{section.5.2}%
-\contentsline {subsection}{\numberline {5.2.1}Library Includes, Hardware Pin Denitions, and Global Constants}{74}{subsection.5.2.1}%
-\contentsline {subsection}{\numberline {5.2.2}Sensor Reading Functions}{77}{subsection.5.2.2}%
-\contentsline {subsection}{\numberline {5.2.3}Local HTTP Server Direct Relay Control Endpoints}{80}{subsection.5.2.3}%
-\contentsline {subsection}{\numberline {5.2.4}Device Authentication JWT Token Lifecycle}{82}{subsection.5.2.4}%
-\contentsline {subsection}{\numberline {5.2.5}Motion-Triggered Sensor Reporting sendMotionRequest()}{85}{subsection.5.2.5}%
-\contentsline {subsection}{\numberline {5.2.6}Main Firmware Logic setup() and loop()}{88}{subsection.5.2.6}%
-\contentsline {section}{\numberline {5.3}Python AI Processing Service Implementation}{96}{section.5.3}%
-\contentsline {subsection}{\numberline {5.3.1}Stage 1: Single-Camera Prototype (cout\_code.txt)}{96}{subsection.5.3.1}%
-\contentsline {subsection}{\numberline {5.3.2}Camera Source Abstraction Module (camera\_sources.py)}{103}{subsection.5.3.2}%
-\contentsline {subsection}{\numberline {5.3.3}Stage 2: Production Multi-Camera Tracking API (droidip.py)}{110}{subsection.5.3.3}%
-\contentsline {section}{\numberline {5.4}Administration and Conguration Interface}{124}{section.5.4}%
-\contentsline {subsection}{\numberline {5.4.1}Add Lab Laboratory Provisioning Form}{124}{subsection.5.4.1}%
-\contentsline {subsection}{\numberline {5.4.2}Devices Hardware Registry}{125}{subsection.5.4.2}%
-\contentsline {subsection}{\numberline {5.4.3}Users Account List}{125}{subsection.5.4.3}%
-\contentsline {subsection}{\numberline {5.4.4}Add User Account Creation Form}{126}{subsection.5.4.4}%
-\contentsline {section}{\numberline {5.5}Monitoring Dashboard Implementation}{126}{section.5.5}%
-\contentsline {subsection}{\numberline {5.5.1}Login Screen}{127}{subsection.5.5.1}%
-\contentsline {section}{\numberline {5.6}Implementation Traceability Matrix}{129}{section.5.6}%
-\contentsline {section}{\numberline {5.7}Worked End-to-End Example: One Motion Event Across All}{130}{section.5.7}%
-\contentsline {subsection}{\numberline {5.7.1}Tier 1 ESP32 Sensor Reads (loop() iteration N)}{130}{subsection.5.7.1}%
+\contentsline {chapter}{\numberline {5}Implementation}{75}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Introduction}{75}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Hardware Layer Implementation ESP32 Firmware}{76}{section.5.2}%
+\contentsline {subsection}{\numberline {5.2.1}Library Includes, Hardware Pin Denitions, and Global Constants}{76}{subsection.5.2.1}%
+\contentsline {subsection}{\numberline {5.2.2}Sensor Reading Functions}{79}{subsection.5.2.2}%
+\contentsline {subsection}{\numberline {5.2.3}Local HTTP Server Direct Relay Control Endpoints}{82}{subsection.5.2.3}%
+\contentsline {subsection}{\numberline {5.2.4}Device Authentication JWT Token Lifecycle}{83}{subsection.5.2.4}%
+\contentsline {subsection}{\numberline {5.2.5}Motion-Triggered Sensor Reporting sendMotionRequest()}{87}{subsection.5.2.5}%
+\contentsline {subsection}{\numberline {5.2.6}Main Firmware Logic setup() and loop()}{90}{subsection.5.2.6}%
+\contentsline {section}{\numberline {5.3}Python AI Processing Service Implementation}{97}{section.5.3}%
+\contentsline {subsection}{\numberline {5.3.1}Stage 1: Single-Camera Prototype (cout\_code.txt)}{98}{subsection.5.3.1}%
+\contentsline {subsection}{\numberline {5.3.2}Camera Source Abstraction Module (camera\_sources.py)}{104}{subsection.5.3.2}%
+\contentsline {subsection}{\numberline {5.3.3}Stage 2: Production Multi-Camera Tracking API (droidip.py)}{111}{subsection.5.3.3}%
+\contentsline {section}{\numberline {5.4}Administration and Conguration Interface}{125}{section.5.4}%
+\contentsline {subsection}{\numberline {5.4.1}Add Lab Laboratory Provisioning Form}{125}{subsection.5.4.1}%
+\contentsline {subsection}{\numberline {5.4.2}Devices Hardware Registry}{126}{subsection.5.4.2}%
+\contentsline {subsection}{\numberline {5.4.3}Users Account List}{127}{subsection.5.4.3}%
+\contentsline {subsection}{\numberline {5.4.4}Add User Account Creation Form}{127}{subsection.5.4.4}%
+\contentsline {section}{\numberline {5.5}Monitoring Dashboard Implementation}{128}{section.5.5}%
+\contentsline {subsection}{\numberline {5.5.1}Login Screen}{128}{subsection.5.5.1}%
+\contentsline {section}{\numberline {5.6}Implementation Traceability Matrix}{130}{section.5.6}%
+\contentsline {section}{\numberline {5.7}Worked End-to-End Example: One Motion Event Across All}{131}{section.5.7}%
+\contentsline {subsection}{\numberline {5.7.1}Tier 1 ESP32 Sensor Reads (loop() iteration N)}{131}{subsection.5.7.1}%
 \contentsline {subsection}{\numberline {5.7.2}Tier 1 -> Tier 2: HTTP POST to the ASP.NET Core Backend}{131}{subsection.5.7.2}%
-\contentsline {subsection}{\numberline {5.7.3}Tier 2 -> Tier 3: AI Service Poll (concurrent with backend evaluation)}{131}{subsection.5.7.3}%
-\contentsline {subsection}{\numberline {5.7.4}Tier 2 -> Tier 1: Backend Response}{132}{subsection.5.7.4}%
+\contentsline {subsection}{\numberline {5.7.3}Tier 2 -> Tier 3: AI Service Poll (concurrent with backend evaluation)}{132}{subsection.5.7.3}%
+\contentsline {subsection}{\numberline {5.7.4}Tier 2 -> Tier 1: Backend Response}{133}{subsection.5.7.4}%
 \contentsline {subsection}{\numberline {5.7.5}Tier 1 Relay Actuation}{133}{subsection.5.7.5}%
-\contentsline {subsection}{\numberline {5.7.6}Tier 4 Dashboard Update}{133}{subsection.5.7.6}%
-\contentsline {section}{\numberline {5.8}Chapter Summary}{133}{section.5.8}%
-\contentsline {chapter}{\numberline {6}Conclusions, Limitations, and Future}{135}{chapter.6}%
-\contentsline {section}{\numberline {6.1}Introduction to the Chapter}{135}{section.6.1}%
-\contentsline {section}{\numberline {6.2}Achievement of Project Objectives}{135}{section.6.2}%
-\contentsline {section}{\numberline {6.3}Summary of Project Contribution}{136}{section.6.3}%
-\contentsline {section}{\numberline {6.4}Limitations}{137}{section.6.4}%
-\contentsline {subsection}{\numberline {6.4.1}Implementation Deviations}{137}{subsection.6.4.1}%
-\contentsline {subsection}{\numberline {6.4.2}Project-Level Limitations}{137}{subsection.6.4.2}%
-\contentsline {section}{\numberline {6.5}Future Work}{138}{section.6.5}%
+\contentsline {subsection}{\numberline {5.7.6}Tier 4 Dashboard Update}{134}{subsection.5.7.6}%
+\contentsline {section}{\numberline {5.8}Chapter Summary}{134}{section.5.8}%
+\contentsline {chapter}{\numberline {6}Conclusions, Limitations, and Future}{137}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Introduction to the Chapter}{137}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Achievement of Project Objectives}{137}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Summary of Project Contribution}{138}{section.6.3}%
+\contentsline {section}{\numberline {6.4}Limitations}{139}{section.6.4}%
+\contentsline {subsection}{\numberline {6.4.1}Implementation Deviations}{139}{subsection.6.4.1}%
+\contentsline {subsection}{\numberline {6.4.2}Project-Level Limitations}{139}{subsection.6.4.2}%
+\contentsline {section}{\numberline {6.5}Future Work}{140}{section.6.5}%
+\contentsline {chapter}{References}{141}{chapter*.48}%

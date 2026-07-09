@@ -25,7 +25,35 @@ attributed; a source is excluded if it addresses only tangentially related topic
 
 is unavailable for veriﬁcation, or if more recent and directly relevant sources supersede it.
 
-Eight sources met this standard and are reviewed in Sections 2.2.1 through 2.2.8.
+Eight sources met this standard for detailed review and are presented in Sections 2.2.1
+
+through 2.2.8. Beyond these, the broader literature on occupancy detection, computer vision,
+
+and IoT-based building automation was consulted to inform GreenLab's system-level design
+
+decisions. This includes research on BLE-based occupancy tracking \cite{tekler2020,park2018},
+
+WiFi connection count analysis \cite{alishahi2021}, PIR-based indoor localization
+
+\cite{mukhopadhyay2021}, residential occupancy sensing \cite{mitra2022}, and scalable
+
+occupancy prediction in IoT-enabled buildings \cite{khan2024}. Studies on data transmission
+
+optimisation for smart HVAC networks \cite{alturjman2024} and advanced occupancy sensing
+
+conﬁgurations \cite{tanaka2024} also informed the design. On the computer vision side,
+
+vision-based tracking frameworks \cite{zhou2021}, CNN-based occupancy prediction \cite{meng2023},
+
+multi-person tracking under occlusion \cite{kumar2024}, and group-equivariant transformer
+
+architectures for overhead ﬁsheye images \cite{chen2023} provided technical context for
+
+the AI processing layer. The review also draws on smart home automation implementations
+
+\cite{marhoon2018,sowndarya2021} and environmental monitoring systems \cite{dhanashri2020}
+
+for the hardware design.
 
 Each review follows the same analytical structure: a description of the methodology and
 
@@ -47,9 +75,7 @@ tion 2.4 synthesises the literature gap that GreenLab is designed to close.
 \subsection{Challa et al. (2025) --- Multimodal Classroom Occupancy for HVAC}
 Methodology and Technical Summary Challa et al. proposed a classroom occupancy-
 
-detection method that combines real-time video analysis with gas-sensor data for HVAC
-
-optimisation [?]. The paper is directly relevant to GreenLab because both systems treat
+detection method that combines real-time video analysis with gas-sensor data for HVAC optimisation \cite{challa2025}. The paper is directly relevant to GreenLab because both systems treat
 
 educational spaces as variable-occupancy environments and use visual occupancy informa-
 
@@ -69,7 +95,7 @@ camera blind spots. The gas sensor provides an independent signal that can corro
 
 contradict the camera-derived occupancy estimate, reducing the risk that a single modality
 
-failure leads to an incorrect HVAC response [?].
+failure leads to an incorrect HVAC response \cite{challa2025}.
 
 The methodology is important for GreenLab because it demonstrates the value of com-
 
@@ -173,9 +199,7 @@ Buildings
 
 Methodology and Technical Summary Chaudhari, Xiao, Cheng, and Li presented a
 
-broad survey of occupancy detection technologies for smart buildings using IoT sensors
-
-	[?]. The survey is relevant because GreenLab requires reliable occupancy information for
+broad survey of occupancy detection technologies for smart buildings using IoT sensors \cite{chaudhari2024}. The survey is relevant because GreenLab requires reliable occupancy information for
 
 lighting, ventilation, monitoring, and safety-related decisions, and the survey provides a
 
@@ -191,7 +215,7 @@ occupancy data. The survey covers ﬁve principal sensing methods: passive infra
 
 sors, carbon dioxide sensors, camera-based detection, Wi-Fi-based device counting, and
 
-Bluetooth Low Energy proximity sensing [?].
+Bluetooth Low Energy proximity sensing \cite{chaudhari2024}.
 
 The survey identiﬁes several practical limitations that are directly relevant to Green-
 
@@ -306,7 +330,7 @@ Occupancy
 
 Methodology and Technical Summary Zhang et al. proposed a modiﬁed lightweight
 
-YOLOv8 model for fast and precise indoor occupancy detection [?]. The paper is relevant
+YOLOv8 model for fast and precise indoor occupancy detection \cite{zhang2026}. The paper is relevant
 
 to GreenLab's AI processing layer because GreenLab depends on person detection or occu-
 
@@ -324,7 +348,7 @@ person detection more challenging than in open pedestrian scenes. These factors 
 
 the detection accuracy of standard YOLO models that are trained primarily on outdoor or
 
-full-body datasets [?].
+full-body datasets \cite{zhang2026}.
 
 The proposed architecture modiﬁes YOLOv8 using feature-map improvements and
 
@@ -447,7 +471,7 @@ Methodology and Technical Summary Waghchoure et al. described a classroom energy
 
 saving system using IoT, PIR motion sensing, camera-based detection, a microcontroller,
 
-and relay control for lights and fans [?]. The paper is relevant because it addresses the
+and relay control for lights and fans \cite{waghchoure2025}. The paper is relevant because it addresses the
 
 same educational-building problem that GreenLab targets: appliances may remain active
 
@@ -459,9 +483,7 @@ controls appliances based on detection, and continuously monitors entry and exit
 
 The camera is activated when the PIR sensor detects motion, providing visual veriﬁcation
 
-that reduces false positives from non-human heat sources such as sunlight or heating vents
-
-	[?].
+that reduces false positives from non-human heat sources such as sunlight or heating vents \cite{waghchoure2025}.
 
 The methodology contributes to GreenLab by showing a practical classroom automa-
 
@@ -561,7 +583,7 @@ Laboratory
 
 Methodology and Technical Summary Wibowo et al. presented an IoT-based energy
 
-management system designed speciﬁcally for university laboratory environments [?]. The
+management system designed speciﬁcally for university laboratory environments \cite{wibowo2023}. The
 
 paper is relevant to GreenLab because it targets the same environment, university labora-
 
@@ -577,7 +599,7 @@ istrators. The system demonstrates that centralised monitoring reduces energy wa
 
 academic labs by ensuring that appliances are switched off when laboratories are not in use
 
-and that energy consumption patterns are visible to decision-makers [?].
+and that energy consumption patterns are visible to decision-makers \cite{wibowo2023}.
 
 The key contribution of this paper to GreenLab is the validation of the university labo-
 
@@ -679,7 +701,7 @@ Methodology and Technical Summary Ahmed et al. described an IoT-based classroom
 
 automation system that uses motion detection, environmental sensors, a microcontroller,
 
-and a web dashboard for classroom appliance switching [?]. The paper is relevant because
+and a web dashboard for classroom appliance switching \cite{ahmed2020}. The paper is relevant because
 
 it demonstrates the feasibility of low-cost IoT classroom automation using off-the-shelf
 
@@ -691,7 +713,7 @@ switch lights and fans through relays. A web dashboard provides remote monitorin
 
 manual control, allowing instructors to check classroom status and override automatic de-
 
-cisions from a web browser [?].
+cisions from a web browser \cite{ahmed2020}.
 
 The paper highlights several challenges that are directly relevant to GreenLab's de-
 
@@ -793,7 +815,7 @@ by Ingole et al. integrates ESP32 technology, LDR sensing, temperature sensing, 
 
 controlled lighting and fan systems, entry management, two operational modes, and a
 
-Wi-Fi manual control interface [?]. This project is highly relevant because its hardware
+Wi-Fi manual control interface \cite{ingole2024}. This project is highly relevant because its hardware
 
 stack closely matches the GreenLab hardware concept. The ESP32 serves as the central
 
@@ -805,9 +827,7 @@ and activating relays to switch lights and fans. The system supports two operati
 
 an automatic mode in which the ESP32 applies sensor-based control rules independently,
 
-and a manual mode in which the user can override automatic decisions through a Wi-Fi
-
-interface [?].
+and a manual mode in which the user can override automatic decisions through a Wi-Fi interface \cite{ingole2024}.
 
 The two-mode design is a useful reference for GreenLab because GreenLab also needs
 
@@ -924,7 +944,7 @@ Methodology and Technical Summary SmartHaus is an open-source home automa-
 
 tion system for monitoring and controlling IoT devices through real-time dashboards and
 
-a RESTful API [?]. Its repository describes an Angular client, a Node.js server, REST
+a RESTful API \cite{smarthaus}. Its repository describes an Angular client, a Node.js server, REST
 
 communication, microcontroller compatibility with Arduino, ESP8266, and ESP32, and
 
@@ -936,7 +956,7 @@ monitor device state and issue authorised control commands. SmartHaus demonstrat
 
 an Angular single-page application can serve as an effective IoT monitoring and control
 
-interface, with real-time device status updates and responsive command submission [?].
+interface, with real-time device status updates and responsive command submission \cite{smarthaus}.
 
 The main contribution of SmartHaus to GreenLab is architectural rather than domain-
 
@@ -1090,7 +1110,7 @@ body of work.
 		\end{longtable}
 	}
 
-	{\small \textit{Sources: Challa et al. [?]; Waghchoure et al. [?]; Wibowo et al. [?]; Ahmed et al. [?]; Ingole et al. [?]; SmartHaus [?].}}
+	{\small \textit{Sources: Challa et al. \cite{challa2025}; Waghchoure et al. \cite{waghchoure2025}; Wibowo et al. \cite{wibowo2023}; Ahmed et al. \cite{ahmed2020}; Ingole et al. \cite{ingole2024}; SmartHaus \cite{smarthaus}.}}
 
 
 The comparison table conﬁrms that no single reviewed source combines laboratory
@@ -1144,9 +1164,7 @@ This gap can be stated precisely along three structural lines, each grounded in 
 reviewed sources above:
 
 \begin{itemize}
-	\item The detection-without-governance gap. Challa et al. [?], Chaudhari et al. [?],
-\end{itemize}
-and Zhang et al. [?] demonstrate that occupancy can be detected accurately and
+	\item The detection-without-governance gap. Challa et al. \cite{challa2025}, Chaudhari et al. \cite{chaudhari2024}, and Zhang et al. \cite{zhang2026}\end{itemize}demonstrate that occupancy can be detected accurately and
 
 efﬁciently through multimodal sensing and lightweight computer vision, but none
 
@@ -1155,9 +1173,7 @@ of these sources extends detection into an accountable control system: there is 
 concept of who is authorised to act on a detection result, and no record of who did.
 
 \begin{itemize}
-	\item The automation-without-accountability gap. Waghchoure et al. [?], Ahmed et
-\end{itemize}
-al. [?], and Ingole et al. [?] demonstrate that sensor-to-relay automation is achiev-
+	\item The automation-without-accountability gap. Waghchoure et al. \cite{waghchoure2025}, Ahmed et al. \cite{ahmed2020}, and Ingole et al. \cite{ingole2024}\end{itemize}demonstrate that sensor-to-relay automation is achiev-
 
 able with low-cost embedded hardware, but each treats manual override as an unau-
 
@@ -1166,7 +1182,7 @@ thenticated, unaudited convenience feature rather than a governed operation, lea
 unauthorised or unaccountable control as an open risk in any production deployment.
 
 \begin{itemize}
-	\item The dashboard-without-domain-logic gap. Wibowo et al. [?] and SmartHaus [?]
+	\item The dashboard-without-domain-logic gap. Wibowo et al. \cite{wibowo2023} and SmartHaus \cite{smarthaus}
 \end{itemize}
 demonstrate that centralised web dashboards can provide visibility and control over
 

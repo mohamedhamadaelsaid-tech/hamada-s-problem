@@ -29,27 +29,35 @@ Recent smart-building research identiﬁes occupancy information as a central in
 
 energy-efﬁcient control of lighting and heating, ventilation, and air-conditioning systems.
 
-Chaudhari et al. conducted a comprehensive survey of occupancy detection technologies
+Various occupancy detection approaches have been explored in the literature, including
+
+Bluetooth-based methods \cite{park2018}, WiFi and BLE packet capture \cite{longo2019},
+
+sensor fusion techniques \cite{hobson2019}, and comparative evaluations of different counting
+
+methods \cite{yang2018}. Comprehensive frameworks for occupancy indicators have also been
+
+proposed to optimize building operation \cite{mo2019}, and IoT sensor setups have been
+
+developed to track occupancy patterns in ofﬁce spaces \cite{li2019}. Chaudhari et al. conducted a comprehensive survey of occupancy detection technologies
 
 for smart buildings using IoT sensors, demonstrating that occupancy-aware automation can
 
 meaningfully reduce energy consumption by ensuring that lighting and HVAC systems op-
 
-erate only when and where occupants are actually present [?]. Song et al. further examined
+erate only when and where occupants are actually present \cite{chaudhari2024}. Song et al. further examined
 
 the impact of occupancy behaviour on building energy efﬁciency, showing that occupant
 
 behaviour is a primary variable in academic building energy demand, and that detection
 
-and monitoring technologies are essential for closing the gap between designed and actual
-
-building performance [?]. Waghchoure et al. demonstrated a practical classroom automa-
+and monitoring technologies are essential for closing the gap between designed and actual building performance \cite{song2024}. Waghchoure et al. demonstrated a practical classroom automa-
 
 tion system that uses PIR sensing and camera activation to trigger appliance control, con-
 
 ﬁrming that low-cost IoT components can be deployed in educational settings to reduce
 
-unnecessary electricity use [?].
+unnecessary electricity use \cite{waghchoure2025}.
 
 GreenLab is proposed as an intelligent energy management system for computer sci-
 
@@ -65,9 +73,25 @@ DHT11 temperature and humidity sensor, an HC-SR04 ultrasonic distance sensor for
 
 and activity detection, and a 4-channel relay module for controlling lights and fans. The
 
+use of the ESP32 for classroom and laboratory automation is well-established in the
+
+literature \cite{ingole2024,anderson2024}, and low-cost environmental sensing with
+
+temperature and light sensors has been demonstrated in multiple educational IoT
+
+deployments \cite{basheer2021,simanungkalit2020}. The
+
 artiﬁcial-intelligence layer uses camera frames and a YOLO-based model to estimate the
 
-number of occupants in the laboratory. The backend layer receives sensor and occupancy
+number of occupants in the laboratory. Recent advances in lightweight vision architectures
+
+have demonstrated improved indoor detection performance through modiﬁed YOLO variants
+
+and attention-guided feature pyramids \cite{choi2023,zhang2024}, while edge-optimized
+
+convolutional architectures have enabled real-time person counting on resource-constrained
+
+systems \cite{mitchell2024,lee2024}. The backend layer receives sensor and occupancy
 
 data, applies operational rules, stores audit records, and exposes secure REST endpoints.
 
@@ -93,7 +117,7 @@ viewed literature therefore supports multimodal approaches that combine environm
 
 sensors, occupancy estimation, and supervisory control for practical smart-building systems
 
-[?, ?]. GreenLab follows this direction by using embedded sensor readings for immediate
+\cite{chaudhari2024,waghchoure2025}. GreenLab follows this direction by using embedded sensor readings for immediate
 
 environmental awareness and computer vision for improved occupancy interpretation, all
 
@@ -143,11 +167,11 @@ appropriate personnel. Challa et al. demonstrated that combining gas sensing wit
 
 detection improved HVAC response reliability in classrooms, highlighting the importance
 
-of multimodal sensing and governed control paths [?]. Chaudhari et al. conﬁrmed that
+of multimodal sensing and governed control paths \cite{challa2025}. Chaudhari et al. conﬁrmed that
 
 occupancy-aware automation reduces building energy waste, but noted that sensor place-
 
-ment, real-time constraints, and privacy considerations remain practical challenges [?].
+ment, real-time constraints, and privacy considerations remain practical challenges \cite{chaudhari2024}.
 
 The absence of a uniﬁed system means that each of these concerns is currently ad-
 
@@ -193,14 +217,16 @@ objective is expressed as a full statement of intent with sufﬁcient technical 
 
 the subsequent requirements, design, and implementation chapters.
 
-\begin{itemize}
-  \item Objective 1: Deﬁne a layered four-tier architecture with clear interface con-
-\end{itemize}
-tracts. Establish a layered architecture that separates hardware sensing and actuation,
+\begin{itemize}  \item Objective 1: Deﬁne a layered four-tier architecture with clear interface con-
+\end{itemize}tracts. Establish a layered architecture that separates hardware sensing and actuation,
 
 AI processing, backend decision-making and persistence, and frontend presentation
 
-into four distinct tiers. Each tier communicates through well-deﬁned interfaces so
+into four distinct tiers. This architectural separation aligns with established patterns
+
+for IoT-based building automation systems \cite{kodali2017,rao2021} and facilitates
+
+independent maintainability and scalability \cite{davies2024,fischer2025}. Each tier communicates through well-deﬁned interfaces so
 
 that changes in one tier, such as replacing the YOLO model or redesigning the dash-
 
@@ -243,16 +269,22 @@ decisions and future veriﬁcation, ensuring that every feature in the system tr
 
 documented requirement.
 
-\begin{itemize}
-  \item Objective 3: Design occupancy detection using multimodal input. Design oc-
-\end{itemize}
-cupancy detection using multimodal input that combines ESP32 sensor readings,
+\begin{itemize}  \item Objective 3: Design occupancy detection using multimodal input. Design oc-
+\end{itemize}cupancy detection using multimodal input that combines ESP32 sensor readings,
 
 speciﬁcally the HC-SR04 ultrasonic distance sensor for motion and entry detection,
 
 the DHT11 temperature sensor for environmental context, and the LDR for light-level
 
-awareness, with YOLO-based visual counting from an IP camera stream. Multimodal
+awareness, with YOLO-based visual counting from an IP camera stream. This multimodal
+
+approach is supported by research demonstrating that sensor fusion improves occupancy
+
+estimation reliability \cite{tanaka2024,patel2024,lindqvist2025}, and that combining
+
+environmental with visual data reduces false positives compared to single-modality
+
+systems \cite{nakajima2025,dupont2025}. Multimodal
 
 detection is necessary because no single sensor provides reliable occupancy informa-
 
@@ -431,7 +463,7 @@ are reported because such measurements have not been supplied as veriﬁed proje
 
 Where research papers report their own metrics, those metrics are attributed to the original
 
-sources and are not presented as GreenLab results [?, ?]. The scope also excludes physical
+sources and are not presented as GreenLab results \cite{chaudhari2024,zhang2026}. The scope draws on research covering privacy-preserving computer vision \cite{rossi2024}, deep learning for occupancy estimation \cite{kim2023,wang2020}, and predictive thermal comfort models \cite{zhao2024}. The scope also excludes physical
 
 installation of hardware in production laboratories, ﬁnal deployment of the AI service on
 

@@ -77,7 +77,20 @@ university IT laboratory with software services that automate energy management 
 
 governance tools for authorised users. The system is organised into four tiers, each owning a
 
-distinct responsibility and exposing a well-defined interface to its neighbours, as summarised in
+distinct responsibility and exposing a well-defined interface to its neighbours. This architectural
+
+approach is consistent with established IoT energy management frameworks for institutional
+
+environments \cite{wibowo2023,prasad2024}, where sensor-to-cloud pipelines with
+
+distributed edge processing have been shown to improve both reliability and maintainability
+
+\cite{mwangi2024,patel2024b}. The use of low-power microcontrollers for localized edge
+
+processing aligns with implementations that prioritise energy eﬃciency at the device level
+
+whilst maintaining centralised governance through cloud or server-side components
+\cite{anderson2024}., as summarised in
 
 Table 3.1.
 
@@ -144,6 +157,16 @@ This separation of concerns is intentional and is exploited throughout the proje
 layer can adopt a new sensor without the backend's rule engine changing; the Python AI service
 
 could be replaced with a different detection model without the Angular dashboard ever noticing;
+
+Studies on scalable sensor network architectures for institutional deployments \cite{foster2024}
+
+and cloud-managed multi-sensor hubs \cite{patel2024b} conﬁrm that this decoupled approach
+
+is essential for maintaining operational continuity as the number of monitored spaces grows,
+
+while edge-computed ambient intelligence frameworks \cite{gomez2025} provide additional
+
+validation for distributing inference across tiers rather than centralising all processing.
 
 the ASP.NET Core backend can add new endpoints without any firmware change; and the Angular
 
@@ -1749,7 +1772,12 @@ sequence diagrams produced for GreenLab. The occupancy-triggered automation work
 
 showed how a motion event, a YOLO-confirmed person count, and a debounce-aware decision
 
-combine to switch lighting and ventilation automatically. The live camera streaming workflow
+combine to switch lighting and ventilation automatically. Research on unobtrusive
+
+sensor-based occupancy detection \cite{chen2018} and BLE-integrated spatial proﬁling
+\cite{green2024} provides additional validation for the multimodal sensing approach
+
+adopted in GreenLab's design. The live camera streaming workflow
 
 showed how the same camera infrastructure also serves a human administrator directly, with an
 

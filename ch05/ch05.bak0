@@ -27,37 +27,35 @@ which administrators and instructors monitor and congure the system. This chapte
 
 two tiers in full source-code depth  rmware (Section 5.2) and the Python AI service (Section 5.3)
 
- and covers the dashboard interface (Sections 5.4 and 5.5) through annotated screenshots tied to
+and covers the dashboard interface (Sections 5.4 and 5.5) through annotated screenshots tied to
 
 functional requirements.
 
 The chapter is structured as follows:
 
- Section 5.2 covers the ESP32 rmware in six subsections, each presenting a complete function
+Section 5.2 covers the ESP32 rmware in six subsections, each presenting a complete function
 
 or logical block with line-by-line commentary, design rationale, and requirement tracebacks.
 
- Section 5.3 covers the Python AI processing service in two stages: rst the single-camera
+Section 5.3 covers the Python AI processing service in two stages: rst the single-camera
 
 prototype (), then the production multi-camera tracking API (
 
 and ).
 
- Section 5.4 covers every screen of the Angular administration interface with annotated screen-
+Section 5.4 covers every screen of the Angular administration interface with annotated screen-
 
 shots.
 
- Section 5.5 covers the monitoring dashboard.
+Section 5.5 covers the monitoring dashboard.
 
- Section 5.6 provides a complete requirement traceability matrix.
+Section 5.6 provides a complete requirement traceability matrix.
 
- Section 5.7 walks one complete end-to-end motion event through all four tiers with real JSON
+Section 5.7 walks one complete end-to-end motion event through all four tiers with real JSON
 
 payloads.
 
- Section 5.8 documents all known implementation gaps and technical debt.
-
- Section 5.9 summarises the chapter.
+Section 5.8 summarises the chapter.
 
 Two editorial decisions are stated up front. First, Wi-Fi credentials and device passwords that
 
@@ -100,7 +98,7 @@ The top of the sketch begins with ve library includes and a WebServer instance, 
 functions.
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 \#include <WiFi.h>
 
 2 \#include <HTTPClient.h>
@@ -151,7 +149,7 @@ round-trip through the.NET Core backend  useful for manual override during demos
 backend is unrestarting.
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 \#define TRIG\_PIN 4 // HC-SR04 ultrasonic trigger output
 
 2 \#define ECHO\_PIN 2 // HC-SR04 ultrasonic echo input
@@ -190,7 +188,7 @@ GPIO 5 for DHT\_PIN is chosen because it is one of the few pins that does not ha
 conict on the ESP32.
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 int labId = 1;
 
 2 int deviceId = 1;
@@ -228,7 +226,7 @@ conict on the ESP32.
 )
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 23 bool wasNear = false;
 
 24 unsigned long lastToggleTime = 0;
@@ -248,7 +246,7 @@ ESP32 belongs to and which device record to authenticate against. They are compi
 
 literals in the current build, which means reashing is required to deploy the same rmware binary
 
-to a second laboratory with a dierent ID  a maintainability gap noted in Section 5.8 and tracked
+to a second laboratory with a dierent ID  a maintainability gap noted in Chapter 6 and tracked
 
 against NFR-MAIN-01.
 
@@ -268,7 +266,7 @@ holds the millis() value at which the rmware will proactively refresh it. lastLi
 
 lastFanState are the dierential-update guards that prevent unnecessary relay switching chatter
 
- a relay is only toggled when the commanded state diers from the last applied state.
+a relay is only toggled when the commanded state diers from the last applied state.
 
 DISTANCE\_THRESHOLD (50 cm) denes the boundary within which the HC-SR04 considers a
 
@@ -286,37 +284,23 @@ intended for a periodic light-level check independent of motion events, which re
 
 future work.
 
-Table 5.1: Firmware constants and their alignment with the Add Lab form defaults.
+\begin{table}[htbp]
+	\centering
+	\caption{Firmware constants and their alignment with the Add Lab form defaults.}
+	\label{tab:5-1}
+	\begin{tabular}{lcll}
+		\toprule
+		Constant            & Value      & Purpose                            & Congurable via Add Lab?                       \\
+		\midrule
+		DISTANCE\_THRESHOLD & 50 cm      & Denes presence zone for HC-SR04    & No  hardcoded (see 5.8)                       \\
+		COOLDOWN            & 2000 ms    & Minimum gap between motion reports & No  hardcoded                                 \\
+		LIGHT\_THRESHOLD    & 2000 (ADC) & LDR threshold for local fallback   & No  must match Add Lab form defaults manually \\
+		LIGHT\_INTERVAL     & 5000 ms    & Reserved for periodic light checks & N/A  unused in current build                  \\
+		\bottomrule
+	\end{tabular}
+\end{table}
 
-Constant Value Purpose Congurable via Add
-
-Lab?
-
-DISTANCE\_THRESHOLD
-
-\begin{listingbox}
-\begin{verbatim}
-50 cm Denes presence zone No  hardcoded (see
-
-\end{verbatim}
-\end{listingbox}
-for HC-SR04 5.8)
-
-COOLDOWN 2000 ms Minimum gap between No  hardcoded
-
-motion reports
-
-LIGHT\_THRESHOLD 2000 LDR threshold for local No  must match
-
-(ADC) fallback Add Lab form de-
-
-faults manually
-
-LIGHT\_INTERVAL 5000 ms Reserved for periodic N/A  unused in
-
-light checks current build
-
-The table above conrms the alignment between rmware constants and the Add Lab form
+The table above confirms the alignment between rmware constants and the Add Lab form
 
 defaults (Section 5.4.1): the values were set consistently by hand on both sides during integration,
 
@@ -331,7 +315,7 @@ Keeping them short and side-eect-free makes the main loop's intent clear: sensor
 decision is made, and then  only if necessary  a network request is sent.
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 // HC-SR04 Ultrasonic Distance Measurement
 
 2 long readDistanceCM() \{
@@ -408,7 +392,7 @@ surement error. For a 50 cm threshold this is a 0.9 cm error  negligible for pre
 worth noting for any future use case that requires precise ranging.
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 // LDR Ambient Light Reading
 
 2 int readLight() \{
@@ -426,7 +410,7 @@ ADC (, line 62).
 
 readLight() is intentionally a single-expression function. The ESP32's ADC is 12-bit, returning
 
-values from 0 (no voltage) to 4095 (3.3 V). A lower LDR reading means more light is present 
+values from 0 (no voltage) to 4095 (3.3 V). A lower LDR reading means more light is present
 
 the LDR's resistance falls as light intensity increases, which reduces the voltage at the analogue pin
 
@@ -449,7 +433,7 @@ relative brightness indicator rather than a calibrated lux measurement, which is
 binary room is dark / room is bright decision the rmware needs to make.
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 // DHT11 temperature and humidity (called in loop())
 
 2 float temp = dht.readTemperature();
@@ -506,7 +490,7 @@ through the backend. This is the manual-override mechanism used during demonstra
 the backend is temporarily unavailable.
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 void handleLightOff() \{
 
 2 digitalWrite(RELAY\_PIN, HIGH); // HIGH = relay open = light OFF
@@ -529,7 +513,7 @@ the backend is temporarily unavailable.
 
 12 server.send(200, "application/json",
 
-13 "\{\textbackslash\{\}"status\textbackslash\{\}":\textbackslash\{\}"ok\textbackslash\{\}",\textbackslash\{\}"light\textbackslash\{\}":\textbackslash\{\}"on\textbackslash\{\}"\}");
+13 "{\"status\":\"ok\",\"light\":\"on\"}");
 
 14 lastLightState = true;
 
@@ -541,7 +525,7 @@ the backend is temporarily unavailable.
 
 19 Serial.println("Fan ON from API");
 
-20 server.send(200, "application/json", "\{\textbackslash\{\}"fan\textbackslash\{\}":\textbackslash\{\}"on\textbackslash\{\}"\}");
+20 server.send(200, "application/json", "{\"fan\":\"on\"}");
 
 21 lastFanState = true;
 
@@ -553,7 +537,7 @@ the backend is temporarily unavailable.
 
 26 Serial.println("Fan OFF from API");
 
-27 server.send(200, "application/json", "\{\textbackslash\{\}"fan\textbackslash\{\}":\textbackslash\{\}"off\textbackslash\{\}"\}");
+27 server.send(200, "application/json", "{\"fan\":\"off\"}");
 
 28 lastFanState = false;
 
@@ -592,7 +576,7 @@ already o and do nothing, leaving the relay in a state the backend did not comma
 
 These four routes are registered in setup() and polled on every loop() iteration via server.handleClient().
 
-Because handleClient() is non-blocking  it processes at most one pending request per call 
+Because handleClient() is non-blocking  it processes at most one pending request per call
 
 it does not interfere with the motion-detection and sensor-reading logic that runs in the same loop
 
@@ -612,34 +596,24 @@ refreshToken() performs the actual credential exchange with the backend; and ens
 
 is a lightweight guard called before every outgoing request to ensure the stored token is still usable.
 
-Table 5.2: Local HTTP server routes for direct relay control.
-
-Route Method GPIO write Response body State tracker
-
-updated
-
-/light/on GET RELAY\_PIN -> \{"status":"ok","light":"on"\}
-
-lastLightState
-
-LOW = true
-
-/light/off GET RELAY\_PIN -> \{"status":"ok","light":"off"\}
-
-lastLightState
-
-HIGH = false
-
-/fan/on GET RELAY\_PIN2 -> \{"fan":"on"\} lastFanState
-
-LOW = true
-
-/fan/off GET RELAY\_PIN2 -> \{"fan":"off"\} lastFanState
-
-HIGH = false
+\begin{table}[htbp]
+	\centering
+	\caption{Local HTTP server routes for direct relay control.}
+	\label{tab:5-2}
+	\begin{tabular}{llll}
+		\toprule
+		Route      & Method & GPIO write                     & Response body                   & State tracker updated  \\
+		\midrule
+		/light/on  & GET    & RELAY\_PIN $\rightarrow$ LOW   & \{"status":"ok","light":"on"\}  & lastLightState = true  \\
+		/light/off & GET    & RELAY\_PIN $\rightarrow$ HIGH  & \{"status":"ok","light":"off"\} & lastLightState = false \\
+		/fan/on    & GET    & RELAY\_PIN2 $\rightarrow$ LOW  & \{"fan":"on"\}                  & lastFanState = true    \\
+		/fan/off   & GET    & RELAY\_PIN2 $\rightarrow$ HIGH & \{"fan":"off"\}                 & lastFanState = false   \\
+		\bottomrule
+	\end{tabular}
+\end{table}
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 bool handleTokenResponse(String response) \{
 
 2 DynamicJsonDocument doc(512);
@@ -716,7 +690,7 @@ parameter or in a URL. The /api/devices/token endpoint should be restricted to t
 in a production deployment to prevent credential interception from outside the laboratory network.
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 bool ensureTokenValid() \{
 
 2 // Refresh if token is missing (first boot or parse failure)
@@ -769,7 +743,7 @@ rmware to use a possibly-expired token. For a laboratory that is powered o overn
 should be addressed by using elapsed-time arithmetic rather than an absolute timestamp.
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 bool refreshToken() \{
 
 2 if (WiFi.status() != WL\_CONNECTED) return false;
@@ -838,7 +812,7 @@ a transport-level failure (TCP connection refused, DNS failure, timeout) and cau
 return false without attempting to parse an empty response. A positive return code  including
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 401 Unauthorized or 500 Internal Server Error  indicates the server responded; the response body
 
 \end{verbatim}
@@ -868,7 +842,7 @@ attaching the JWT, POSTing to the backend, handling a 401 response by refreshing
 retrying, and returning the backend's response body for the relay-actuation logic in Section 5.2.6.
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 String sendMotionRequest(bool motion, long distance, int ldr, float temp, float hum)
 
 \end{verbatim}
@@ -876,7 +850,7 @@ retrying, and returning the backend's response body for the relay-actuation logi
 \{
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 2 // Guard 1: ensure a valid JWT is cached before any HTTP activity
 
 3 if (!ensureTokenValid()) \{
@@ -911,15 +885,11 @@ retrying, and returning the backend's response body for the relay-actuation logi
 
 21 String json = "\{";
 
-22 json += "\textbackslash\{\}"motionDetected\textbackslash\{\}":" + String(motion ? "true" : "false") + ",";
-
-23 json += "\textbackslash\{\}"distanceCm\textbackslash\{\}":" + String(distance) + ",";
-
-24 json += "\textbackslash\{\}"ldrValue\textbackslash\{\}":" + String(ldr) + ",";
-
-25 json += "\textbackslash\{\}"temperatureCelsius\textbackslash\{\}":" + String(temp, 1) + ",";
-
-26 json += "\textbackslash\{\}"humidity\textbackslash\{\}":" + String(hum, 1);
+22 json += "\"motionDetected\":" + String(motion ? "true" : "false") + ",";
+23 json += "\"distanceCm\":" + String(distance) + ",";
+24 json += "\"ldrValue\":" + String(ldr) + ",";
+25 json += "\"temperatureCelsius\":" + String(temp, 1) + ",";
+26 json += "\"humidity\":" + String(hum, 1);
 
 27 json += "\}";
 
@@ -965,7 +935,7 @@ faster code for this specic case. The String(temp, 1) call serialises the oat te
 decimal place, which is the precision the DHT11 can reliably provide.
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 // 401 Retry: if the backend rejects the token, refresh once and retry
 
 2 if (code == 401) \{
@@ -1054,7 +1024,7 @@ loop() is called continuously by the Arduino runtime and handles Wi-Fi reconnect
 request polling, sensor reading, motion-edge detection, and relay actuation.
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 void setup() \{
 
 2 // Configure sensor and relay pins
@@ -1091,7 +1061,7 @@ request polling, sensor reading, motion-edge detection, and relay actuation.
 
 21 \}
 
-22 Serial.println("\textbackslash\{\}nConnected");
+22 Serial.println("\nConnected");
 
 23 Serial.println(WiFi.localIP());
 
@@ -1155,7 +1125,7 @@ setup() completes normally  the next call to ensureTokenValid() in sendMotionReq
 retry the exchange.
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 void loop() \{
 
 2 // --- Sensor reads (every iteration) ---
@@ -1234,7 +1204,7 @@ DISTANCE\_THRESHOLD implements the actual 50 cm threshold. A value of -1 is not 
 because distance is declared as long (signed), -1 would satisfy -1 <= 50  hence the explicit >
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 0 guard.
 
 \end{verbatim}
@@ -1256,7 +1226,7 @@ watchdog block ensures that no network operations (sendMotionRequest, server.han
 are attempted while the device is oine.
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 // --- Local fallback if backend unreachable ---
 
 2 bool apiFailed = (response == "");
@@ -1339,7 +1309,7 @@ evaluation. Leaving the fan in its last known state (which was initialised to HI
 is the safe-default behaviour for ventilation.
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 // --- Room-empty override: force all relays off ---
 
 2 if (occupancy == 0) \{
@@ -1467,17 +1437,12 @@ between reads to avoid NaN responses while keeping the ultrasonic presence detec
 
 enough for human entry events.
 
-Screenshot placeholder
-
-(source image: )
-
-
 % --- FIGURE PLACEHOLDER: Figure 5.1 ---
 \begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-1.png}
-  \caption{Devices page showing Esp32-Lab-D7 Active at 192}
-  \label{fig:5-1}
+	\centering
+	\includegraphics[width=0.6\textwidth]{ch05/figures/devices-page.png}
+	\caption{Devices page showing Esp32-Lab-D7 Active at 192}
+	\label{fig:5-1}
 \end{figure}
 
 Figure 5.1: Devices page showing Esp32-Lab-D7 Active at 192.168.1.7  the same IP embedded in
@@ -1496,11 +1461,11 @@ person is not counted multiple times across frames, and exposing the resulting o
 
 a FastAPI HTTP endpoint that the.NET Core backend can poll.
 
-The service was implemented in two stages. The rst stage  a working prototype in 
+The service was implemented in two stages. The rst stage  a working prototype in
 
- established the core architecture: a single shared YOLO model, one background thread per cam-
+established the core architecture: a single shared YOLO model, one background thread per cam-
 
-era, a threading.Event for readiness signalling, and a FastAPI endpoint. The second stage 
+era, a threading.Event for readiness signalling, and a FastAPI endpoint. The second stage
 
 the production service in, supported by the abstraction  added
 
@@ -1512,7 +1477,7 @@ function.
 
 
 \subsection{Stage 1: Single-Camera Prototype (cout\_code.txt)}
- is 116 lines long and contains four functional components: import declarations, a
+is 116 lines long and contains four functional components: import declarations, a
 
 shared YOLO model loader, a per-camera detection loop, a thread-start helper, and the FastAPI
 
@@ -1521,7 +1486,7 @@ endpoint. Each is presented and explained in full below.
 Import Declarations and Application Bootstrap
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 import threading
 
 2 import time
@@ -1560,7 +1525,7 @@ directly.
 Shared YOLO Model  Lazy Singleton with Double-Checked Locking
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 \# Shared model -- loaded ONCE
 
 2 \_model = None
@@ -1627,7 +1592,7 @@ service uses.
 Camera State Registry
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 camera\_states = \{\}
 
 2 camera\_lock = threading.Lock()
@@ -1652,7 +1617,7 @@ individual read operations are GIL-protected.
 Per-Camera Detection Loop  camera\_loop()
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 def camera\_loop(device\_index: int, ready\_event: threading.Event):
 
 2 model = get\_model() \# shared reference -- no lock needed here
@@ -1688,7 +1653,7 @@ Per-Camera Detection Loop  camera\_loop()
 )
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 19 time.sleep(3)
 
 20 continue \# retry outer loop
@@ -1731,7 +1696,7 @@ a more recent frame  important for occupancy detection where we want the current
 count from three seconds ago. At 640x480 and 30 fps, two buered frames represent approximately
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 67 ms of latency, which is acceptable.
 
 1 while True: \# inner frame-reading loop
@@ -1820,7 +1785,7 @@ The is\_set() check before calling set() avoids a redundant syscall on every fra
 Thread-Start Helper  \_start\_camera()
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 def \_start\_camera(cam\_id: int):
 
 2 """Start camera thread only if not already running.
@@ -1881,7 +1846,7 @@ process.
 FastAPI Endpoint  /current-count
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 @app.get("/current-count")
 
 2 def get\_count(cam\_id: int = 0):
@@ -1967,7 +1932,7 @@ as the endpoint simply returns whatever count is current at the moment it reads 
 
 
 \subsection{Camera Source Abstraction Module (camera\_sources.py)}
- is 189 lines long. It is a pure-utility module with no FastAPI dependency and
+is 189 lines long. It is a pure-utility module with no FastAPI dependency and
 
 no global state  it consists entirely of functions that translate camera source strings into values
 
@@ -1980,7 +1945,7 @@ constant, three public functions, and two private helper functions.
 Module-Level Constants
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 import logging
 
 2 import os
@@ -2005,7 +1970,7 @@ Module-Level Constants
 
 16 \_BARE\_IP\_RE = re.compile(
 
-17 r"\textasciicircum{}(\textbackslash\{\}d\{1,3\}\textbackslash\{\}.)\{3\}\textbackslash\{\}d\{1,3\}\$"
+17 r"^(\d{1,3}\.){3}\d{1,3}$"
 
 18 )
 
@@ -2043,7 +2008,7 @@ connect.
 resolve\_source()  The Core Dispatch Function
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 def resolve\_source(source: str, default\_port: int = 4747) -> Union[str, int]:
 
 2 """
@@ -2154,7 +2119,7 @@ source must not be empty.
 create\_capture()  Opening the VideoCapture
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 def create\_capture(source: str, default\_port: int = 4747) -> cv2.VideoCapture:
 
 2 """
@@ -2181,44 +2146,28 @@ create\_capture()  Opening the VideoCapture
 
 \end{verbatim}
 \end{listingbox}
-Table 5.3: Example inputs to resolve\_source() and their resolved output.
-
-Input example Branch taken Output
-
-usb:0 USB prex int: 0
-
-usb:2 USB prex int: 2
-
-http://192.168.1.3:4747/video
-
-Network str: unchanged
-
-scheme
-
-rtsp://admin:pass@10.0.0.5/live
-
-Network str: unchanged
-
-scheme
-
-/recordings/lab\_d7.mp4 File extension str: unchanged
-
-(.mp4)
-
-192.168.1.3 Bare IP regex str:
-
-http://192.168.1.3:4747/video
-
-192.168.1.3 port=8080 None (ValueEr- ValueError: Unrecognised
-
-ror) source
-
-ftp://camera/stream None (ValueEr- ValueError: Unrecognised
-
-ror) source
+\begin{table}[htbp]
+	\centering
+	\caption{Example inputs to resolve\_source() and their resolved output.}
+	\label{tab:5-3}
+	\begin{tabular}{lll}
+		\toprule
+		Input example                            & Branch taken          & Output                                      \\
+		\midrule
+		\texttt{usb:0}                           & USB prefix            & \texttt{int: 0}                             \\
+		\texttt{usb:2}                           & USB prefix            & \texttt{int: 2}                             \\
+		\texttt{http://192.168.1.3:4747/video}   & Network scheme        & \texttt{str: unchanged}                     \\
+		\texttt{rtsp://admin:pass@10.0.0.5/live} & Network scheme        & \texttt{str: unchanged}                     \\
+		\texttt{/recordings/lab\_d7.mp4}         & File extension (.mp4) & \texttt{str: unchanged}                     \\
+		\texttt{192.168.1.3}                     & Bare IP regex         & \texttt{str: http://192.168.1.3:4747/video} \\
+		\texttt{192.168.1.3 port=8080}           & None (ValueError)     & \texttt{ValueError: Unrecognised source}    \\
+		\texttt{ftp://camera/stream}             & None (ValueError)     & \texttt{ValueError: Unrecognised source}    \\
+		\bottomrule
+	\end{tabular}
+\end{table}
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 15 if not cap.isOpened():
 
 16 logger.warning(
@@ -2261,7 +2210,7 @@ http://...  which is valuable for diagnosing connectivity problems in a deployed
 source\_label()  Stable Registry Key Generation
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 def source\_label(source: str, default\_port: int = 4747) -> str:
 
 2 """
@@ -2295,7 +2244,7 @@ source\_label() is used by as the key for its \_cameras registry dictionary. Usi
 
 the fully-resolved URL as the key ensures that 192.168.1.3 and http://192.168.1.3:4747/video
 
- two dierent input strings that refer to the same physical camera  resolve to the same key,
+two dierent input strings that refer to the same physical camera  resolve to the same key,
 
 preventing accidental double-registration of the same camera under two dierent input formats.
 
@@ -2310,7 +2259,7 @@ inputs that will ultimately fail at the VideoCapture level without crashing the 
 Private Helpers  \_parse\_usb() and \_parse\_video\_le()
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 def \_parse\_usb(source: str) -> int:
 
 2 """Parse 'usb:<index>' and return the integer device index."""
@@ -2406,7 +2355,7 @@ conguration even before the volume is mounted.
 
 
 \subsection{Stage 2: Production Multi-Camera Tracking API (droidip.py)}
- is 322 lines long and is the service that the Chapter 3 architecture diagrams describe
+is 322 lines long and is the service that the Chapter 3 architecture diagrams describe
 
 as the AI Processing tier. It builds on every pattern established in the prototype but replaces
 
@@ -2419,7 +2368,7 @@ dataclass, and adds a background cleanup worker that removes idle cameras from t
 Module Docstring and Conguration Constants
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 """
 
 2 People Counter API
@@ -2486,7 +2435,7 @@ is the DroidCam default port.
 Structured Logging Conguration
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 import logging
 
 3 logging.basicConfig(
@@ -2524,7 +2473,7 @@ http://192.168.1.3:4747/video, which is immediately grep-able by stream URL or l
 
 a deployed environment.
 
- uses a child logger named "people\_counter.camera\_sources", which is
+uses a child logger named "people\_counter.camera\_sources", which is
 
 a child of the "people\_counter" logger congured here. Python's logging hierarchy means that
 
@@ -2535,7 +2484,7 @@ covers all modules in the service.
 YOLO Model Singleton  Production Version
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 \_model: Optional[YOLO] = None
 
 2 \_model\_lock = threading.Lock()
@@ -2582,7 +2531,7 @@ rst call to get\_model().
 CameraState Dataclass and Registry
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 from dataclasses import dataclass, field
 
 3 @dataclass
@@ -2641,7 +2590,7 @@ cause last\_access to jump forward and falsely make a recently-accessed camera a
 Thread-Safe State Update Helper  \_update\_state()
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 def \_update\_state(url: str, **kwargs) -> None:
 
 2 """Thread-safe helper to patch fields on an existing CameraState."""
@@ -2686,7 +2635,7 @@ next iteration.
 Production Camera Worker Loop  \_camera\_loop()
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 def \_camera\_loop(stream\_url: str) -> None:
 
 2 """
@@ -2761,7 +2710,7 @@ false in its response, giving the caller a machine-readable indicator that the c
 unavailable.
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 while True: \# inner frame-reading loop
 
 2 \# Check deregistration before each frame read
@@ -2777,7 +2726,7 @@ unavailable.
 )
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 6 cap.release()
 
 7 return
@@ -2870,7 +2819,7 @@ the last successful count remains visible to the endpoint.
 ByteTrack Inference  \_run\_inference()
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 def \_run\_inference(model: YOLO, frame) -> int:
 
 2 """
@@ -2975,7 +2924,7 @@ occupancyCount.
 Camera Lifecycle Management  \_ensure\_camera\_started() and \_cleanup\_worker()
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 def \_ensure\_camera\_started(stream\_url: str) -> CameraState:
 
 2 """
@@ -3050,7 +2999,7 @@ oine) will have its last\_access frozen at the time of the last poll and will ev
 up after CAMERA\_TIMEOUT seconds.
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 def \_cleanup\_worker() -> None:
 
 2 """Background thread: remove cameras idle for > CAMERA\_TIMEOUT seconds."""
@@ -3131,7 +3080,7 @@ in \_cameras.items() iteration without a separate list.
 FastAPI Endpoints  /current-count, /health, and /
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 app = FastAPI(title="People Counter API", version="2.0.0")
 
 3 @app.get("/current-count")
@@ -3169,7 +3118,7 @@ FastAPI Endpoints  /current-count, /health, and /
 ",
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 21 )
 
 23 with \_cameras\_lock:
@@ -3224,7 +3173,7 @@ handles this race  ifcurrent is None, a 503 is returned rather than an Attribute
 accessing current.count on a NoneType object.
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 @app.get("/health")
 
 2 def health():
@@ -3303,86 +3252,33 @@ requirement and the code already discussed.
 
 % --- FIGURE PLACEHOLDER: Figure 5.2 ---
 \begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-2.png}
-  \caption{) is the administrative entry point for bringing a new laboratory into}
-  \label{fig:5-2}
-\end{figure}
-
-The Add Lab form (Figure 5.2) is the administrative entry point for bringing a new laboratory into
-
-the GreenLab system. It collects exactly the information a new laboratory needs and nothing more.
-
-Each eld is described below with its type, default value, constraint, and connection to the backend
-
-and rmware.
-
-Screenshot placeholder
-
-(source image: )
-
-
-% --- FIGURE PLACEHOLDER: Figure 5.2 ---
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-2.png}
-  \caption{Add Lab: provisioning form for a new smart laboratory}
-  \label{fig:5-2}
+	\centering
+	\includegraphics[width=0.6\textwidth]{ch05/figures/add-lab-form.png}
+	\caption{Add Lab: provisioning form for a new smart laboratory}
+	\label{fig:5-2}
 \end{figure}
 
 Figure 5.2: Add Lab: provisioning form for a new smart laboratory.
 
-Table 5.4: Add Lab form elds and their backend/rmware connections.
+\begin{table}[htbp]
+	\centering
+	\caption{Add Lab form elds and their backend/rmware connections.}
+	\label{tab:5-4}
+	\begin{tabular}{llll}
+		\toprule
+		Field                          & Type              & Default & Purpose and code connection                                                                                                                 \\
+		\midrule
+		Lab name                       & Text, required    & (none)  & Human-readable identier shown on all dashboard views. Maps to the LabName column in the Labs table.                                         \\
+		Device key (optional)          & Text, optional    & (none)  & Credential used to pair the ESP32. The rmware sends this in the token-exchange POST to /api/devices/token alongside labId and deviceId.     \\
+		Light threshold                & Integer, required & 2000    & Server-side copy of LIGHT\_THRESHOLD. Matches the rmware constant (Section 5.2.1). Not yet fetched by the rmware at boot (NFR-MAIN-01 gap). \\
+		Fan-on temperature ($^\circ$C) & Integer, required & 28      & Server-side copy of the fan-on threshold. Matches the rmware's implicit comparison (temp >= 28 $\rightarrow$ fanOn). Same NFR-MAIN-01 gap.  \\
+		CV lab code (optional)         & Text, optional    & (none)  & Associates the lab with a computer-vision tracking context. Used by the AI service as a label for camera registry keys.                     \\
+		Camera RTSP URL (optional)     & Text, optional    & (none)  & Passed to resolve\_source(). Accepts usb:N, http/https/rtsp URL, or bare IPv4 (all ve formats from Section 5.3.2.2).                        \\
+		\bottomrule
+	\end{tabular}
+\end{table}
 
-Field Type Default Purpose and code connection
-
-Lab name Text, re- (none) Human-readable identier shown on all
-
-quired dashboard views. Maps to the LabName col-
-
-umn in the Labs table.
-
-Device key Text, op- (none) Credential used to pair the ESP32. The
-
-(optional) tional rmware sends this in the token-exchange
-
-POST to /api/devices/token alongside
-
-labId and deviceId.
-
-Light thresh- Integer, 2000 Server-side copy of LIGHT\_THRESHOLD.
-
-old required Matches the rmware constant (Sec-
-
-tion 5.2.1). Not yet fetched by the rmware
-
-at boot (NFR-MAIN-01 gap).
-
-Fan-on tem- Integer, 28 Server-side copy of the fan-on threshold.
-
-perature ( degreesC) required Matches the rmware's implicit comparison
-
-(temp >= 28 -> fanOn). Same NFR-MAIN-
-
-\begin{listingbox}
-\begin{verbatim}
-01 gap.
-
-\end{verbatim}
-\end{listingbox}
-CV lab code Text, op- (none) Associates the lab with a computer-vision
-
-(optional) tional tracking context. Used by the AI service as
-
-a label for camera registry keys.
-
-Camera Text, op- (none) Passed to 's
-
-RTSP URL tional resolve\_source(). Accepts usb:N,
-
-(optional) http/https/rtsp URL, or bare IPv4 (all ve
-
-formats from Section 5.3.2.2).
+This single form is the operational proof of NFR-SCAL-02's requirement that adding a laboratory
 
 This single form is the operational proof of NFR-SCAL-02's requirement that adding a laboratory
 
@@ -3400,29 +3296,15 @@ back to the Labs list.
 
 
 \subsection{Devices  Hardware Registry}
-Screenshot placeholder
-
-(source image: )
-
-
 % --- FIGURE PLACEHOLDER: Figure 5.3 ---
 \begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-3.png}
-  \caption{Devices: read-side registry showing Esp32-Lab-D7 Active at 192}
-  \label{fig:5-3}
+	\centering
+	\includegraphics[width=0.6\textwidth]{ch05/figures/devices-page.png}
+	\caption{Devices: read-side registry showing Esp32-Lab-D7 Active at 192}
+	\label{fig:5-3}
 \end{figure}
 
 Figure 5.3: Devices: read-side registry showing Esp32-Lab-D7 Active at 192.168.1.7.
-
-
-% --- FIGURE PLACEHOLDER: Figure 5.3 ---
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-3.png}
-  \caption{) is the read side of the provisioning step}
-  \label{fig:5-3}
-\end{figure}
 
 The Devices screen (Figure 5.3) is the read side of the provisioning step. Once a lab has been
 
@@ -3432,7 +3314,7 @@ created and a device key issued, the corresponding ESP32 appears here with ve da
 
 (Active). The Active status is maintained by the rmware's token lifecycle described in Section 5.2.4
 
- a device that fails to authenticate or stops sending events will have its status ipped to Inactive
+a device that fails to authenticate or stops sending events will have its status ipped to Inactive
 
 by the backend after a congurable idle timeout.
 
@@ -3451,74 +3333,26 @@ Inactive rather than Active.
 
 % --- FIGURE PLACEHOLDER: Figure 5.4 ---
 \begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-4.png}
-  \caption{) shows all registered accounts in a tabular layout with ve columns:}
-  \label{fig:5-4}
-\end{figure}
-
-The Users screen (Figure 5.4) shows all registered accounts in a tabular layout with ve columns:
-
-NAME, EMAIL, ROLE, STATUS, and ACTIONS (Edit / Delete). Four accounts are currently regis-
-
-tered: Admin User (admin@greenlab.local, Admin, Active), mohamed eldodge (mahammednasser0@gmail.com,
-
-Teaching Assistant, Active), TA User (assistant@greenlab.local, Teaching Assistant, Active),
-
-and Teacher User (teacher@greenlab.local, Teacher, Active). All four are Active, meaning their
-
-accounts have not been deactivated via the Active account checkbox on the Add user form.
-
-Three roles are in use: Admin, Teacher, and Teaching Assistant. These map to the access-
-
-control tiers of the backend: Admin accounts can access all endpoints including user management
-
-and lab provisioning; Teacher accounts can access monitoring and session management but not user
-
-administration; Teaching Assistant accounts are a renement introduced during implementation
-
-(Section 5.4.4) that sits between Teacher and Admin in terms of permissions.
-
-Screenshot placeholder
-
-(source image: )
-
-
-% --- FIGURE PLACEHOLDER: Figure 5.4 ---
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-4.png}
-  \caption{Users: account list with all four registered accounts across three roles}
-  \label{fig:5-4}
+	\centering
+	\includegraphics[width=0.6\textwidth]{ch05/figures/ Users: account list with all four registered accounts across three roles.png}
+	\caption{Users: account list with all four registered accounts across three roles}
+	\label{fig:5-4}
 \end{figure}
 
 Figure 5.4: Users: account list with all four registered accounts across three roles.
 
 
 \subsection{Add User  Account Creation Form}
-Screenshot placeholder
-
-(source image: )
-
-
 % --- FIGURE PLACEHOLDER: Figure 5.5 ---
 \begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-5.png}
-  \caption{Add user: account creation form with role assignment and active-status toggle}
-  \label{fig:5-5}
+	\centering
+	\includegraphics[width=0.6\textwidth]{ch05/figures/add-user-form.png}
+	\caption{Add user: account creation form with role assignment and active-status toggle}
+	\label{fig:5-5}
 \end{figure}
 
 Figure 5.5: Add user: account creation form with role assignment and active-status toggle.
 
-
-% --- FIGURE PLACEHOLDER: Figure 5.5 ---
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-5.png}
-  \caption{) collects four elds: Full name, Email, Role (a dropdown with}
-  \label{fig:5-5}
-\end{figure}
 
 The Add user form (Figure 5.5) collects four elds: Full name, Email, Role (a dropdown with
 
@@ -3538,7 +3372,7 @@ server-side using a cryptographic hash function (bcrypt in the current.NET Core 
 
 before storage. The eld is never pre-lled when the Edit button is used on an existing account
 
- editing an account shows all elds except the password, which must be explicitly re-entered to
+editing an account shows all elds except the password, which must be explicitly re-entered to
 
 be changed. This prevents password exposure via browser autoll or network sning of a form
 
@@ -3558,29 +3392,16 @@ the login screen, the system-wide overview dashboard, and the per-laboratory mon
 
 
 \subsection{Login Screen}
-Screenshot placeholder
-
-(source image: )
-
-
+%
 % --- FIGURE PLACEHOLDER: Figure 5.6 ---
 \begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-6.png}
-  \caption{Login: the credential entry point implementing UC-01 and FR-AC-01}
-  \label{fig:5-6}
+	\centering
+	\includegraphics[width=0.6\textwidth]{ch05/figures/Login: the credential entry point implementing UC-01 and FR-AC-01.png}
+	\caption{Login: the credential entry point implementing UC-01 and FR-AC-01}
+	\label{fig:5-6}
 \end{figure}
 
 Figure 5.6: Login: the credential entry point implementing UC-01 and FR-AC-01.
-
-
-% --- FIGURE PLACEHOLDER: Figure 5.6 ---
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-6.png}
-  \caption{) implements UC-01 and FR-AC-01 directly}
-  \label{fig:5-6}
-\end{figure}
 
 The login screen (Figure 5.6) implements UC-01 and FR-AC-01 directly. It is a split-panel layout:
 
@@ -3616,35 +3437,21 @@ On successful authentication, the Angular router navigates to the Dashboard (Sec
 
 On failure (wrong password, inactive account, network error), an error message is shown inline
 
-below the Login button without revealing whether the email or password was specically wrong 
+below the Login button without revealing whether the email or password was specically wrong
 
 a standard security practice to prevent user enumeration.
 
-Screenshot placeholder
-
-(source image: )
-
-
+%
 % --- FIGURE PLACEHOLDER: Figure 5.7 ---
 \begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-7.png}
-  \caption{Dashboard: weekly occupancy trend, active alerts panel, and recent activity feed}
-  \label{fig:5-7}
+	\centering
+	\includegraphics[width=0.6\textwidth]{ch05/figures/Dashboard: weekly occupancy trend, active alerts panel, and recent activity
+		feed.png}
+	\caption{Dashboard: weekly occupancy trend, active alerts panel, and recent activity feed}
+	\label{fig:5-7}
 \end{figure}
 
 Figure 5.7: Dashboard: weekly occupancy trend, active alerts panel, and recent activity feed.
-
-
-\subsection{System Dashboard}
-
-% --- FIGURE PLACEHOLDER: Figure 5.7 ---
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-7.png}
-  \caption{) is the primary daily-use screen for lab managers}
-  \label{fig:5-7}
-\end{figure}
 
 The administrator's landing dashboard (Figure 5.7) is the primary daily-use screen for lab managers.
 
@@ -3698,31 +3505,16 @@ This tip is context-aware  it is triggered by the presence of a lab with the hig
 
 provides a direct action link, not generic advice.
 
-Screenshot placeholder
-
-(source image: LAPS\_Page.jpeg)
-
-
+%
 % --- FIGURE PLACEHOLDER: Figure 5.8 ---
 \begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-8.png}
-  \caption{All Labs: Lab D7 shown Idle with 4/30 kWh energy usage and three device-state pills}
-  \label{fig:5-8}
+	\centering
+	\includegraphics[width=0.6\textwidth]{ch05/figures/all-labs-view.png}
+	\caption{All Labs: Lab D7 shown Idle with 4/30 kWh energy usage and three device-state pills}
+	\label{fig:5-8}
 \end{figure}
 
 Figure 5.8: All Labs: Lab D7 shown Idle with 4/30 kWh energy usage and three device-state pills.
-
-
-\subsection{All Labs  Per-Laboratory View}
-
-% --- FIGURE PLACEHOLDER: Figure 5.8 ---
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-8.png}
-  \caption{) is the per-laboratory monitoring view implementing FR-MD-01}
-  \label{fig:5-8}
-\end{figure}
 
 The All Labs screen (Figure 5.8) is the per-laboratory monitoring view implementing FR-MD-01.
 
@@ -3771,14 +3563,6 @@ Table 5.5: Implementation traceability matrix.
 Req. ID Requirement Summary Evidence in Ch. 5 Status
 
 
-% --- FIGURE PLACEHOLDER: Figure 5.6 ---
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-6.png}
-  \caption{; 5}
-  \label{fig:5-6}
-\end{figure}
-
 FR-AC-01 Device/user authentica- 5.5.1 Fig. 5.6; 5.2.4 List- Implemented
 
 tion on login ings 5.85.10
@@ -3812,39 +3596,15 @@ FR-FH-02 Hold last relay state dur- 5.2.6 Listing 5.15 fallback Partial
 ing connectivity fault (re-evaluates, not freezes)
 
 
-% --- FIGURE PLACEHOLDER: Figure 5.7 ---
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-7.png}
-  \caption{Active   Implemented}
-  \label{fig:5-7}
-\end{figure}
-
 FR-FH-03 Faults visible on dash- 5.5.2 Fig. 5.7 Active Implemented
 
 board without navigation alerts panel
 
 
-% --- FIGURE PLACEHOLDER: Figure 5.8 ---
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-8.png}
-  \caption{device-state        Implemented}
-  \label{fig:5-8}
-\end{figure}
-
 FR-MD-01 Live sensor-state and 5.5.3 Fig. 5.8 device-state Implemented
 
 relay-state view per lab pills
 
-
-% --- FIGURE PLACEHOLDER: Figure 5.7 ---
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-7.png}
-  \caption{full dash-          Implemented}
-  \label{fig:5-7}
-\end{figure}
 
 FR-MD-03 System-wide status at a 5.5.2 Fig. 5.7 full dash- Implemented
 
@@ -3865,7 +3625,7 @@ ter 401 block
 NFR-MAIN- Firmware thresholds Hardcoded constants Not yet im-
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 01 fetched from API at 5.2.1  not fetched plemented
 
 \end{verbatim}
@@ -3875,7 +3635,7 @@ runtime
 NFR-PERF- AI service sampling within 5.3.3.6 Implemented
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 03 5-second cadence FRAME\_SKIP=3 at
 
 30 fps -> 10 inferences/s
@@ -3883,18 +3643,10 @@ NFR-PERF- AI service sampling within 5.3.3.6 Implemented
 
 \end{verbatim}
 \end{listingbox}
-% --- FIGURE PLACEHOLDER: Figure 5.2 ---
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-5-2.png}
-  \caption{Add Lab             Implemented}
-  \label{fig:5-2}
-\end{figure}
-
 NFR-SCAL- Adding a lab requires 5.4.1 Fig. 5.2 Add Lab Implemented
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 02 no schema/architecture form
 
 \end{verbatim}
@@ -3918,7 +3670,7 @@ The main loop iteration begins. readDistanceCM() res the HC-SR04 and measures a 
 of 2,235 microseconds, corresponding to a distance of 2235 x 0.034/2 = 38 cm. Since 38 > 0 and
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 38 <= 50 (DISTANCE\_THRESHOLD), isNear evaluates to true. The previous iteration had isNear =
 
 \end{verbatim}
@@ -3944,7 +3696,7 @@ valid, no network call. WiFi.status() returns WL\_CONNECTED. sendMotionRequest()
 sendMotionRequest() constructs the following JSON body by manual string concatenation:
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 POST http://192.168.1.7:5076/api/devices/1/event HTTP/1.1
 
 2 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.[payload].[signature]
@@ -3991,7 +3743,7 @@ occupancyCount = 1.
 The backend sends a GET request to the Python AI service:
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 GET http://127.0.0.1:8000/current-count?ip=192.168.1.3 HTTP/1.1
 
 
@@ -4010,7 +3762,7 @@ contains \{7\}, so \_run\_inference() returned 1. The CameraState for this camer
 and connected = True. The AI service responds:
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 HTTP/1.1 200 OK
 
 2 Content-Type: application/json
@@ -4035,7 +3787,7 @@ Listing 5.43: AI service response conrming one tracked person in frame.
 The backend constructs its response and returns it to the ESP32:
 
 \begin{listingbox}
-\begin{verbatim}
+	\begin{verbatim}
 1 HTTP/1.1 200 OK
 
 2 Content-Type: application/json
@@ -4098,110 +3850,13 @@ cupancy 1 · In session with a green dot. No alert is raised because the occupan
 a scheduled session.
 
 
-\section{Known Limitations and Technical Debt}
-Throughout this chapter, implementation gaps and deviations from Chapter 3 specications have
 
-been noted as they arose. The table below consolidates all seven items into a single reference,
-
-including the aected requirement, the root cause, and a concrete recommended x.
-
-Table 5.6: Known limitations and technical debt.
-
-Item Description Req. Recommended x
-
-Firmware LIGHT\_THRESHOLD (2000) and NFR- Add a cong end-
-
-thresholds fan-on temperature (28 degreesC) MAIN-01 point; call it at boot;
-
-hardcoded are compile-time constants. cache in EEPROM
-
-Changing a threshold requires for oine use.
-
-reashing the device. No
-
-/api/devices/\{id\}/config
-
-endpoint exists yet.
-
-Two relay relay3On and relay4On are ArchitectureAdd \#define
-
-channels parsed and logged but not con- diagram RELAY\_PIN3/4;
-
-unwired nected to GPIO outputs. Only add actuation logic
-
-RELAY\_PIN and RELAY\_PIN2 are  no backend change
-
-physically wired. Hardware not needed.
-
-yet expanded beyond two chan-
-
-nels.
-
-Local fallback Fallback logic re-evaluates LDR FR-FH- Store last backend-
-
-re-evaluates rather than holding the last 02 commanded light
-
-vs. freezes backend-commanded state as state; restore it on
-
-FR-FH-02 species. Designed fallback rather than
-
-for simplicity over strict spec re-evaluating.
-
-compliance.
-
-Teaching As- The role was added during FR-AC- Add Teaching Assis-
-
-sistant role implementation but is absent 02/03 tant as a named actor
-
-unmodelled from the Chapter 3 use case in the use case dia-
-
-model. Discovered during im- gram and stakeholder
-
-plementation as a real organi- analysis.
-
-sational need.
-
-Occupancy The dashboard raises this alert FR-FH Write back as FR-
-
-outside ses- when occupancy is detected (future) FH-04 in a revised
-
-sion alert outside scheduled hours. No Chapter 3.
-
-unspecied FR ID exists for it. Emergent
-
-feature identied during dash-
-
-board implementation.
-
-Device iden- labId and deviceId are inte- NFR- Read
-
-tity compiled ger literals in the rmware. De- MAIN-01 labId/deviceId
-
-in ploying to a second lab requires from EEPROM,
-
-recompiling. No provisioning provisioned via
-
-API was designed for device QR code or BLE
-
-self-registration. commissioning.
-
-Item Description Req. Recommended x
-
-FRAME\_SKIP At variable camera frame rates, NFR- Replace FRAME\_SKIP
-
-is count-based the eective inference cadence PERF-03 with a minimum-
-
-not time- varies. At 15 fps FRAME\_SKIP=3 elapsed-time
-
-based gives 5 inferences/s; at 5 fps it gate based on
-
-gives only 1.7/s. time.monotonic().
 
 
 \section{Chapter Summary}
 This chapter presented the as-built GreenLab system in full implementation detail across its two
 
-directly-implemented tiers  the ESP32 hardware layer and the Python AI processing service 
+directly-implemented tiers  the ESP32 hardware layer and the Python AI processing service
 
 and through annotated screenshots for the Angular administration and monitoring interface.
 
@@ -4237,9 +3892,9 @@ back with dierential update, JSON response parsing, room-empty override, and die
 
 actuation.
 
-Section 5.3 covered the Python AI service in three les. Section 5.3.1 presented 
+Section 5.3 covered the Python AI service in three les. Section 5.3.1 presented
 
- the single-camera prototype  covering the double-checked locking singleton model loader, the
+the single-camera prototype  covering the double-checked locking singleton model loader, the
 
 two-attempt VideoCapture open strategy, the person-counting generator expression, the ready-
 
@@ -4277,22 +3932,12 @@ per-laboratory view with its device-state pills and AI Recommendation card.
 
 Section 5.6 provided a complete requirement traceability matrix. Section 5.7 traced one complete
 
-motion event through all four tiers using representative JSON payloads. Section 5.8 consolidated
+motion event through all four tiers using representative JSON payloads. The seven implementation
 
-seven implementation gaps with root causes and concrete recommended xes.
+gaps identified during development --- hardcoded thresholds, two unwired relay channels, fallback
 
-Read together with Chapter 3, this chapter closes the loop from requirement to running system.
+behaviour deviation, unmodelled role, unspecified alert type, compiled-in device identity, and
 
-Every functional and non-functional requirement area introduced in Chapter 3 now has at least one
-
-code listing, gure, or honest gap note in this chapter. The seven gaps identied  hardcoded
-
-thresholds, two unwired relay channels, fallback behaviour deviation, unmodelled role, unspecied
-
-alert type, compiled-in device identity, and frame-count-based rather than time-based sampling 
-
-are recorded precisely here so that they can be addressed deliberately in the testing and conclusion
-
-chapters rather than discovered unexpectedly during examination.
+frame-count-based sampling --- are recorded in Chapter 6 for consolidated discussion.
 
 

@@ -177,11 +177,15 @@ to both the instructor and the administrator.
 \subsection{Component Topology}
 The hardware layer is built around a single ESP32 microcontroller that reads four
 
-physical sensors and drives two relay channels. The following pin assignments are taken
+physical sensors and drives two relay channels. The ESP32 has been widely adopted
 
-directly from the implemented firmware and govern both the circuit layout and the
+for IoT automation in educational settings due to its integrated Wi-Fi capability,
 
-software configuration.
+low cost, and adequate GPIO count \cite{marhoon2018,rao2021}. The following pin
+
+assignments are taken directly from the implemented firmware and govern both the
+
+circuit layout and the software configuration.
 
 \begin{longtable}{|L{2.5cm}|L{2.5cm}|L{1.5cm}|L{4.5cm}|L{2.5cm}|}
 \caption{ESP32 pin assignments and sensor specifications.} \label{tab:4-2} \\
@@ -336,7 +340,16 @@ exactly once regardless of concurrent request traffic. The model is placed on th
 
 (MODEL\_DEVICE = 'cpu') to maintain compatibility with deployment environments that
 
-do not have a dedicated GPU. Inference runs via model.track() with the following fixed
+do not have a dedicated GPU. The choice of YOLO for indoor occupancy detection is
+
+supported by research demonstrating its eﬀectiveness in classroom environments \cite{choi2023}
+
+and its suitability for real-time building automation workﬂows \cite{meng2023b}. The
+
+ByteTrack tracker is used to maintain persistent identities across frames, reducing the
+
+double-counting problem noted in naive frame-by-frame detection approaches
+\cite{kumar2024,wu2024}. Inference runs via model.track() with the following fixed
 
 configuration:
 
@@ -426,7 +439,15 @@ The response JSON is:
 
 The backend maps the people\_count integer to an occupancy classification (Empty = 0,
 
-Low = 1--5, Moderate = 6--15, High > 15) and passes this classification into thelighting decision matrix and fan activation table described in Section 4.6.
+Low = 1--5, Moderate = 6--15, High > 15) and passes this classification intothe lighting decision matrix and fan activation table described in Section 4.6.
+
+Demand-driven load prediction models based on continuous occupancy estimation have
+
+been shown to improve HVAC eﬃciency in institutional buildings \cite{park2020}, and
+
+multi-zone occupancy classiﬁcation using distributed environmental sensor networks
+
+has been demonstrated as a viable approach for larger facilities \cite{garcia2024}.
 
 
 \section{Database Design}
@@ -922,11 +943,14 @@ Each record contains: Action (the operation type), Details (a JSON-serialisable 
 
 of the change), Entity (the affected entity type and ID), UserId (the authenticated actor),
 
-and CreatedAt (server-assigned timestamp). This design satisfies NFR-SEC-02 (tamper-
+and CreatedAt (server-assigned timestamp). This design satisﬁes NFR-SEC-02 (tamper-
 
 resistant audit trail) and supports the administrative audit-log review view described in
 
-Section 4.9.
+Section 4.9. The INSERT-only audit paradigm follows established security patterns for
+
+building automation systems where accountability and non-repudiation are critical
+\cite{alturjman2024,nguyen2025}.
 
 
 \section{Angular Dashboard Design}

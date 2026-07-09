@@ -1,0 +1,28 @@
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Occupancy-detection taxonomy and sensing modalities discussed by Chaudhari et al}}{13}{figure.caption.10}%
+\contentsline {figure}{\numberline {2.2}{\ignorespaces Modiﬁed lightweight YOLOv8 architecture used for indoor occupancy detection by}}{15}{figure.caption.13}%
+\contentsline {figure}{\numberline {2.3}{\ignorespaces ESP32-based classroom automation hardware prototype reported by Ingole et al}}{21}{figure.caption.22}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces GreenLab four-tier system architecture and data flow}}{28}{figure.caption.25}%
+\contentsline {figure}{\numberline {3.2}{\ignorespaces GreenLab Business Model Canvas}}{31}{figure.caption.26}%
+\contentsline {figure}{\numberline {3.3}{\ignorespaces GreenLab use case diagram showing actors and system interactions}}{35}{figure.caption.27}%
+\contentsline {figure}{\numberline {3.4}{\ignorespaces Sequence diagram --- occupancy-triggered automation workflow}}{45}{figure.caption.28}%
+\contentsline {figure}{\numberline {3.5}{\ignorespaces Sequence diagram --- live camera streaming workflow}}{46}{figure.caption.29}%
+\contentsline {figure}{\numberline {3.6}{\ignorespaces Sequence diagram --- manual override (relay control) workflow}}{47}{figure.caption.30}%
+\contentsline {figure}{\numberline {3.7}{\ignorespaces Sequence diagram --- laboratory transfer request workflow}}{49}{figure.caption.31}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces GreenLab context-level data flow diagram (DFD Level 0) --- the system as a single process bounded by four external actors and three data stores.}}{55}{figure.caption.32}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces GreenLab Level-1 data flow diagram --- decomposition of the GreenLab System process into five functional processes and three data stores.}}{55}{figure.caption.33}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces GreenLab database entity-relationship diagram --- 11 application tables spanning laboratory management, operational control, and audit/identity domains.}}{61}{figure.caption.34}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces GreenLab system class diagram --- principal domain classes, their attributes, methods, and structural relationships across the laboratory management, operational control, and audit domains.}}{64}{figure.caption.35}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Devices page showing Esp32-Lab-D7 Active at 192}}{97}{figure.caption.38}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Add Lab: provisioning form for a new smart laboratory}}{126}{figure.caption.40}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces Devices: read-side registry showing Esp32-Lab-D7 Active at 192}}{126}{figure.caption.42}%
+\contentsline {figure}{\numberline {5.4}{\ignorespaces Users: account list with all four registered accounts across three roles}}{127}{figure.caption.43}%
+\contentsline {figure}{\numberline {5.5}{\ignorespaces Add user: account creation form with role assignment and active-status toggle}}{127}{figure.caption.44}%
+\contentsline {figure}{\numberline {5.6}{\ignorespaces Login: the credential entry point implementing UC-01 and FR-AC-01}}{128}{figure.caption.45}%
+\contentsline {figure}{\numberline {5.7}{\ignorespaces Dashboard: weekly occupancy trend, active alerts panel, and recent activity feed}}{129}{figure.caption.46}%
+\contentsline {figure}{\numberline {5.8}{\ignorespaces All Labs: Lab D7 shown Idle with 4/30 kWh energy usage and three device-state pills}}{130}{figure.caption.47}%
+\addvspace {10\p@ }

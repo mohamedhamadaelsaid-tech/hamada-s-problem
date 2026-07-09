@@ -1,0 +1,119 @@
+\documentclass[11pt,a4paper,twoside]{book}
+
+% ==========================================
+% 1. PACKAGES
+% ==========================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{pifont}
+\usepackage{graphicx}
+\usepackage[table,dvipsnames]{xcolor}
+\usepackage[hmargin=2.2cm, vmargin=2.2cm, headsep=8pt, footskip=12pt]{geometry}
+\usepackage{framed}
+\usepackage[font=small,skip=4pt]{caption}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{makecell}
+\usepackage{csquotes}
+\usepackage[most]{tcolorbox}
+\usepackage{emptypage}
+\usepackage[titletoc]{appendix}
+\usepackage[acronym,toc]{glossaries}
+\usepackage{setspace}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,arrows,arrows.meta,positioning,decorations.pathreplacing,matrix,fit,calc}
+\usepackage{fontawesome5}
+\usepackage{ragged2e}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{colortbl}
+
+% ==========================================
+% 3. CONFIGURATIONS (Compact Layout)
+% ==========================================
+\singlespacing
+\setlength{\parskip}{0.4em}
+\setlength{\parindent}{0em}
+\setlength{\headheight}{14pt}
+\setlength{\topskip}{6pt}
+\setlength{\floatsep}{8pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{10pt plus 3pt minus 3pt}
+\setlength{\intextsep}{8pt plus 2pt minus 2pt}
+\setlist{nolistsep,noitemsep}
+\raggedbottom
+\setlength{\LTpre}{0pt}
+\setlength{\LTpost}{0pt}
+
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[LO]{\footnotesize{ \nouppercase{\leftmark}} }
+\fancyhead[RE]{\footnotesize{ \nouppercase{\rightmark}} }
+\renewcommand{\headrulewidth}{0.3pt}
+
+\newcommand*{\listingautorefname}{Listing}
+\newcommand*{\Appendixautorefname}{Appendix}
+
+% ==========================================
+% 4. TABLE TEMPLATE STYLE (from pasted code)
+% ==========================================
+\definecolor{tableheadergray}{HTML}{D9D9D9}
+\definecolor{listinggray}{HTML}{F5F5F5}
+\newcolumntype{L}[1]{>{\RaggedRight\setlength{\rightskip}{0pt plus 2em}\setlength{\parfillskip}{0pt}\arraybackslash}p{#1}}
+\newcolumntype{Y}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\tableheaderrow}[1]{\rowcolor{tableheadergray}\textbf{#1}}
+\newcommand{\tablebodyfont}{\small}
+\newtcolorbox{listingbox}[1][]{enhanced,breakable,colback=listinggray,colframe=black,boxrule=0.75pt,arc=0pt,left=6pt,right=6pt,top=4pt,bottom=4pt,sharp corners,#1}
+
+% ==========================================
+% 5. FRONTMATTER METADATA
+% ==========================================
+\input{backmatter/acronyms}
+\makeglossaries
+
+\title{GreenLab: Intelligent Laboratory Energy Management System}
+\author{Your Name Here}
+\date{2026}
+
+\begin{document}
+\pagestyle{fancy}
+
+\frontmatter
+
+\input{frontmatter/coverpage.tex}
+\input{frontmatter/abstract.tex}
+\input{frontmatter/acknowledgment.tex}
+
+\tableofcontents
+
+\listoftables
+\addcontentsline{toc}{chapter}{List of Tables}
+
+\listoffigures
+\addcontentsline{toc}{chapter}{List of Figures}
+
+\mainmatter
+
+% ==========================================
+% 6. CHAPTERS
+% ==========================================
+
+\input{ch01/ch01.tex}
+\input{ch02/ch02.tex}
+\input{ch03/ch03.tex}
+\input{ch04/ch04.tex}
+\input{ch05/ch05.tex}
+\input{ch06/ch06.tex}
+
+% ==========================================
+% 7. BACKMATTER & APPENDICES
+% ==========================================
+
+\backmatter
+\end{document}
