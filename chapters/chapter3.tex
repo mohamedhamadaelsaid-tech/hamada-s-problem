@@ -1,0 +1,1512 @@
+% ============================================
+% Chapter 3: System Analysis
+% ============================================
+
+\chapter{System Analysis}
+\label{ch:system-analysis}
+
+GreenLab --- Chapter 3: System Analysis
+
+
+
+
+
+\section{Introduction to the Chapter}
+
+This chapter is the analytical foundation on which the design and implementation of GreenLab,
+described in the subsequent chapters, are built. All technical values, requirement identifiers,
+database fields, and API paths quoted in this chapter are taken directly from the project's TA
+Reference Document and are treated as authoritative.
+
+Chapter 2 reviewed the literature on occupancy-driven building automation and identified a gap
+that no single reviewed system closes: the combination of multimodal embedded sensing, YOLObased visual occupancy counting, a rule-based backend automation engine, a role-based
+governance dashboard, immutable audit logging, and laboratory transfer management. This chapter
+turns that gap into a concrete, analysable system. It answers three questions in sequence. First,
+what is GreenLab, and what kind of system is it --- Section 3.2 positions GreenLab as a four-tier
+cyber-physical system and explains the temporal and governance pressures that shape every
+requirement that follows, and Section 3.3 immediately translates that system context into a
+commercial case using the Business Model Canvas. Second, who needs GreenLab to do what, and
+how do they interact with it --- Section 3.4 identifies the six stakeholder groups affected by the
+system, and Section 3.5 translates their needs into a formal use case model. Third, precisely what
+must the system do and how well must it do it --- Sections 3.6 and 3.7 state the 36 functional
+requirements and the non-functional requirements, organised by area and quality dimension
+respectively, exactly as fixed in the TA Reference Document.
+
+The chapter closes by validating the requirement set dynamically rather than only statically. A
+requirements table states what the system must do in isolation; it does not show how those
+requirements compose into an end-to-end behaviour that crosses all four tiers in a single
+operational scenario. Section 3.8 supplies that missing dimension by walking through the four
+sequence diagrams produced for GreenLab --- the occupancy-triggered automation workflow, the
+live camera streaming workflow, the manual override workflow, and the laboratory transfer request
+workflow --- explaining each lifeline, each conditional branch, and each loop in terms of the
+functional requirements and database tables it realises. Section 3.9 then summarises the chapter and
+states explicitly how its outputs feed into the design chapter that follows.
+1
+GreenLab --- Chapter 3: System Analysis
+
+
+Two conventions are used consistently throughout this chapter and the rest of the project book.
+First, the four tiers are always referred to by their fixed names --- the hardware layer, the Python AI
+service, the ASP.NET Core backend, and the Angular dashboard --- rather than informal synonyms
+such as ``the server'' or ``the frontend'', in line with the project's terminology standard. Second,
+every functional and non-functional requirement is cited by its fixed identifier (for example FRLC-03 or NFR-SEC-01) so that it can be traced unambiguously into the design, implementation,
+and testing chapters.
+
+
+
+
+2
+GreenLab --- Chapter 3: System Analysis
+
+
+
+\section{System Context}
+
+GreenLab is analysed as a cyber-physical system that bridges the physical environment of a
+university IT laboratory with software services that automate energy management and provide
+governance tools for authorised users. The system is organised into four tiers, each owning a
+distinct responsibility and exposing a well-defined interface to its neighbours, as summarised in
+Table 3.1.
+
+Table 3.1: GreenLab four-tier architecture and tier responsibilities.
+
+Tier Exact Term Technology Responsibility
+
+Tier 1 the hardware layer ESP32 + Sensors + Relay Sensing, relay control,
+entry/exit counting
+
+Tier 2 the Python AI service Python + YOLOv11n Visual occupancy detection,
+person counting
+
+Tier 3 the ASP.NET Core backend ASP.NET Core 8 + SQL Automation engine, API,
+Server RBAC, audit logging
+
+Tier 4 the Angular dashboard Angular SPA Real-time monitoring,
+override, admin governance
+
+
+
+
+Figure 3.1: GreenLab four-tier system architecture and data flow.
+
+3
+GreenLab --- Chapter 3: System Analysis
+
+
+The hardware layer, built around the ESP32 microcontroller, observes laboratory conditions
+through three connected sensors --- a DHT11 temperature and humidity sensor, an LDR lightdependent resistor, and an HC-SR04 ultrasonic distance sensor --- and acts on the physical
+environment through a four-channel relay module that switches two lighting circuits and two
+ventilation fans. The Python AI service runs YOLOv8n object detection on frames pulled from an
+IP camera, providing a person count that complements the hardware tier's entry/exit counting. The
+ASP.NET Core backend applies the automation rules captured in the decision matrix and fan
+activation table, persists every state change and event to SQL Server, and exposes the 21
+authenticated REST endpoints listed in Section 3.6 to both the frontend and the hardware devices.
+The Angular dashboard presents real-time laboratory monitoring, manual override controls,
+scheduling, transfer-request forms, and administrative tools to instructors and administrators.
+
+This separation of concerns is intentional and is exploited throughout the project. The hardware
+layer can adopt a new sensor without the backend's rule engine changing; the Python AI service
+could be replaced with a different detection model without the Angular dashboard ever noticing;
+the ASP.NET Core backend can add new endpoints without any firmware change; and the Angular
+dashboard can be redesigned without touching server-side code. Feature dependencies in Table 3.2
+make this layering explicit: every frontend feature depends on authentication (BE-03); the
+automation engine (BE-01) depends on live sensor data (HW-01) and on both occupancy signals
+(AI-01, AI-02); relay-based appliance control (HW-02) is only ever driven by the automation
+engine or by an override (BE-01, BE-02); and manual override itself (BE-02) depends on
+authentication and produces audit log entries (BE-03, BE-04).
+
+Table 3.2: Feature dependency chain across the four-tier architecture.
+
+Feature(s) Depends On Reason
+
+FE-01, FE-02, FE-03, FE-04 BE-03 All frontend features require
+authentication (JWT)
+
+BE-01 HW-01, AI-01, AI-02 Automation engine needs live sensor +
+occupancy data
+
+HW-02 BE-01, BE-02 Relay control driven by automation
+engine or override
+
+
+
+
+4
+GreenLab --- Chapter 3: System Analysis
+
+
+Feature(s) Depends On Reason
+
+BE-02 BE-03, BE-04 Override requires auth and generates
+audit log entries
+
+
+\subsection{Temporal Dimension}
+
+Unlike residential or commercial buildings, where occupancy patterns are comparatively stable, a
+university IT laboratory experiences highly variable occupancy that changes by semester, by
+session, and sometimes within a single day: a taught session from 8:00 to 10:00, two empty hours,
+an open-lab period from 12:00 to 14:00, and an examination from 14:00 to 16:00 are all plausible
+within one room on one day. Each usage type implies different lighting and ventilation needs --- a
+projector-led taught session benefits from dimmed lighting, while an open-lab period with active
+workstations needs full lighting --- so the system must combine real-time, sensor-driven
+automation with schedule-aware context rather than a single static rule set.
+
+\subsection{Governance Dimension}
+
+GreenLab is deliberately not a simple sensor-to-relay automation system. University laboratory
+operations are governed by institutional policy that defines who may control which appliances,
+how a laboratory transfer request is reviewed, what must be auditable, and how a fault is escalated.
+These governance requirements are why the functional requirement set in Section 3.6 includes a
+dedicated authentication and access control area (FR-AC), a manual override area with explicit
+precedence rules between instructor and administrator (FR-MO), and an INSERT-only AuditLog
+table that makes every state-changing action attributable and tamper-evident.
+
+\subsection{Resilience and Safe Defaults}
+
+Because GreenLab is cyber-physical, it must keep behaving sensibly when the network is
+unreliable, when sensor readings are noisy, or when the Python AI service is temporarily
+unreachable. The design therefore commits to a safe default at every tier: the ESP32 holds its last
+known relay state without resetting when it loses contact with the backend (NFR-REL-01); the
+backend continues serving cached sensor data and honouring active overrides if the AI service is
+offline; and when any fault is active, the automation engine holds Relay 1 (lighting) ON and leaves
+Relays 2--4 at their last commanded state rather than guessing (FR-FH-02). Grace periods --- the 3second HC-SR04 debounce (FR-EE-02) and the 15/30-second sensor and camera timeout
+
+
+5
+GreenLab --- Chapter 3: System Analysis
+
+
+thresholds (FR-FH-01) --- prevent transient sensor noise or brief connectivity gaps from being
+mistaken for genuine occupancy changes or hardware failure.
+
+Read together, the system context is a set of four directional data flows governed by a single
+authorisation point at the backend: sensor data flows upward from the hardware layer; occupancy
+data flows upward from the Python AI service; control commands flow downward from the
+Angular dashboard, through the backend, to the hardware layer; and audit records flow from every
+tier into SQL Server. Sections 3.6 to 3.8 formalise this context first as testable requirements and
+then as concrete sequence diagrams.
+
+
+
+
+6
+GreenLab --- Chapter 3: System Analysis
+
+
+
+\section{Business Model}
+
+Section 3.2 established GreenLab as a technical system: its four-tier architecture and the temporal
+and governance pressures that shape it. A graduation project intended for genuine deployment
+beyond the university, however, must also be positioned as a viable proposition rather than a
+working prototype alone. This section supplies that commercial dimension using the Business
+Model Canvas (BMC), a strategic framework that maps how an organisation creates, delivers, and
+captures value across nine interlocking blocks. Figure 3.2 presents the completed canvas for
+GreenLab; the discussion that follows explains each block in turn and traces it back to the four-tier
+architecture of Section 3.2 and to the stakeholder, requirement, and sequence-diagram analysis
+presented later in this chapter, so that the business case is grounded in the same requirement set as
+the rest of the chapter rather than treated as a separate exercise.
+
+
+
+
+Figure 3.2: GreenLab Business Model Canvas.
+
+\subsection{Value Proposition and Customer Focus}
+
+The value propositions in the canvas restate, in commercial language, exactly what the requirement
+areas fixed later in this chapter (Section 3.6) express in technical language. Reduced energy
+consumption, lower operating costs, and the reduction of electricity waste are the direct
+commercial expression of the Lighting Control and Ventilation Control areas (FR-LC, FR-VC),
+which switch relays off whenever occupancy is Empty rather than leaving appliances running by
+
+7
+GreenLab --- Chapter 3: System Analysis
+
+
+default. Automating lighting and ventilation and monitoring laboratory occupancy in real time map
+directly onto the automation engine and the Monitoring and Dashboard area (FR-MD): a laboratory
+operator is not asked to trust an opaque automation engine, but can see its occupancy and relay
+state at any moment, consistent with the refresh behaviour fixed by FR-MD-01. Taken together,
+these value propositions are framed in the canvas as supporting a single overarching goal ---
+sustainable campus operations --- which positions GreenLab as a campus-wide energy-efficiency
+initiative rather than only a per-laboratory monitoring tool.
+
+The customer segments named in the canvas are a refinement of the six stakeholder groups
+identified in Section 3.4, now split explicitly into a primary and a secondary segment. Universities
+and educational institutions form the primary segment: the buying organisations that would
+authorise a GreenLab deployment and its budget, corresponding to the Faculty Management row of
+the stakeholder table. IT departments, laboratory staff, facilities and maintenance teams, and
+university administrators form the secondary segment: the operational users who interact with the
+system day to day or who depend on its outputs, corresponding respectively to the IT Department,
+Laboratory Staff, and Administrator rows of the same table. Separating the two makes explicit that
+GreenLab is sold to an institution as a single purchasing decision, even though several distinct roles
+within that institution go on to operate it. The customer relationship block completes this picture on
+the service side: technical support, installation service, scheduled maintenance, software updates,
+and training sessions are the ongoing obligations a vendor of GreenLab would owe its customers,
+and the training-session commitment in particular is what keeps the low-friction override path of
+NFR-USA-01 credible for an instructor who is a subject-matter expert rather than an IT specialist.
+
+\subsection{Key Partners, Activities, and Resources}
+
+The key partners block identifies the organisations a real GreenLab deployment depends on outside
+the development team itself: the university administration and its facilities and maintenance
+department as the institutional sponsor and physical site owner, the IT department as the network
+and security gatekeeper referenced throughout Section 3.2.2's governance discussion, IoT
+hardware vendors supplying the ESP32 boards, sensors, and relay modules, and a cloud or server
+hosting provider for the ASP.NET Core backend and SQL Server database. Rather than assuming a
+dedicated camera infrastructure provider, the canvas treats the IP cameras already installed across
+university laboratories as an existing asset that the Python AI service reuses, which lowers the
+barrier to a pilot deployment considerably. Each of these partners corresponds to a tier or a cross-
+8
+GreenLab --- Chapter 3: System Analysis
+
+
+cutting concern already fixed in Table 3.1: IoT hardware vendors supply Tier 1, the existing
+university camera estate supplies the visual input consumed by Tier 2, and the hosting provider
+supplies the infrastructure Tier 3 runs on.
+
+The key activities --- energy management, occupancy counting, lighting and ventilation
+automation, and real-time system monitoring --- are the commercial names for the automatic use
+cases detailed later in this chapter (UC-09 through UC-13): they are the activities the system
+performs continuously regardless of who is watching, and they are what a customer is ultimately
+paying to have run reliably. The key resources block separates the assets that make those activities
+possible into three categories that mirror the architecture directly: physical resources (cameras and
+IoT devices) correspond to Tier 1 and the AI-processing camera input; technology resources (the
+YOLO model and the SQL Server database) correspond to Tier 2 and the persistence layer
+described in Section 3.2; and human resources (software developers) are the team responsible for
+maintaining the backend's decision matrix, fan activation table, and Angular dashboard as the
+system evolves beyond the pilot deployment analysed in this chapter.
+
+\subsection{Channels}
+
+The channels block sets out how GreenLab would reach and be adopted by the customer segments
+identified above: direct sales to faculty management, university partnerships that allow a pilot
+deployment in one laboratory to expand across a faculty's full estate (the scenario NFR-SCAL-01
+is designed to support), participation in technology competitions that provide visibility among IoT
+solution providers, and relationships with existing IoT solution providers who could integrate
+GreenLab's automation engine alongside their own hardware offerings. These channels are
+consistent with the project's current status as a graduation project rather than a commercial
+product: the university partnership and competition channels are the most immediately actionable
+routes, while direct sales and third-party integration represent the longer-term path once the fourtier architecture has been validated at the scale Section 3.7.6 targets.
+
+\subsection{Cost Structure and Revenue Streams}
+
+The cost structure groups GreenLab's expenses into three areas that again align with the
+architecture: hardware costs (the ESP32 boards, sensors, relays, and cameras that make up Tier 1
+and the camera input to Tier 2), software development costs (backend development, dashboard
+development, and AI maintenance and integration, spanning Tier 2 through Tier 4), and cloud and
+
+9
+GreenLab --- Chapter 3: System Analysis
+
+
+infrastructure costs (database hosting for the SQL Server instance described in Section 3.2). Set
+against these costs, the revenue streams propose five ways GreenLab could recover its costs and
+generate a margin: one-time installation fees for initial system setup; annual maintenance contracts
+that fund ongoing support; a recurring software subscription that covers access to the monitoring
+dashboard and future updates; paid custom solutions for client-specific requirements; and
+integration services for connecting GreenLab to a customer's existing cameras and IoT devices
+rather than requiring a full hardware replacement. The subscription and maintenance-contract
+streams in particular depend on the reliability targets of Section 3.7.2 --- a backend that is
+unavailable during operating hours, or an ESP32 that resets its relay state on every network
+interruption, would undermine the recurring-revenue case as directly as it would undermine the
+technical case for the system.
+
+Table 3.3 closes this section by tracing each canvas block back to the chapter section or
+requirement area it draws on, preserving the same traceability discipline applied to the use cases
+and sequence diagrams later in this chapter.
+
+Table 3.3: Business Model Canvas blocks traced to their chapter basis.
+
+BMC Block Chapter Basis
+
+Value Propositions FR-LC, FR-VC, FR-OD, FR-MO, FR-MD, NFR-SCAL
+
+Customer Segments Table 3.4 (Stakeholder Analysis); Faculty Management
+(primary), IT Department / Laboratory Staff / Administrator
+(secondary)
+
+Customer Relationships NFR-USA-01, NFR-MAIN-01
+
+Key Partners Table 3.1 (four-tier architecture); Section 3.2.2
+
+Key Activities UC-09--UC-13 (Section 3.5.3)
+
+Key Resources Section 3.2 (tier responsibilities)
+
+Channels Section 3.7.6 (Scalability)
+
+Cost Structure Table 3.1 tier technologies
+
+Revenue Streams Section 3.7.2 (Reliability)
+
+
+
+10
+GreenLab --- Chapter 3: System Analysis
+
+
+Read alongside the rest of this chapter, the canvas in Figure 3.2 shows that GreenLab's
+requirement set was not defined in a commercial vacuum: the same automation behaviour,
+governance controls, and reliability targets that satisfy the functional and non-functional
+requirements set out later in this chapter are also the features and guarantees a paying customer
+would evaluate before adopting the system beyond a single pilot laboratory.
+
+
+
+
+11
+GreenLab --- Chapter 3: System Analysis
+
+
+
+\section{Stakeholder Analysis}
+
+Six stakeholder groups have a direct or indirect interest in GreenLab's operation. Identifying them
+precisely is what keeps the requirements in Sections 3.6 and 3.7 grounded in real operational need
+rather than hypothetical scenarios.
+
+Table 3.4: Stakeholder analysis summary.
+
+Stakeholder Role Primary Concern System Features
+
+Instructor Conducts sessions, monitors Automatic control must not Real-time dashboard,
+assigned labs, overrides interfere with teaching manual override with timed
+automation when teaching expiry, transfer request form
+needs it, requests transfers
+
+Administrator Manages users, schedules, Operational oversight, User management, schedule
+transfers, and configuration; policy compliance, management, transfer
+reviews audit logs and faults accountability approval, audit log, fault
+acknowledgement
+
+Laboratory Staff Monitors hardware integrity, Hardware faults detected Fault alert dashboard, sensor
+responds to fault alerts, and resolved before they status display, relay
+maintains equipment compromise safety feedback
+
+Student Occupies the laboratory; an A comfortable environment Indirect benefit through
+indirect beneficiary without needing to interact occupancy-driven lighting
+with the system and ventilation
+
+IT Department Maintains network, server, Reliable infrastructure, HTTPS, JWT, service
+and security infrastructure security compliance, accounts, firmware update
+updateable firmware support, network
+configuration
+
+Faculty Management Reviews energy trends and Energy cost reduction, Energy reports, audit log
+policy compliance; environmental review, configuration
+authorises budget responsibility, auditability oversight
+
+The instructor and administrator are the two roles that interact directly with the Angular dashboard
+and therefore drive most of the use case model in Section 3.5; laboratory staff, students, the IT
+department, and faculty management are served indirectly through the features that the instructor
+and administrator operate on their behalf --- fault visibility for laboratory staff, ambient comfort for
+
+12
+GreenLab --- Chapter 3: System Analysis
+
+
+students, HTTPS/JWT compliance for the IT department, and audit/reporting access for faculty
+management.
+
+
+
+
+13
+GreenLab --- Chapter 3: System Analysis
+
+
+
+\section{Use Case Analysis}
+
+The use case diagram for the GreenLab Intelligent Energy Management System (Figure 3.3)
+captures every interaction identified in the stakeholder analysis above and groups them around four
+actors: the two human roles, Instructor and Administrator, and two automated actors, the Hardware
+System (Automatic) and the AI Processing System. Separating human-triggered use cases from
+automatically-triggered ones makes explicit which behaviours require a logged-in user and which
+run continuously regardless of who is watching --- a distinction that matters because, as Section
+\subsection{explained, GreenLab's governance model hinges on knowing exactly which actions are}
+
+attributable to a person.
+
+
+
+
+Figure 3.3: GreenLab use case diagram showing actors and system interactions.
+
+\subsection{Actors}
+
+\begin{itemize}
+  \item Instructor --- a human actor who logs in to monitor their assigned laboratory, issue manual
+overrides, and submit transfer requests.
+\end{itemize}
+
+\begin{itemize}
+  \item Administrator --- a human actor with faculty-wide visibility who manages user accounts,
+laboratory schedules, transfer approvals, and system logs.
+\end{itemize}
+
+\begin{itemize}
+  \item Hardware System (Automatic) --- the ESP32 and its sensors and relay module, acting
+without a human in the loop to apply occupancy-based lighting and temperature-based
+ventilation control.
+14
+GreenLab --- Chapter 3: System Analysis
+\end{itemize}
+
+
+\begin{itemize}
+  \item AI Processing System --- the Python YOLO-based occupancy detection service, acting as
+an automated actor that supplies person-count data into the same automatic control loop.
+\end{itemize}
+
+\subsection{Human-Triggered Use Cases}
+
+Both human actors share ``Login to Dashboard'' as a common entry point. The diagram models this
+with <<include>> relationships: ``Manual Override Control Lights and Fans'', ``Submit Laboratory
+Transfer Request'', and ``Manage Laboratory Schedule'' each include ``Login to Dashboard'',
+meaning none of them can be performed without a valid, authenticated session --- the direct use
+case expression of FR-AC-02 (every endpoint except login requires a valid JWT).
+
+\begin{itemize}
+  \item Login to Dashboard --- validates credentials and returns a role-bearing JWT (realised by
+FR-AC-01).
+\end{itemize}
+
+\begin{itemize}
+  \item View Real-Time Monitoring Data --- the instructor or administrator views live LDR,
+temperature, humidity, occupancy, and relay state for a laboratory (FR-MD-01, FR-MD-
+03).
+\end{itemize}
+
+\begin{itemize}
+  \item Manual Override Control Lights and Fans --- issues a timed override for a specific relay
+(FR-MO-01, FR-MO-02); this is the use case realised in detail by the sequence diagram in
+Section 3.8.3.
+\end{itemize}
+
+\begin{itemize}
+  \item Submit Laboratory Transfer Request --- an instructor requests that a session move to a
+different laboratory, creating a row in TransferRequests via POST /transfer/request.
+\end{itemize}
+
+\begin{itemize}
+  \item Manage Laboratory Schedule --- an administrator updates a laboratory's session schedule
+via PUT /labs/{id}/schedule.
+\end{itemize}
+
+\begin{itemize}
+  \item Approve/Reject      Transfer   Requests        ---   an   administrator    reviews     a    pending
+TransferRequests row and resolves it via PUT /transfer/{id}/approve or PUT
+/transfer/{id}/reject; the diagram models the approval decision as an <<extend>> of the base
+review action, since rejection is an alternative outcome of the same review rather than a
+separate trigger.
+\end{itemize}
+
+\begin{itemize}
+  \item Manage User Accounts --- an administrator creates or updates Users rows via POST /users
+and PUT /users/{id}.
+\end{itemize}
+
+
+
+15
+GreenLab --- Chapter 3: System Analysis
+
+
+\begin{itemize}
+  \item View System Logs and Reports --- an administrator inspects the INSERT-only AuditLog
+table and active FaultEvents for oversight and incident investigation.
+\end{itemize}
+
+\subsection{Automatic Use Cases}
+
+The lower half of the diagram belongs to the two automated actors and is connected back into
+``Login to Dashboard'' by dashed <<include>> arrows. This is not a contradiction of the ``no human
+in the loop'' description above --- it represents the fact that the automatic control loop's output
+(current relay state, current occupancy classification) is what the dashboard displays once a user
+does log in, so the automatic use cases feed the same dashboard rather than triggering it.
+
+\begin{itemize}
+  \item Automatic Occupancy-Based Lighting Control --- the decision procedure behind FR-LC-
+01 and FR-LC-03, evaluated on every 5-second sensor cycle by the Hardware System actor
+in conjunction with the backend's decision matrix.
+\end{itemize}
+
+\begin{itemize}
+  \item Automatic Temperature-Based Ventilation Control --- the decision procedure behind
+FR-VC-01 and FR-VC-02, giving the Hot temperature zone priority over occupancy when
+deciding fan state.
+\end{itemize}
+
+\begin{itemize}
+  \item Continuous Monitoring --- the unending 5-second sensor polling cycle (FR-SI of Section
+\end{itemize}
+\subsection{onward) that keeps SensorReadings current and is the precondition for every other}
+
+automatic use case.
+
+\begin{itemize}
+  \item End of Session Reset --- the behaviour invoked when occupancy returns to Empty with no
+active override, returning both light relays and, where the temperature zone permits, both
+fan relays to OFF (FR-LC-03, FR-VC-03).
+\end{itemize}
+
+\begin{itemize}
+  \item Perform Occupancy Detection (YOLO-based) --- owned by the AI Processing System
+actor; this is FR-OD-01 through FR-OD-04, and it is the use case explained step by step in
+the sequence diagram of Section 3.8.1.
+\end{itemize}
+
+
+
+
+16
+GreenLab --- Chapter 3: System Analysis
+
+
+\subsection{Use Case Summary Table}
+
+Table 3.5 and Table 3.6 together trace every use case identified above to the functional
+requirements it realises, split across the two tables below for readability.
+
+Table 3.5: Use case descriptions and traceability to functional requirements (UC-01 to UC-06).
+
+Traced
+ID Use Case Actor(s) Description Requirements
+
+UC-01 Login to Dashboard Instructor, Authenticate and FR-AC-01, FR-AC-
+Administrator receive a role-scoped 02
+JWT.
+
+UC-02 View Real-Time Instructor, Display live sensor, FR-MD-01--FR-MD-
+Monitoring Data Administrator occupancy, and relay 04
+state for one or all
+labs.
+
+UC-03 Manual Override Instructor, Issue a timed override FR-MO-01--FR-MO-
+Control Lights and Administrator on a specific relay, 04, FR-LC-02, FR-
+Fans superseding VC-04
+automation.
+
+UC-04 Submit Laboratory Instructor Request a session TransferRequests
+Transfer Request move to a different table; Endpoint 13
+laboratory.
+
+UC-05 Manage Laboratory Administrator Create or update a Endpoint 12
+Schedule laboratory's session
+schedule.
+
+UC-06 Approve/Reject Administrator Review and resolve a Endpoints 14--16
+Transfer Requests pending transfer
+request.
+
+
+
+
+17
+GreenLab --- Chapter 3: System Analysis
+
+
+Table 3.6: Use case descriptions and traceability to functional requirements (UC-07 to UC-13).
+
+Traced
+ID Use Case Actor(s) Description Requirements
+
+UC-07 Manage User Administrator Create or update user Endpoints 17--19, FR-
+Accounts accounts and role AC-04
+assignment.
+
+UC-08 View System Logs Administrator Inspect the audit trail FR-FH-03, FR-FH-
+and Reports and active fault 04, AuditLog
+events.
+
+UC-09 Automatic Hardware System Apply the lighting FR-LC-01, FR-LC-
+Occupancy-Based (Automatic) decision matrix on 03, FR-LC-04
+Lighting Control every sensor cycle.
+
+UC-10 Automatic Hardware System Apply the fan FR-VC-01--FR-VC-
+Temperature-Based (Automatic) activation table on 04
+Ventilation Control every sensor cycle.
+
+UC-11 Continuous Hardware System Poll all three sensors FR-SI-01--FR-SI-04,
+Monitoring (Automatic) every 5 seconds. FR-EE-01--FR-EE-04
+
+UC-12 End of Session Reset Hardware System Return relays to OFF FR-LC-03, FR-VC-03
+(Automatic) once occupancy is
+Empty and no
+override is active.
+
+UC-13 Perform Occupancy AI Processing System Run YOLOv8n FR-OD-01--FR-OD-
+Detection (YOLO- inference and report a 04
+based) classified person
+count.
+
+
+
+
+18
+GreenLab --- Chapter 3: System Analysis
+
+
+
+\section{Functional Requirements}
+
+The functional requirements are organised into the nine areas defined in the TA Reference
+Document, with four requirements per area, for a total of thirty-six. Requirement identifiers follow
+the pattern FR-[AREA]-[NUMBER]; priority is marked P1 (must have) or P2 (should have). These
+nine areas correspond directly to the use cases of Section 3.5 and to the sequence diagrams
+analysed in Section 3.8: System Initialisation feeds Continuous Monitoring (UC-11); Entry/Exit
+Detection and Occupancy Detection together feed the occupancy-triggered automation workflow of
+Section 3.8.1; Lighting and Ventilation Control are the two automatic use cases UC-09 and UC-10;
+Monitoring and Dashboard underlies UC-02 and the camera streaming workflow of Section 3.8.2;
+Manual Override is UC-03 and the workflow of Section 3.8.3; Fault Handling and Safety underlies
+UC-08; and Authentication and Access Control underlies UC-01 and gates every other use case in
+the model.
+
+\subsection{Area: System Initialisation and Startup}
+
+These requirements govern the ESP32 firmware's behaviour during power-up, before the device
+enters its normal sensing-and-control loop. They establish the conditions under which the hardware
+tier is considered ready to participate in the wider GreenLab data flow, and they define the fallback
+behaviour when network connectivity cannot be established immediately.
+
+Table 3.7: Area: System Initialisation and Startup.
+
+FR-ID Requirement Priority
+
+FR-SI-01 The ESP32 shall verify all three sensor P1
+interfaces on power-up before entering
+the normal polling loop; if any sensor
+fails, log fault and proceed.
+
+FR-SI-02 The ESP32 shall attempt Wi-Fi P1
+connection with up to 3 retries on
+startup; if all fail, enter Degraded
+Mode with all relays holding last state.
+
+
+
+
+19
+GreenLab --- Chapter 3: System Analysis
+
+
+FR-ID Requirement Priority
+
+FR-SI-03 On first successful Wi-Fi connection P1
+after startup, the ESP32 shall retrieve
+the current active relay command from
+GET /relay/state/{labId}.
+
+FR-SI-04 The backend shall reject any sensor P1
+POST from an ESP32 presenting an
+invalid or expired Service-role JWT,
+returning HTTP 401.
+
+
+\subsection{Area: Entry and Exit Detection}
+
+Entry and exit detection is the hardware tier's first line of occupancy awareness, implemented
+through the HC-SR04 ultrasonic sensor. These requirements define how a physical presence event
+at the laboratory doorway is converted into a debounced, countable signal that feeds the occupancy
+counter referenced throughout the automation engine.
+
+Table 3.8: Area: Entry and Exit Detection.
+
+FR-ID Requirement Priority
+
+FR-EE-01 The ESP32 shall classify an entry P1
+event when an HC-SR04 reading drops
+below 200 cm and increment the local
+occupancy counter.
+
+FR-EE-02 The ESP32 shall enforce a minimum P1
+3-second debounce interval between
+consecutive HC-SR04 entry or exit
+events.
+
+FR-EE-03 The ESP32 shall include the current P2
+occupancy counter value in every
+sensor POST payload sent to
+/sensor/readings.
+
+
+
+
+20
+GreenLab --- Chapter 3: System Analysis
+
+
+FR-ID Requirement Priority
+
+FR-EE-04 If the HC-SR04 returns no echo within P2
+30 ms (out of effective range), the
+ESP32 shall record the reading as null
+in SensorReadings.
+
+
+\subsection{Area: Occupancy Detection and Classification}
+
+Where entry/exit counting gives a coarse occupancy signal, the Python AI service provides a
+richer, vision-based estimate using YOLOv8n person detection. These requirements define the
+inference cycle, the classification thresholds that translate a raw person count into an operational
+category, and the reconciliation rule applied when the two occupancy signals disagree.
+
+Table 3.9: Area: Occupancy Detection and Classification.
+
+FR-ID Requirement Priority
+
+FR-OD-01 The Python AI service shall run P1
+YOLOv8n inference every 5 seconds
+per lab, filter detections to class 0 with
+confidence $\ge$ 0.6.
+
+FR-OD-02 The ASP.NET Core backend shall map P1
+the received person count to exactly
+one of four classifications: Empty (0),
+Low (1--5), Moderate (6--15), High
+(>15).
+
+FR-OD-03 If the IP camera stream is unreachable, P1
+the AI service shall POST a
+CAMERA_UNAVAILABLE fault and
+cease sending occupancy updates.
+
+FR-OD-04 If YOLO and HC-SR04 classifications P2
+disagree by more than one tier, the
+backend shall use the higher
+classification as the active value.
+
+
+
+
+21
+GreenLab --- Chapter 3: System Analysis
+
+
+\subsection{Area: Lighting Control}
+
+Lighting control is the first of the two automation outputs driven by the decision matrix in the
+ASP.NET Core backend. These requirements specify when a lighting relay command is issued,
+how an active manual override suppresses automatic lighting decisions, and how every lighting
+state change is captured for traceability.
+
+Table 3.10: Area: Lighting Control.
+
+FR-ID Requirement Priority
+
+FR-LC-01 The automation engine shall evaluate P1
+the lighting decision matrix on every
+sensor cycle and issue a relay
+command only when state changes.
+
+FR-LC-02 When an active OverrideCommand P1
+exists for Relay 1 or Relay 2, the
+automation engine shall not issue any
+lighting relay commands.
+
+FR-LC-03 When occupancy classification is P1
+Empty and no active override exists
+for light relays, the automation engine
+shall command both light relays OFF.
+
+FR-LC-04 Every relay state change shall produce P1
+one row in RelayStates
+(CommandSource = Automation or
+Override) and one row in AuditLog.
+
+
+\subsection{Area: Ventilation Control}
+
+Ventilation control mirrors lighting control but is driven primarily by the DHT11 temperature
+reading rather than occupancy alone, reflecting the fact that thermal comfort and equipment
+cooling needs can apply even in an empty room. These requirements define the fan activation rule,
+the priority given to the Hot temperature zone, and the same override-suppression and audit
+principles applied to lighting.
+
+
+
+
+22
+GreenLab --- Chapter 3: System Analysis
+
+
+Table 3.11: Area: Ventilation Control.
+
+FR-ID Requirement Priority
+
+FR-VC-01 The automation engine shall evaluate P1
+the fan activation table on every sensor
+cycle and command Relay 3 and Relay
+4 accordingly.
+
+FR-VC-02 When temperature zone is Hot (above P1
+30$^\circ$C), the automation engine shall
+command Relay 3 (Fan 1) to ON
+regardless of occupancy.
+
+FR-VC-03 When occupancy is Empty and P1
+temperature zone is Cool or
+Comfortable, both Relay 3 and Relay 4
+shall be commanded OFF.
+
+FR-VC-04 When an active OverrideCommand P1
+exists for Relay 3 or Relay 4, the
+automation engine shall not issue any
+ventilation relay commands.
+
+
+\subsection{Area: Monitoring and Dashboard}
+
+These requirements define what the Angular dashboard must show, how often it refreshes, and how
+visibility is scoped by role --- an instructor sees only their assigned laboratory, while an
+administrator sees the full estate. They also define how fault conditions surface visually so that
+they cannot be missed.
+
+Table 3.12: Area: Monitoring and Dashboard.
+
+FR-ID Requirement Priority
+
+FR-MD-01 The Angular dashboard shall refresh P1
+each lab state every 10 seconds via
+GET /labs/{id}, showing LDR
+value/zone, temperature, humidity,
+occupancy, relay states.
+
+
+
+
+23
+GreenLab --- Chapter 3: System Analysis
+
+
+FR-ID Requirement Priority
+
+FR-MD-02 An instructor shall only view data for P1
+the LabId in their JWT AssignedLabId
+claim; a mismatched GET /labs/{id}
+request returns HTTP 403.
+
+FR-MD-03 An administrator shall view P2
+LabStatusCards for all active
+laboratories from one view, with fault
+banners visible without scrolling.
+
+FR-MD-04 Active fault events shall appear as a P1
+styled banner showing fault type,
+timestamp, and a Resolve button
+visible only to administrators.
+
+
+\subsection{Area: Manual Override}
+
+Manual override is the mechanism through which the governance dimension of GreenLab asserts
+itself over pure automation: an authorised user may temporarily take direct control of a relay.
+These requirements define who may override what, how an override expires automatically, and
+how administrator overrides take precedence over instructor overrides --- directly reflected in the
+Manual Override sequence diagram analysed in Section 3.8.3.
+
+Table 3.13: Area: Manual Override.
+
+FR-ID Requirement Priority
+
+FR-MO-01 An instructor shall issue a manual P1
+override for any relay in their assigned
+lab only, specifying relay target,
+desired state, duration, and reason.
+
+FR-MO-02 An administrator shall issue a manual P1
+override for any relay in any lab; an
+administrator override supersedes any
+existing instructor override.
+
+
+
+
+24
+GreenLab --- Chapter 3: System Analysis
+
+
+FR-ID Requirement Priority
+
+FR-MO-03 When an override ExpiresAt is P1
+reached, the backend shall set IsActive
+= 0 and resume automation engine
+control of the affected relay.
+
+FR-MO-04 Every override creation, automatic P1
+expiry, and manual cancellation shall
+be recorded in AuditLog with ActorId,
+ActorRole, and Outcome.
+
+
+\subsection{Area: Fault Handling and Safety}
+
+Because GreenLab directly switches physical appliances, the system must fail safe rather than fail
+silent. These requirements define the timeout thresholds that distinguish a healthy data flow from a
+stalled one, the safe state the automation engine holds during a fault, and the administrator
+workflow for acknowledging and clearing a fault once resolved.
+
+Table 3.14: Area: Fault Handling and Safety.
+
+FR-ID Requirement Priority
+
+FR-FH-01 The backend shall generate P1
+SENSOR_TIMEOUT if no
+SensorReadings row arrives within 15
+seconds, and CAMERA_TIMEOUT if
+no occupancy update arrives within 30
+seconds.
+
+FR-FH-02 When any fault is active, the P1
+automation engine shall hold safe
+state: Relay 1 ON (lights), Relays 2--4
+hold last known state.
+
+FR-FH-03 Active faults appear as fault banners P1
+on the relevant LabStatusCard;
+administrators see all labs; instructors
+see their assigned lab only.
+
+
+
+
+25
+GreenLab --- Chapter 3: System Analysis
+
+
+FR-ID Requirement Priority
+
+FR-FH-04 An administrator resolves a fault via P1
+PUT /faults/{id}/resolve; the backend
+sets IsResolved = 1, ResolvedAt =
+UTC now, ResolvedByAdminId.
+
+
+\subsection{Area: Authentication and Access Control}
+
+Every other functional area depends on this one: nothing in GreenLab is reachable without a valid
+identity and a verified role. These requirements define how credentials are validated, how the
+resulting JSON Web Token is structured and enforced, and the non-negotiable rule that plaintext
+passwords are never stored or transmitted in clear form --- the same JWT life cycle that underlies
+the authentication step of the Manual Override workflow in Section 3.8.3.
+
+Table 3.15: Area: Authentication and Access Control.
+
+FR-ID Requirement Priority
+
+FR-AC-01 POST /auth/login shall validate P1
+username and verify password against
+bcrypt PasswordHash; on success
+return a JWT signed with HMAC-
+SHA256, expiring in 60 minutes.
+
+FR-AC-02 Every endpoint except POST P1
+/auth/login requires a valid non-
+expired JWT bearer token;
+missing/invalid token returns HTTP
+401.
+
+FR-AC-03 The backend shall enforce that an P1
+instructor's JWT AssignedLabId claim
+matches the labId in every request; any
+mismatch returns HTTP 403.
+
+FR-AC-04 All passwords shall be stored P1
+exclusively as bcrypt hashes; plaintext
+passwords shall never be stored,
+logged, or returned.
+
+
+
+26
+GreenLab --- Chapter 3: System Analysis
+
+
+
+\section{Non-Functional Requirements}
+
+Where Section 3.6 states what the system must do, this section states how well it must do it, across
+six quality dimensions: performance, reliability, security, usability, maintainability, and scalability.
+Every design target below is a design target, not a measured result --- verification against these
+targets belongs to the testing chapter, not this one.
+
+\subsection{Performance}
+
+Performance requirements bound how quickly the system must react, since a 10-second dashboard
+refresh and a 5-second sensor cycle are only meaningful if every tier underneath them keeps pace.
+
+Table 3.16: Non-functional requirements --- Performance.
+
+NFR-ID Requirement Design Target Rationale
+
+NFR-PERF-01 Backend responds to all API < 500 ms Dashboard 10 s polling must
+requests under normal load feel instantaneous.
+($\le$ 20 labs, $\le$ 50 concurrent
+users).
+
+NFR-PERF-02 End-to-end sensor-reading $\le$ 2 seconds One 5 s polling cycle must
+→ relay-command latency complete within it.
+under normal load.
+
+NFR-PERF-03 Python AI service completes $\le$ 5 seconds Keeps occupancy
+one full YOLOv8n classification fresh every
+inference cycle per lab. polling cycle.
+
+
+\subsection{Reliability}
+
+Reliability requirements address what happens when connectivity is imperfect --- the normal
+condition for IoT deployments inside a university building rather than the exception.
+
+
+
+
+27
+GreenLab --- Chapter 3: System Analysis
+
+
+Table 3.17: Non-functional requirements --- Reliability.
+
+NFR-ID Requirement Design Target Rationale
+
+NFR-REL-01 ESP32 in Degraded Mode No time limit Prevents relay flapping on
+maintains last known relay intermittent network.
+state without reset until
+connectivity returns.
+
+NFR-REL-02 Backend uptime during lab $\ge$ 99% Faculty operations depend
+operating hours (08:00-- on continuous availability.
+22:00, Mon--Sat).
+
+NFR-REL-03 On ESP32 reconnection, Within 1 poll cycle Prevents stale relay states
+device retrieves current after reconnection.
+relay command before
+resuming automation.
+
+
+\subsection{Security}
+
+Security requirements protect the confidentiality of credentials and sensor data in transit and
+guarantee that the audit trail cannot be altered after the fact.
+
+Table 3.18: Non-functional requirements --- Security.
+
+NFR-ID Requirement Design Target Rationale
+
+NFR-SEC-01 All tier communication uses TLS 1.2+ Protects JWT tokens and
+HTTPS; backend redirects sensor data in transit.
+any HTTP request to
+HTTPS.
+
+NFR-SEC-02 Role enforcement Middleware-level Single enforcement point;
+implemented at middleware no gap from missing checks.
+level, not inside individual
+controller methods.
+
+NFR-SEC-03 AuditLog has no UPDATE INSERT-only Records must be tamper-
+or DELETE permissions for evident and legally
+any role; only INSERT by defensible.
+audit middleware.
+
+
+
+
+28
+GreenLab --- Chapter 3: System Analysis
+
+
+\subsection{Usability}
+
+Usability requirements recognise that instructors are domain experts in teaching, not in buildingautomation software, so the override path in particular must be self-evident.
+
+Table 3.19: Non-functional requirements --- Usability.
+
+NFR-ID Requirement Design Target Rationale
+
+NFR-USA-01 A first-time instructor can $\le$ 3 clicks Instructors are not IT
+locate and issue a manual specialists.
+override without reading
+documentation.
+
+NFR-USA-02 Fault banners visible on 1920×1080, no scroll Faults must be immediately
+LabStatusCard without visible.
+scrolling, up to 6 cards on
+screen.
+
+
+\subsection{Maintainability}
+
+Maintainability requirements keep tuning and evolution out of the source code, consistent with the
+independently-deployable four-tier philosophy described in Section 3.2.
+
+Table 3.20: Non-functional requirements --- Maintainability.
+
+NFR-ID Requirement Design Target Rationale
+
+NFR-MAIN-01 All control thresholds (LDR 0 hardcoded thresholds Enables tuning without code
+zones, YOLO confidence, changes or redeployment.
+polling intervals, JWT
+expiry, fan levels) stored in
+SystemConfig.
+
+NFR-MAIN-02 Each of the four tiers is Zero cross-tier coupling Supports iterative
+independently deployable; improvement of individual
+updating one tier requires no tiers.
+changes to any other tier,
+provided the API contract is
+stable.
+
+
+
+
+29
+GreenLab --- Chapter 3: System Analysis
+
+
+\subsection{Scalability}
+
+Scalability requirements ensure that GreenLab can grow from a pilot deployment to the full set of
+IT laboratories without a redesign.
+
+Table 3.21: Non-functional requirements --- Scalability.
+
+NFR-ID Requirement Design Target Rationale
+
+NFR-SCAL-01 System supports $\ge$ 20 labs Faculty has >10 IT labs;
+simultaneously active future growth must be
+laboratories, each posting supported.
+sensor data every 5 s,
+without architecture or
+schema changes.
+
+NFR-SCAL-02 Adding a new laboratory 0 schema changes per new Reduces IT Department
+requires only: one lab effort for lab additions.
+Laboratories row, one user
+account, one ESP32
+configured, one camera
+configured.
+
+
+
+
+30
+GreenLab --- Chapter 3: System Analysis
+
+
+
+\section{Sequence Diagram Analysis}
+
+A requirement table establishes correctness criteria for one behaviour in isolation. A sequence
+diagram shows how several requirements, several actors, and all four tiers cooperate to deliver one
+complete, time-ordered scenario. The four sequence diagrams produced for GreenLab and analysed
+below were chosen because together they exercise every tier of the architecture at least once: the
+occupancy workflow exercises the hardware layer, the Python AI service, and the backend; the
+camera streaming workflow exercises the backend's media-handling path and the Angular
+dashboard; the manual override workflow exercises authentication, the backend's automation
+engine, the hardware layer, and the audit subsystem in a single pass; and the transfer request
+workflow exercises the same authorisation layer applied to an organisational rather than a
+hardware-level decision.
+
+\subsection{Occupancy-Triggered Automation Workflow}
+
+This diagram has six lifelines --- Motion Sensor, ESP32, Controller, API, Model YOLO, and
+Camera --- and models the complete path from a physical presence event to an appliance being
+switched, including the visual confirmation step performed by YOLO. It is the dynamic
+counterpart of the Entry/Exit Detection (FR-EE), Occupancy Detection and Classification (FROD), Lighting Control (FR-LC), and Ventilation Control (FR-VC) requirement areas, and it
+realises use cases UC-09, UC-10, UC-12, and UC-13.
+
+
+
+
+31
+GreenLab --- Chapter 3: System Analysis
+
+
+
+
+Figure 3.4: Sequence diagram --- occupancy-triggered automation workflow.
+
+The scenario begins when the Motion Sensor detects activity (step 1) and signals the ESP32, which
+sends a trigger to the Controller (step 2) --- the practical instantiation of the HC-SR04 entry
+classification in FR-EE-01, subject to the 3-second debounce of FR-EE-02. The Controller issues
+an HTTP request to analyse the scene (step 3), which the API forwards to the Model YOLO
+component as a request for frame analysis (step 4). This request-response pair is wrapped in an opt
+[Camera Active] guard: if the camera is reachable, YOLO captures a frame from the Camera (step
+\begin{itemize}
+  \item and receives it back (step 6); if the camera is not active, this branch is skipped entirely, which is
+the sequence-diagram expression of the CAMERA_UNAVAILABLE fault path defined in FROD-03 --- the diagram shows the happy path, while the fault path is specified formally by that
+requirement rather than drawn as a second branch.
+\end{itemize}
+
+
+32
+GreenLab --- Chapter 3: System Analysis
+
+
+Once a frame is available, YOLO processes the image and counts students (step 7, a self-call
+representing the YOLOv8n inference and the confidence-0.6 / class-0 filter of FR-OD-01), then
+returns the count to the API (step 8), which relays it to the Controller as the response students
+count (step 9). The Controller's next action is wrapped in an alt block with two mutually exclusive
+branches that correspond directly to FR-LC-03 and FR-VC-03 on one side and FR-LC-01/FR-VC01 on the other: when [students greater than 0], the Controller tells the ESP32 to turn ON devices
+(step 10), and the ESP32 activates the lights and AC/fan (step 11); when [students equal 0 for a
+period], the Controller instead instructs the ESP32 to turn OFF devices (step 12), and the ESP32
+deactivates the relevant components (step 13) --- this is the End of Session Reset use case (UC-12)
+executing in practice. The diagram closes with a loop [Continuous Monitoring] (step 14), which is
+the visual representation of the fact that this entire sequence repeats indefinitely on the 5-second
+polling cycle defined across the System Initialisation and Occupancy Detection requirement areas,
+rather than running once.
+
+Two design decisions in this diagram are worth calling out explicitly because they recur in the
+requirements. First, occupancy is confirmed by a vision-based count rather than acted on directly
+from the motion trigger alone --- the motion event only initiates the check; the relay decision waits
+for YOLO's answer. This is what allows FR-OD-04 to exist at all: a disagreement between the HCSR04-based entry/exit signal and the YOLO-based count is only meaningful because both signals
+are computed and compared, not because one pre-empts the other. Second, the alt branch's OFF
+path is not triggered the instant the count reaches zero but only when it is zero ``for a period'',
+which is the sequence-diagram phrasing of the safe-default philosophy described in Section 3.2.3: a
+single empty reading should not instantly switch off lighting that a class is merely stepping out of
+for a moment.
+
+\subsection{Live Camera Streaming Workflow}
+
+This diagram has four lifelines --- Admin, System, CameraService, and Camera --- and models the
+path an administrator follows to view a laboratory's live video feed from the Angular dashboard,
+distinct from the YOLO inference path of Section 3.8.1 even though both ultimately read from the
+same IP camera. It realises the visual-monitoring half of UC-02 and is underpinned, on the
+implementation side, by the camera-source resolution logic described in the camera_sources.py and
+droidip.py modules referenced later in the design chapter.
+
+
+33
+GreenLab --- Chapter 3: System Analysis
+
+
+
+
+Figure 3.5: Sequence diagram --- live camera streaming workflow.
+
+The Admin clicks ``View Camera for Lab'' (step 1), and the System requests a camera stream for
+that LabId from the CameraService (step 2). This request is followed by an opt [Connection
+Needed] guard: a connection to the physical Camera is established (step 3) and confirmed (step 4)
+only if one is not already open, which mirrors the connection-pooling behaviour implemented by
+the create_capture/_ensure_camera_started logic in the streaming service --- an already-registered
+camera is reused rather than reconnected on every request. Once connected, the diagram enters a
+loop [Streaming Active]: the Camera continuously sends video data to the CameraService (step 5),
+which forwards the stream to the System (step 6). This loop is the sequence-diagram view of the
+long-running per-camera worker thread that keeps reading frames for as long as the stream remains
+registered.
+
+The outcome is resolved by an alt block with two branches. On [Success], the System displays live
+video to the Admin (step 7) --- the direct realisation of FR-MD-01's requirement that the
+dashboard show live state. On [Failure], the System instead shows an error message (step 8). This
+34
+GreenLab --- Chapter 3: System Analysis
+
+
+failure branch is the user-facing counterpart of the same condition that drives FR-OD-03 in the
+occupancy workflow: an unreachable camera should produce a clear, immediate signal to the user
+rather than a frozen or blank video panel, consistent with the fault-visibility requirements of FRMD-04 and FR-FH-03.
+
+This diagram complements the occupancy workflow of Section 3.8.1 rather than duplicating it: that
+diagram shows the camera being used as a sensor input to an automated decision, while this
+diagram shows the same camera being used as a direct visual aid for a human administrator. Both
+depend on the camera being reachable, which is why camera connectivity is treated as a fault
+condition (CAMERA_UNAVAILABLE / CAMERA_TIMEOUT) in FR-OD-03 and FR-FH-01
+regardless of which consumer --- YOLO or a human --- is currently using the stream.
+
+\subsection{Manual Override (Relay Control) Workflow}
+
+This diagram has five lifelines --- Instructor, Angular Dashboard, ASP.NET Backend, ESP32, and
+Relay Module --- and is the most complete single-diagram demonstration of GreenLab's
+governance dimension: in one continuous scenario it exercises authentication, role validation, relay
+actuation, dashboard feedback, and audit logging. It is the dynamic realisation of use case UC-03
+and of the Manual Override (FR-MO) and Authentication and Access Control (FR-AC)
+requirement areas together, and it shows concretely how FR-LC-02 and FR-VC-04 (override
+suppresses automatic relay commands) are enforced at the point an override is created rather than
+left to be checked later.
+
+
+
+
+35
+GreenLab --- Chapter 3: System Analysis
+
+
+
+
+Figure 3.6: Sequence diagram --- manual override (relay control) workflow.
+
+The scenario opens with the Instructor opening the dashboard and logging in (step 1). This is
+wrapped in an opt [Authentication] guard, since a returning user with an unexpired JWT can skip
+straight past it: the Angular Dashboard posts the username and password to /api/auth/login (step 2),
+and the ASP.NET Backend returns 200 OK with a JWT (step 3) --- the direct execution of FR-AC01, which specifies bcrypt password verification and an HMAC-SHA256-signed token expiring in
+60 minutes. The dashboard then loads (step 4).
+
+With a session established, the Instructor sets lighting to 100% through Manual Control (step 5),
+and the Angular Dashboard posts this to /api/control/manual-override with the JWT attached as a
+Bearer token (step 6). The backend's first action is to validate the JWT and confirm the caller's
+role (step 7, a self-call) --- this is FR-AC-02 and FR-AC-03 being enforced at the middleware level
+as required by NFR-SEC-02, before any relay logic runs, and it is also the point at which FR-MO01's constraint that an instructor may only override a relay in their own assigned lab would be
+checked. Only once that check passes does a loop [Device Command] begin: the backend sends the
+payload (lighting 100, mode MANUAL) to the ESP32 (step 8), the ESP32 performs the relay
+36
+GreenLab --- Chapter 3: System Analysis
+
+
+actuation --- channel ON, intensity 100 (step 9) --- against the physical Relay Module, receives an
+acknowledgement (step 10), and forwards an ACK that the command was executed back to the
+backend (step 11). This loop framing reflects that a real override may legitimately need to retry or
+re-issue the device command, not that the user repeats their request.
+
+Once the device confirms execution, the backend updates its dashboard data store (step 12, a selfcall corresponding to writing a new RelayStates row with CommandSource = Override, satisfying
+FR-LC-04) and returns 200 OK with state MANUAL and lighting 100 to the Angular Dashboard
+(step 13). The outcome is then resolved by an alt block: on [Success], the dashboard displays a
+MANUAL badge and updates its indicators (step 14), giving the instructor immediate visual
+confirmation that automation has been suspended for that relay, exactly as FR-LC-02 requires; on
+[Failure], the dashboard shows an error message instead (step 15), consistent with the same failvisibly principle used in the camera streaming workflow of Section 3.8.2. Independently of which
+branch was taken, the backend logs the action to the audit table with timestamp, user ID, action,
+and resulting state (step 16, a self-call) --- the direct execution of FR-MO-04 and FR-LC-04, and
+the reason the AuditLog table is defined as INSERT-only under NFR-SEC-03: this final step is not
+optional or conditional on success, because both a successful and a failed override attempt are
+governance-relevant events that must be attributable.
+
+Taken together with the other diagrams, this workflow demonstrates the precedence rule of FRMO-02 implicitly: because the override-creation path runs through the same role-validation selfcall at step 7, an administrator's request would be authorised to target any laboratory's relay, while
+an instructor's request is constrained to their own AssignedLabId, and a later administrator
+override on the same relay would simply repeat steps 6--16 and overwrite the active
+OverrideCommand row, which is why FR-MO-02 states that an administrator override supersedes
+an existing instructor override rather than being rejected by it.
+
+\subsection{Laboratory Transfer Request Workflow}
+
+This diagram has five lifelines --- Instructor, Angular Dashboard, ASP.NET Backend,
+Administrator, and Notification Service --- and models the governance workflow through which an
+instructor formally requests that their session be moved to a different laboratory, and an
+administrator reviews and resolves that request. It is the dynamic realisation of use case UC-06
+(Approve/Reject Transfer Requests) together with UC-04 (Submit Laboratory Transfer Request),
+
+37
+GreenLab --- Chapter 3: System Analysis
+
+
+and it exercises the TransferRequests table, the role-based authorisation layer (FR-AC), and the
+audit logging requirement (FR-MO-04) in a single end-to-end scenario.
+
+
+
+
+Figure 3.7: Sequence diagram --- laboratory transfer request workflow.
+
+The scenario opens with the Instructor logging in and opening the dashboard (step 1), protected by
+the same opt [Authentication] guard used in Section 3.8.3: the Angular Dashboard posts credentials
+to /api/auth/login (step 2), the ASP.NET Backend returns 200 OK with a JWT (step 3), and the
+dashboard loads (step 4). This authentication preamble is identical across all instructor-initiated
+workflows because FR-AC-01 applies uniformly --- no action is reachable without a verified
+identity and a role-scoped token.
+
+With a session established, the Instructor submits a transfer request through the dashboard form
+(step 5), and the Angular Dashboard posts it to /api/transfer/request with the JWT as a Bearer token
+(step 6). The backend validates the JWT and confirms the instructor role (step 7, a self-call) ---
+enforcing FR-AC-02 and FR-AC-03 at the middleware level before any business logic runs. Once
+authorised, the backend creates a new TransferRequests row with status PENDING (step 8, a selfcall), and returns 201 Created to the Angular Dashboard (step 9), which confirms the submission to
+38
+GreenLab --- Chapter 3: System Analysis
+
+
+the Instructor (step 10). This creation step is the direct execution of the Submit Laboratory Transfer
+Request use case (UC-04).
+
+The workflow then shifts to the administrator's side, modelled here as a separate lifeline that picks
+up asynchronously. A loop [Pending Requests] reflects that an administrator may review one or
+many pending requests in a single session. The Notification Service (step 11) alerts the
+Administrator that a new transfer request is awaiting review, and the Administrator retrieves the
+request details from the backend via GET /api/transfer/{id} (step 12), receiving the full
+TransferRequests record in response (step 13). The administrator then makes a resolution decision,
+captured by an alt block: on [Approve], the Angular Dashboard puts /api/transfer/{id}/approve
+(step 14), the backend updates the TransferRequests row to APPROVED (step 15, a self-call), and
+the Notification Service sends an approval notification to the Instructor (step 16); on [Reject], the
+Angular Dashboard puts /api/transfer/{id}/reject (step 17), the backend updates the row to
+REJECTED (step 18, a self-call), and the Notification Service sends a rejection notification instead
+(step 19). This branching realises the Approve/Reject Transfer Requests use case (UC-06) and its
+<<extend>> relationship: approval and rejection are both outcomes of the same review action rather
+than separate triggers.
+
+Independently of the resolution branch, the backend logs the entire transaction --- request creation,
+review, and outcome --- to the AuditLog table with timestamp, userID, action, and resulting state
+(step 20, a self-call), satisfying FR-MO-04 and the INSERT-only constraint of NFR-SEC-03. As in
+the manual override workflow, this logging step is unconditional: a rejected transfer request is as
+governance-relevant as an approved one, because the audit trail must be able to show not only what
+changes were made to laboratory assignments, but also which requests were considered and
+declined.
+
+Together, the four sequence diagrams of Section 3.8 demonstrate that GreenLab's governance
+model --- role-scoped tokens, explicit decision branches, mandatory audit records --- applies
+uniformly across automated, administrative, and instructor-initiated workflows rather than being
+confined to any single scenario.
+
+
+
+
+39
+GreenLab --- Chapter 3: System Analysis
+
+
+
+\section{Chapter Summary}
+
+This chapter established the analytical basis for the GreenLab system. Section 3.2 positioned
+GreenLab as a four-tier cyber-physical system shaped by two forces beyond simple sensor-to-relay
+automation: a temporal dimension driven by irregular academic scheduling, and a governance
+dimension driven by institutional accountability requirements --- and showed how both are
+answered by safe defaults at every tier rather than by assuming reliable connectivity. Section 3.3
+then positioned that same architecture commercially, using the Business Model Canvas to show
+that GreenLab's automation behaviour, governance controls, and reliability targets double as the
+value propositions, cost drivers, and revenue streams of a viable product rather than a prototype
+alone.
+
+Section 3.4 identified the six stakeholder groups --- Instructor, Administrator, Laboratory Staff,
+Student, IT Department, and Faculty Management --- whose concerns motivate every feature in the
+system. Section 3.5 converted those concerns into a formal use case model of thirteen use cases
+across two human and two automated actors, distinguishing governance actions that require an
+authenticated session from automation actions that run continuously.
+
+Sections 3.6 and 3.7 then fixed the testable requirement baseline for the rest of the project: thirtysix functional requirements across the nine areas of System Initialisation and Startup, Entry and
+Exit Detection, Occupancy Detection and Classification, Lighting Control, Ventilation Control,
+Monitoring and Dashboard, Manual Override, Fault Handling and Safety, and Authentication and
+Access Control; and the non-functional requirements spanning performance, reliability, security,
+usability, maintainability, and scalability. Every requirement identifier, threshold, and design target
+stated in these two sections is taken verbatim from the TA Reference Document and is treated in
+this project as the single source of truth, taking precedence over any earlier draft figures that may
+appear elsewhere.
+
+Finally, Section 3.8 validated that requirement baseline dynamically by walking through the four
+sequence diagrams produced for GreenLab. The occupancy-triggered automation workflow
+showed how a motion event, a YOLO-confirmed person count, and a debounce-aware decision
+combine to switch lighting and ventilation automatically. The live camera streaming workflow
+showed how the same camera infrastructure also serves a human administrator directly, with an
+explicit failure path rather than a silent one. The manual override workflow tied authentication, role
+40
+GreenLab --- Chapter 3: System Analysis
+
+
+validation, relay actuation, dashboard feedback, and audit logging into a single traceable scenario,
+demonstrating concretely how an override suppresses automation and how administrator
+precedence over instructor overrides is structurally guaranteed rather than merely documented. The
+laboratory transfer request workflow completed the picture by modelling the institutional
+governance process through which an instructor requests a room change and an administrator
+approves or rejects it, demonstrating that the same role-scoped authorisation, conditional
+branching, and unconditional audit logging that govern hardware-level actions apply equally to
+organisational workflows.
+
+Together, the business model, the stakeholder and use case analysis, the requirement tables, and the
+sequence diagram analysis in this chapter form the contract that the design chapter must satisfy:
+every component introduced in Chapter 4 --- the database schema, the REST API, the automation
+engine, the AI service, and the Angular dashboard --- exists because a specific requirement, use
+case, or sequence-diagram step in this chapter demands it.
+
+
+
+
+41

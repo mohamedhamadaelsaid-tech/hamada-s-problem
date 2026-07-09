@@ -1,0 +1,59 @@
+\begin{titlepage}
+	\centering
+
+	\includegraphics[width=2cm]{frontmatter/figures/logo-faculty.png}
+	\hfill
+	\includegraphics[width=2cm]{frontmatter/figures/logo-university.png}
+
+	\vspace{1cm}
+
+	{\large\scshape Graduation Project}
+
+	\vspace{1cm}
+
+	{\Huge\bfseries Badya}
+
+	\vspace{0.5cm}
+
+	{\Large An AI-Powered Immersive Language Learning Platform}
+	{\large\itshape Learn through immersion, not isolation}
+
+	\vfill
+
+	{\normalsize\bfseries Presented by}
+
+	\vspace{0.3cm}
+
+	\begin{tabular}{l l}
+		Mohamed El Saeed & Muhammad Abdulrahman \\
+		Mohamed Khaled   & Mahmoud Hassan       \\
+		Mohamed Marey    & Mohamad Ahmed        \\
+		Tamem Abdrabou   & Islam El Shahawy     \\
+		Hossam Fathy     & Mohamed Ibrahim      \\
+	\end{tabular}
+
+	\vfill
+
+	{\normalsize\bfseries Supervisors}
+
+	\vspace{0.1cm}
+
+	{\normalsize Dr. Ahmed Tolba\\
+	T.A. Asmaa Naguib}
+
+	\vfill
+
+	{\normalsize Computer Science}
+	\newline
+	{\small Mansoura University, Egypt}
+
+	\vspace{0.1cm}
+
+	{\normalsize 1\textsuperscript{st} July 2025}
+
+	\vfill
+
+	{\small Keywords: Educational Technology, Language Acquisition, Agentic Workflow, Gamification, Learning Management System}
+
+
+\end{titlepage}

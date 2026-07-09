@@ -1,0 +1,107 @@
+% ============================================
+% GreenLab -- Intelligent Laboratory Energy Management System
+% Preamble: Packages, style, and configuration
+% ============================================
+
+% --- Document class ---
+\documentclass[12pt,a4paper,twoside,openright]{book}
+
+% --- Page geometry ---
+\usepackage[top=2.5cm, bottom=2.5cm, left=3cm, right=2.5cm, headheight=14.5pt, includeheadfoot]{geometry}
+
+% --- Encoding and fonts ---
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% --- Language ---
+\usepackage[english]{babel}
+\usepackage{csquotes}
+
+% --- Mathematics ---
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+
+% --- Graphics and floats ---
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{wrapfig}
+
+% --- Tables ---
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{rotating}
+
+% --- Colors ---
+\usepackage{xcolor}
+\definecolor{primaryblue}{RGB}{0, 82, 136}
+\definecolor{accentgreen}{RGB}{46, 125, 50}
+\definecolor{lightgray}{RGB}{245, 245, 245}
+\definecolor{codebg}{RGB}{247, 247, 247}
+
+% --- Code listings ---
+\usepackage{listings}
+\lstset{
+    basicstyle=\small\ttfamily,
+    backgroundcolor=\color{codebg},
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    breaklines=true,
+    tabsize=4,
+    captionpos=b,
+    showstringspaces=false,
+    keywordstyle=\color{primaryblue},
+    stringstyle=\color{accentgreen},
+    commentstyle=\color{gray}\itshape
+}
+
+% --- Hyperlinks ---
+\usepackage[colorlinks=true, linkcolor=primaryblue, citecolor=accentgreen, urlcolor=primaryblue]{hyperref}
+
+% --- Header and footer ---
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\textit{\nouppercase{\leftmark}}}
+\fancyhead[RO]{\textit{\nouppercase{\rightmark}}}
+\fancyfoot[LE,RO]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% --- Table of contents ---
+\usepackage{tocloft}
+\renewcommand{\cftchapfont}{\bfseries}
+\renewcommand{\cftchappagefont}{\bfseries}
+\renewcommand{\cftchapleader}{\cftdotfill{\cftdotsep}}
+
+% --- Captions ---
+\captionsetup{font=small, labelfont=bf, justification=centering}
+
+% --- Enumerations ---
+\usepackage{enumitem}
+\setlist{noitemsep, topsep=4pt}
+
+% --- Appendix ---
+\usepackage[titletoc]{appendix}
+
+% --- URLs ---
+\usepackage{url}
+
+% --- Bibliography ---
+\usepackage[backend=bibtex, style=numeric, sorting=none]{biblatex}
+\addbibresource{references.bib}
+
+% --- Custom commands ---
+\newcommand{\GreenLab}{\textsc{GreenLab}}
+\newcommand{\ie}{i.\,e.}
+\newcommand{\eg}{e.\,g.}
+\newcommand{\etal}{\textit{et~al.}}
+
+

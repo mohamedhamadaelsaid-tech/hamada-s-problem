@@ -1,0 +1,66 @@
+% ============================================
+% GreenLab -- Intelligent Laboratory Energy Management System
+% Main document
+% ============================================
+
+\input{preamble}
+
+\begin{document}
+
+% --- Front matter ---
+\frontmatter
+\input{titlepage}
+\cleardoublepage
+
+% --- Abstract ---
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+\GreenLab{} is an intelligent energy management system designed for computer science faculty laboratories. The system combines embedded sensing, automated appliance control, computer-vision occupancy estimation, backend decision logic, role-based monitoring, and manual override through a web dashboard. The hardware layer is centred on an ESP32 microcontroller connected to environmental sensors and a relay module. The artificial-intelligence layer uses camera frames and a YOLO-based model to estimate the number of occupants. The backend layer receives sensor and occupancy data, applies operational rules, stores audit records, and exposes secure REST endpoints. The frontend layer presents real-time status, laboratory assignments, manual controls, and administrative actions through an Angular single-page application dashboard.
+
+The project addresses the limitations of purely manual control and purely schedule-based automation by providing a multimodal, governed approach that integrates authentication, authorisation, override management, transfer approvals, fault handling, and audit logging within a single four-tier architecture.
+
+\vspace{0.5cm}
+\textbf{Keywords:} IoT, energy management, smart building, ESP32, YOLO, occupancy detection, laboratory automation, Angular, ASP.NET Core
+
+% --- Table of Contents ---
+\newpage
+\tableofcontents
+\cleardoublepage
+
+% --- List of Figures ---
+\listoffigures
+\cleardoublepage
+
+% --- List of Tables ---
+\listoftables
+\cleardoublepage
+
+% --- Main content ---
+\mainmatter
+
+% Part I: Foundation
+\part{Foundation and Analysis}
+\include{chapters/chapter1}    % Introduction
+\include{chapters/chapter2}    % Literature Review
+\include{chapters/chapter3}    % System Analysis
+
+% Part II: Design and Implementation
+\part{Design and Implementation}
+\include{chapters/chapter4}    % System Design
+\include{chapters/chapter5}    % Implementation
+
+% Part III: Closure
+\part{Closure}
+\include{chapters/chapter6}    % Conclusions, Limitations, Future Work
+
+% --- Appendices ---
+\begin{appendices}
+\include{chapters/appendix_a}  % Bill of Materials
+\end{appendices}
+
+% --- Bibliography ---
+\backmatter
+\printbibliography[heading=bibintoc]
+
+\end{document}
