@@ -1,0 +1,1005 @@
+\chapter{System Design}
+System Design
+
+This chapter translates the functional and non-functional requirements established in
+
+Chapter 3 into a complete, concrete design for GreenLab. The design is organised across
+
+eight sections that follow the system's four-tier structure: hardware layer (Section 4.2),
+
+Python AI service (Section 4.3), ASP.NET Core backend including the database, REST API,
+
+automation engine, and security design (Sections 4.4--4.7), and Angular dashboard
+
+frontend (Section 4.8). Each section specifies the component topology, interface contracts,
+
+data flows, and decision logic with sufficient precision to guide a direct implementation.
+
+Two conventions hold throughout this chapter. First, all four tiers are referred to by their
+
+fixed names --- the hardware layer, the Python AI service, the ASP.NET Core backend,
+
+and the Angular dashboard --- consistent with the terminology established in Chapter 1
+
+and formalised in Chapter 3. Second, every design decision that implements a specific
+
+requirement cites the requirement's identifier (FR-XX-NN or NFR-XX-NN) so that the
+
+design can be traced backward to the requirement it satisfies and forward to the
+
+implementation described in Chapter 5.
+
+
+\section{Four-Tier Architecture Overview}
+GreenLab is structured as a four-tier cyber-physical system. Each tier owns a single, well-
+
+bounded responsibility and communicates with its neighbours through a defined
+
+interface, so that a change within one tier --- replacing the YOLO model, redesigning the
+
+dashboard, or extending the database schema --- does not require a corresponding
+
+change in any other tier.
+
+\begin{longtable}{|L{2.5cm}|L{5.5cm}|L{5.0cm}|}
+\caption{GreenLab four-tier architecture --- tiers, responsibilities, and technologies.} \label{tab:4-1} \\
+\hline
+\rowcolor{tableheadergray}
+\textbf{Tier Name} & \textbf{Primary Responsibility} & \textbf{Core Technology} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{tableheadergray}
+\textbf{Tier Name} & \textbf{Primary Responsibility} & \textbf{Core Technology} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+Hardware Layer & Sense the physical laboratory environment every polling cycle; actuate relay-controlled appliances on command received from the backend; maintain JWT-authenticated HTTP communication; fall back to local logic on network loss. & ESP32 microcontroller, DHT11, HC-SR04, LDR, 2-channel relay module, Arduino C++ firmware, WiFi HTTP client \\
+\hline
+Python AI Service & Receive IP camera stream frames; run YOLO-based person detection using ByteTrack persistent tracking; maintain per-camera state and return a stable, de-duplicated person count on demand. & Python 3, FastAPI, Ultralytics YOLO (yolo11n.pt), OpenCV, ByteTrack tracker, uvicorn \\
+\hline
+ASP.NET Core Backend & Receive sensor telemetry from the hardware layer; query the AI service for occupancy count; evaluate the lighting decision matrix and fan activation table; persist all state changes and issue authenticated relay commands; enforce role-based access control and maintain an immutable audit log. & ASP.NET Core 8, Entity Framework Core, SQL Server, JWT Bearer authentication, REST API (Swagger/OpenAPI) \\
+\hline
+Angular Dashboard & Present real-time laboratory status to authenticated instructors and administrators; issue timed manual override commands; submit laboratory transfer requests; expose administrative controls for labs, devices, users, schedules, and audit logs. & Angular 17, TypeScript, HTTP Client, reactive forms, REST API consumer \\
+\hline
+\end{longtable}
+
+The communication paths between tiers are: the hardware layer POSTs sensor events to
+
+the backend via HTTP and receives relay instructions in the JSON response body; the
+
+backend GETs the current person count from the Python AI service's /current-count
+
+endpoint on demand; and the Angular dashboard communicates with the backend
+
+exclusively through the authenticated REST API. There is no direct channel between the
+
+hardware layer and the dashboard, or between the hardware layer and the AI service ---
+
+all routing passes through the backend.
+
+
+\subsection{Data Flow Diagrams}
+To complement the tier-level architecture in Table 4.1, this section presents two
+
+complementary data flow diagrams (DFDs) that trace how information moves through
+
+
+GreenLab at increasing levels of detail. The context-level diagram (Figure 4.1) treats the
+
+system as a single process and defines its boundary with the four external actors, while
+
+
+the Level-1 diagram (Figure 4.2) decomposes that single process into the five functional
+
+processes and three persistent data stores that realise the tier responsibilities
+
+summarised above.
+
+
+% --- FIGURE PLACEHOLDER: Figure 4.1 ---
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.6\textwidth]{figures/figure-4-1.png}
+  \caption{GreenLab context-level data flow diagram (DFD Level 0) --- the system as a}
+  \label{fig:4-1}
+\end{figure}
+
+Figure 4.1: GreenLab context-level data flow diagram (DFD Level 0) --- the system as a
+
+single process bounded by four external actors and three data stores.
+
+The context diagram fixes the system boundary. Two human actors --- the Instructor and
+
+the Administrator --- and two hardware actors --- the ESP32 hardware and the IP camera
+
+--- exchange data exclusively with the GreenLab System process. The instructor issues
+
+manual override commands and laboratory transfer requests and receives lab status and
+
+override confirmations in return; the administrator issues user, device, and schedule
+
+management commands and transfer decisions, and receives lab status, audit log entries,
+
+and alerts. The ESP32 hardware reports sensor events --- motion, distance, LDR,
+
+temperature, and humidity readings --- and receives relay commands for light and fan
+
+control, while the IP camera contributes a continuous video frame stream. Internally, the
+
+system persists data to three stores: the Sensor/Device Data Store, the Schedule \& User
+
+Management DB, and the Audit Log Archive.
+
+
+% --- FIGURE PLACEHOLDER: Figure 4.2 ---
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.6\textwidth]{figures/figure-4-2.png}
+  \caption{GreenLab Level-1 data flow diagram --- decomposition of the}
+  \label{fig:4-2}
+\end{figure}
+
+Figure 4.2: GreenLab Level-1 data flow diagram --- decomposition of the
+
+GreenLab System processinto five functional processes and three data stores.
+
+The Level-1 diagram decomposes the single context process into the five processes that
+
+map directly onto the tier responsibilities in Table 4.1. Process 1.0 (Authenticate User)
+
+validates instructor and administrator credentials against D2 --- User \& Schedule Data
+
+before routing role-scoped commands onward. Process 2.0 (Process Sensor Event)
+
+receives sensor readings from the ESP32 hardware and the video frame stream from the
+
+IP camera, persists them to D1 --- Sensor/Device Data, and forwards occupancy-relevant
+
+events onward. Process 3.0 (Manage Devices) issues relay commands --- light and fan
+
+control --- back to the ESP32 hardware and handles instructor override requests
+
+validated by Process 1.0. Process 4.0 (Manage Lab Schedule) and Process 5.0 (Generate
+
+Logs \& Alerts) close the loop by managing transfer requests and writing every state
+
+change to D3 --- Audit Log, from which lab status, alerts, and audit records are returned
+
+to both the instructor and the administrator.
+
+
+\section{Hardware Layer Design}
+
+\subsection{Component Topology}
+The hardware layer is built around a single ESP32 microcontroller that reads four
+
+physical sensors and drives two relay channels. The following pin assignments are taken
+
+directly from the implemented firmware and govern both the circuit layout and the
+
+software configuration.
+
+\begin{longtable}{|L{2.5cm}|L{2.5cm}|L{1.5cm}|L{4.5cm}|L{2.5cm}|}
+\caption{ESP32 pin assignments and sensor specifications.} \label{tab:4-2} \\
+\hline
+\rowcolor{tableheadergray}
+\textbf{Component} & \textbf{GPIO Pin(s)} & \textbf{Signal Type} & \textbf{Function} & \textbf{Threshold / Range} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{tableheadergray}
+\textbf{Component} & \textbf{GPIO Pin(s)} & \textbf{Signal Type} & \textbf{Function} & \textbf{Threshold / Range} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+HC-SR04 Ultrasonic & TRIG: GPIO 4 / ECHO: GPIO 2 & Digital / PWM & Entry and proximity detection --- triggers a sensor event when an object is within threshold distance. & Trigger if distance <= 50 cm; timeout at 30 000 µs \\
+\hline
+DHT11 Temperature \& Humidity & GPIO 5 & Single-wire digital & Environmental monitoring --- temperature and humidity readings included in every sensor event payload. & Temperature 0--50 $^{\circ}$C; Humidity 20--90\% RH; read on every loop iteration \\
+\hline
+LDR (Light-Dependent Resistor) & GPIO 34 & Analogue (ADC) 0--4095 & Natural-light level monitoring --- determines whether artificial lighting is needed. & Dark < 1000; Dim 1000--2500; Bright > 2500 (12-bit ADC, 0--4095) \\
+\hline
+Relay Channel 1 (Light) & GPIO 26 & Digital output & Controls laboratory lighting circuit 1. & LOW = ON (active-low relay); HIGH = OFF; default HIGH (safe-off) at startup \\
+\hline
+Relay Channel 2 (Fan) & GPIO 27 & Digital output & Controls laboratory ventilation fan circuit 1. & LOW = ON (active-low relay); HIGH = OFF; default HIGH (safe-off) at startup \\
+\hline
+\end{longtable}
+
+The following figure shows the complete wiring diagram for the hardware layer
+
+prototype.
+
+
+% --- FIGURE PLACEHOLDER: Figure 4.3 ---
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.6\textwidth]{figures/figure-4-3.png}
+  \caption{ESP32 hardware layer wiring diagram --- HC-SR04 ultrasonic sensor (top),}
+  \label{fig:4-3}
+\end{figure}
+
+Figure 4.3: ESP32 hardware layer wiring diagram --- HC-SR04 ultrasonic sensor (top),
+
+DHT11 temperature/humidity sensor (left), LDR light sensor module (right), and two relay
+
+modules (bottom left and right) connected to the central ESP32 microcontroller.
+
+
+\subsection{Firmware Architecture}
+The firmware is structured around three concurrent concerns: JWT lifecycle
+
+management, sensor polling and HTTP event reporting, and a local WebServer that
+
+receives direct relay commands from the backend when the backend needs to override
+
+the automatic state. These three concerns interact through a set of shared state variables
+
+that are read in the main loop and written by either the event-response handler or the
+
+WebServer route handlers.
+
+JWT Authentication Lifecycle
+
+The firmware maintains a JWT token obtained from POST /api/devices/token with a
+
+payload containing labId, deviceId, and a device password. The token is cached in a
+
+global string and its expiry is tracked by recording millis() + 50 minutes at the time of
+
+issue, which approximates the server-side expiry without requiring the firmware to
+
+parse ISO 8601 timestamps. On every outbound HTTP request, ensureTokenValid()
+
+checks whether the cached token has expired; if so, it calls refreshToken() before
+
+proceeding. If a live request receives a 401 Unauthorized response, the firmware
+
+performs a single in-flight token refresh and retries the request with the new token
+
+before treating the failure as terminal. This design satisfies NFR-SEC-01 (authenticated
+
+device communication) without requiring a real-time clock module.
+
+Sensor Polling and Event Reporting
+
+The main loop runs at approximately 100 ms intervals (governed by the terminal
+
+delay(100) call). On each iteration, the loop reads the HC-SR04 distance, the LDR analogue
+
+value, and the DHT11 temperature and humidity. A proximity event is triggered when
+
+distance <= 50 cm AND the previous reading was not near (rising-edge detection via the
+
+wasNear flag) AND at least 2 000 ms have elapsed since the last event (debounce via
+
+COOLDOWN). This edge-detection pattern prevents continuous event flooding while
+
+ensuring the backend is notified of every genuine entry event, satisfying FR-EE-01 and
+
+FR-EE-02.
+
+When a proximity event fires, the firmware calls sendMotionRequest() which POSTs a
+
+JSON payload containing motionDetected, distanceCm, ldrValue, temperatureCelsius, and
+
+humidity to POST /api/devices/\{labId\}/event. The backend processes this event, evaluates
+
+the automation engine, and returns a JSON response containing: lightOn, fanOn,
+
+relay3On, relay4On, occupancyCount, and motionIgnored. The firmware parses this
+
+response and actuates the relays accordingly. If occupancyCount is 0, both relays are
+
+forced OFF regardless of any other flags, implementing the empty-room safe-off rule.
+
+Local WebServer for Direct Override
+
+In parallel with the main loop, the firmware runs a WebServer on port 80 that exposes
+
+four endpoints: GET /light/on, GET /light/off, GET /fan/on, GET /fan/off. These endpoints
+
+allow the backend to issue direct relay commands to the ESP32 when a manual override
+
+is activated through the dashboard (FR-MO-01). The WebServer is serviced by calling
+
+server.handleClient() on every main loop iteration, so it shares the same thread as the
+
+sensor loop; the design relies on the low duty cycle of sensor reads and the short HTTP
+
+response time of the relay handlers to avoid contention.
+
+Network Resilience and Fallback
+
+If WiFi.status() is not WL\_CONNECTED at the top of the main loop, the firmware attempts
+
+reconnection every 5 000 ms and returns early from the loop body without sending any
+
+HTTP requests. If the backend returns an empty response (connection failure, timeout),
+
+the firmware falls back to local control logic: it compares the current LDR reading
+
+against LIGHT\_THRESHOLD (2 000) and directly controls Relay 1 based on the result. This
+
+local fallback satisfies NFR-RES-01 (continued basic operation during network loss).
+
+
+\section{Python AI Service Design}
+
+\subsection{Service Architecture}
+The Python AI service is a FastAPI application that runs on port 8000 and exposes two
+
+endpoints: GET /current-count and GET /health. It is designed as a stateful streaming
+
+service: a dedicated per-camera background thread continuously reads frames from a
+
+camera stream, runs YOLO ByteTrack inference, and updates a shared in-memory count
+
+that the endpoint returns synchronously. This design avoids per-request camera
+
+initialisation overhead and provides sub-second response times to the backend's polling
+
+requests.
+
+
+\subsection{Model and Inference Pipeline}
+The service loads a single YOLO model instance (yolo11n.pt --- the nano variant) at
+
+startup using a thread-safe double-checked locking pattern, ensuring the model is loaded
+
+exactly once regardless of concurrent request traffic. The model is placed on the CPU
+
+(MODEL\_DEVICE = 'cpu') to maintain compatibility with deployment environments that
+
+do not have a dedicated GPU. Inference runs via model.track() with the following fixed
+
+configuration:
+
+\begin{longtable}{|L{3.2cm}|L{3.2cm}|L{6.2cm}|}
+\caption{Python AI service inference configuration parameters.} \label{tab:4-3} \\
+\hline
+\rowcolor{tableheadergray}
+\textbf{Parameter} & \textbf{Value} & \textbf{Rationale} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{tableheadergray}
+\textbf{Parameter} & \textbf{Value} & \textbf{Rationale} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+Model & yolo11n.pt & Nano variant --- lowest parameter count; runs within CPU budget for real-time building automation \\
+\hline
+Tracker & bytetrack.yaml & ByteTrack persistent tracking assigns stable IDs across frames, preventing the ID-fragmentation overcounting problem documented by Kim et al. \\
+\hline
+imgsz & 320 & Reduced input size --- halves inference time relative to 640 with acceptable accuracy loss for occupancy counting \\
+\hline
+conf (CONFIDENCE	extunderscore THRESHOLD) & 0.5 & Minimum detection confidence; filters spurious low-confidence boxes while retaining seated occupants partially occluded by desk equipment \\
+\hline
+classes & [0] & Person class only --- eliminates false positives from chairs, bags, and other indoor objects \\
+\hline
+FRAME	extunderscore SKIP & 3 & Inference runs every 3rd frame, reducing CPU load by about 67\% while maintaining adequate count update frequency \\
+\hline
+persist & true & Enables ByteTrack cross-frame ID persistence --- the key to stable, non-inflated counts \\
+\hline
+\end{longtable}
+
+
+\subsection{Camera Source Abstraction}
+The service decouples camera URL resolution from the inference loop through the
+
+camera\_sources module. The resolve\_source() function accepts any of the following
+
+source formats and normalises them to a value that cv2.VideoCapture accepts:
+
+* USB device: usb:0, usb:1 -> integer device index
+
+* Network stream (passed through unchanged): http://, https://, rtsp://
+
+* Video file by extension:.mp4,.avi,.mov,.mkv,.flv,.ts
+
+* Bare IPv4 address (DroidCam backward compatibility): 192.168.x.x ->
+
+http://192.168.x.x:4747/video
+
+This abstraction means the backend can register any IP camera by simply passing its IP
+
+address to the /current-count?ip= endpoint, without the service requiring per-camera
+
+configuration at deployment time.
+
+
+\subsection{Camera Lifecycle Management}
+Each distinct stream URL is registered in an in-memory \_cameras dictionary keyed by
+
+the resolved URL string. A per-camera CameraState dataclass holds the current count,
+
+connection status, a threading.Event that signals when the first frame has been
+
+processed, and a last\_access timestamp. A background cleanup worker runs every 60
+
+seconds and removes camera entries that have not been accessed for more than 300
+
+seconds, releasing the camera thread and freeing the VideoCapture resource. This design
+
+ensures the service does not accumulate idle threads for cameras that the backend has
+
+stopped querying.
+
+
+\subsection{Backend Integration Contract}
+The backend integrates with the AI service through a single polling call:
+
+GET http://\{AI\_SERVICE\_HOST\}:8000/current-count?ip=\{CAMERA\_IP\}\&port=\{PORT\}
+
+The response JSON is:
+
+\{ "camera": "<resolved\_url>", "people\_count": <int>, "connected": <bool> \}
+
+The backend maps the people\_count integer to an occupancy classification (Empty = 0,
+
+Low = 1--5, Moderate = 6--15, High > 15) and passes this classification into the lighting
+
+decision matrix and fan activation table described in Section 4.5.
+
+
+\section{Database Design}
+
+\subsection{Schema Overview}
+The GreenLab database contains eleven tables managed by Entity Framework Core with
+
+a SQL Server provider. The schema is structured around three functional domains:
+
+laboratory management (Labs, LabSensors, LabDevices, StaffLabAssignment),
+
+operational control (LabControlOverrides, ManualControlCommands,
+
+LabSectionSchedules, LabChangeRequests), and audit and identity (Users, AuditLogs,
+
+ScheduleImageImports). The \_EFMigrationsHistory table is managed automatically by EF
+
+Core and is not part of the application domain.
+
+The following figure shows the complete entity-relationship diagram for the GreenLab
+
+database.
+
+
+% --- FIGURE PLACEHOLDER: Figure 4.4 ---
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.6\textwidth]{figures/figure-4-4.png}
+  \caption{GreenLab database entity-relationship diagram --- 11 application tables}
+  \label{fig:4-4}
+\end{figure}
+
+Figure 4.4: GreenLab database entity-relationship diagram --- 11 application tables
+
+spanning laboratory management, operational control, and audit/identity domains.
+
+
+\subsection{Table Specifications}
+\begin{longtable}{|L{2.5cm}|L{3.0cm}|L{5.0cm}|L{3.5cm}|}
+\caption{GreenLab database table definitions and key columns.} \label{tab:4-4} \\
+\hline
+\rowcolor{tableheadergray}
+\textbf{Table} & \textbf{Purpose} & \textbf{Key Columns} & \textbf{Notable Constraints} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{tableheadergray}
+\textbf{Table} & \textbf{Purpose} & \textbf{Key Columns} & \textbf{Notable Constraints} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+Labs & Master record for each physical laboratory & Id (PK), Name, LightThreshold, TempFanOnThreshold, ClubCode, LabOccupancyCount, CameraResult & LightThreshold and TempFanOnThreshold store per-lab calibration values; updated on every sensor event \\
+\hline
+Users & Authenticated system users (instructors, administrators, service accounts) & Id (PK), Email, FullName, PasswordHash, Role, CreatedAt & Role is an enum (Admin, Staff, Device); PasswordHash stores BCrypt-hashed credentials; Email is unique \\
+\hline
+LabSensors & Registered sensor hardware within each laboratory & Id (PK), LabDeviceId (FK), LabId (FK), Name, SensorType, Unit, IsActive & SensorType constrains interpretation; IsActive allows soft-disable without deletion \\
+\hline
+LabDevices & ESP32 or other IoT controller nodes registered per laboratory & Id (PK), LabId (FK), Name, DevicePasswordHash, DeviceType, IsActive, LastSeen & DevicePasswordHash enables the device-level JWT token endpoint; LastSeen updated on every event receipt \\
+\hline
+StaffLab \newline Assignment & Tracks which instructor is currently assigned to which laboratory & Id (PK), UserId (FK), LabId (FK), DayOfWeek, StartTime, EndTime, ValidFrom, ValidUntil, AssignmentSource & ValidFrom/ValidUntil support time-bounded assignments; AssignmentSource distinguishes manual vs schedule-import assignments \\
+\hline
+LabControl\newline Overrides & Records the current manual override state for each laboratory & Id (PK), LabId (FK), SetByUserId, MotionSensorDisabled, ForceLightOn, ForceRelayOn, ForceRelay2On, ForceRelay3On, ForceRelay4On, UpdatedAt & Provides the actor link to AuditLogs; UpdatedAt enables expiry evaluation \\
+\hline
+ManualControl\newline Commands & Log of every manual relay command issued through the dashboard & Id (PK), LabId (FK), RequestedByUserId (FK), Target, RequestedValue, CommandStatus, RequestedAt, AcknowledgedAt & Target identifies which relay; CommandStatus tracks pending/executed/failed lifecycle; AcknowledgedAt records ESP32 confirmation \\
+\hline
+LabSection \newline Schedules & Timetable sessions imported or manually created for each laboratory & Id (PK), LabId (FK), DayOfWeek, StartTime, EndTime, CourseName, AcademicTerm & Imported from schedule-import pipeline; used by the backend to determine scheduled-active periods \\
+\hline
+LabChange\newline Requests & Instructor requests to transfer a laboratory assignment & Id (PK), RequestedByUserId (FK), FromLabId (FK), ToLabId (FK), SectionStart, SectionEnd, RequestedAt, Status, ReviewedByUserId, ReviewedAt & Status lifecycle: Pending $\rightarrow$ Approved/Rejected; ReviewedByUserId records the administrator who actioned it \\
+\hline
+ScheduleImage\newline Imports & Metadata for schedule images uploaded for AI-assisted parsing & Id (PK), FileName, StoredPath, ContentType, FileSizeBytes, UploadedByUserId, UploadedAt, Notes & Supports the schedule-import workflow (POST /api/admin/schedules\newline /import-image $\rightarrow$ analyze $\rightarrow$ apply) \\
+\hline
+AuditLogs & Immutable record of every state-changing action in the system & Id (PK), Action, Details, Entity, UserId (FK), CreatedAt & INSERT-only by design; no UPDATE or DELETE permissions granted to the application user; CreatedAt is server-assigned \\
+\hline
+\end{longtable}
+
+
+\section{Automation Engine Design}
+
+\subsection{Occupancy Classification}
+The backend maps the raw people\_count integer returned by the AI service to a four-
+
+level occupancy classification before applying either control matrix. This classification
+
+step decouples the relay-control logic from the precise count value, making the decision
+
+rules stable under small frame-to-frame count fluctuations.
+
+\begin{longtable}{|L{3.2cm}|L{2.4cm}|L{6.8cm}|}
+\caption{Occupancy classification thresholds.} \label{tab:4-5} \\
+\hline
+\rowcolor{tableheadergray}
+\textbf{Classification} & \textbf{people\_count Range} & \textbf{Relay Behaviour} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{tableheadergray}
+\textbf{Classification} & \textbf{people\_count Range} & \textbf{Relay Behaviour} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+Empty & 0 & All relays forced OFF --- hardcoded safe-off rule that cannot be overridden by lighting/fan matrices \\
+\hline
+Low & 1--5 & Lighting decision matrix evaluated with LDR; fan activation table evaluated with temperature \\
+\hline
+Moderate & 6--15 & As Low --- same matrix evaluation; fan may activate at a lower temperature threshold \\
+\hline
+High & $>$ 15 & As Low/Moderate --- fan activation priority elevated; lighting assumed required regardless of LDR \\
+\hline
+\end{longtable}
+
+
+\subsection{Lighting Decision Matrix}
+The lighting decision matrix combines three inputs --- LDR zone, occupancy
+
+classification, and the current manual override state --- to determine the value of lightOn
+
+in the event response. LDR zones are derived from the per-lab LightThreshold column in
+
+the Labs table, which allows each laboratory to be calibrated independently.
+
+\begin{longtable}{|L{2.6cm}|L{2.0cm}|L{2.0cm}|L{2.0cm}|L{2.0cm}|}
+\caption{Lighting decision matrix (LDR Zone x Occupancy Classification $\rightarrow$ lightOn).} \label{tab:4-6} \\
+\hline
+\rowcolor{tableheadergray}
+\textbf{LDR Zone} & \textbf{Empty} & \textbf{Low} & \textbf{Moderate} & \textbf{High} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{tableheadergray}
+\textbf{LDR Zone} & \textbf{Empty} & \textbf{Low} & \textbf{Moderate} & \textbf{High} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+Dark ($<$ LightThreshold) & OFF (safe-off) & ON & ON & ON \\
+\hline
+Dim (LightThreshold $\times$ 0.5 -- LightThreshold) & OFF (safe-off) & ON & ON & ON \\
+\hline
+Adequate (LightThreshold -- LightThreshold $\times$ 1.5) & OFF (safe-off) & OFF (natural light sufficient) & OFF (natural light sufficient) & ON (high density overrides natural light) \\
+\hline
+Bright ($>$ LightThreshold $\times$ 1.5) & OFF (safe-off) & OFF & OFF & OFF \\
+\hline
+\end{longtable}
+
+Manual override (LabControlOverrides.ForceLightOn = true) short-circuits the matrix
+
+entirely and sets lightOn = true regardless of LDR or occupancy. The backend writes an
+
+AuditLog entry for every override activation and deactivation, recording the actor, the
+
+previous state, and the timestamp.
+
+
+\subsection{Fan Activation Table}
+The fan activation table maps temperature zone (derived from the per-lab
+
+TempFanOnThreshold column) and occupancy classification to the value of fanOn in the
+
+event response.
+
+\begin{longtable}{|L{3.4cm}|L{1.8cm}|L{1.8cm}|L{1.8cm}|L{1.8cm}|}
+\caption{Fan activation table (Temperature Zone x Occupancy Classification $\rightarrow$ fanOn).} \label{tab:4-7} \\
+\hline
+\rowcolor{tableheadergray}
+\textbf{Temperature Zone} & \textbf{Empty} & \textbf{Low} & \textbf{Moderate} & \textbf{High} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{tableheadergray}
+\textbf{Temperature Zone} & \textbf{Empty} & \textbf{Low} & \textbf{Moderate} & \textbf{High} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+Cool ($<$ TempFanOnThreshold $-$ 5 $^{\circ}$C) & OFF & OFF & OFF & OFF \\
+\hline
+Comfortable (TempFanOnThreshold $-$ 5 $^{\circ}$C to TempFanOnThreshold) & OFF & OFF & OFF & ON \\
+\hline
+Warm (TempFanOnThreshold to TempFanOnThreshold $+$ 5 $^{\circ}$C) & OFF & ON & ON & ON \\
+\hline
+Hot ($>$ TempFanOnThreshold $+$ 5 $^{\circ}$C) & OFF & ON & ON & ON \\
+\hline
+\end{longtable}
+
+As with lighting, ForceRelay2On = true in LabControlOverrides overrides the fan table
+
+and forces fanOn = true. The Empty safe-off rule applies to fans as it does to lights:
+
+occupancyCount = 0 forces all relays OFF before the fan table is evaluated.
+
+
+\section{REST API Design}
+
+\subsection{API Structure}
+The GreenLab REST API is implemented in ASP.NET Core 8 and documented through
+
+Swagger/OpenAPI. Endpoints are organised into five groups, each with its own controller
+
+and role-based authorization policy: Auth, Devices, Schedules (admin), Staff, and
+
+AdminLabs. All endpoints require HTTPS in production. The lock icon visible in the API
+
+documentation confirms that every endpoint requires a valid JWT Bearer token; the sole
+
+exception is POST /api/Auth/login, which issues the token.
+
+
+\subsection{Complete Endpoint Catalogue}
+{\small\sloppy
+\begin{longtable}{|L{1.8cm}|L{0.8cm}|L{5.2cm}|L{1.8cm}|L{4.5cm}|}
+\caption{Full GreenLab REST API endpoint catalogue.} \label{tab:4-8} \\
+\hline
+\rowcolor{tableheadergray}
+\textbf{Group} & \textbf{Method} & \textbf{Path} & \textbf{Authorised Role(s)} & \textbf{Description} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{tableheadergray}
+\textbf{Group} & \textbf{Method} & \textbf{Path} & \textbf{Authorised Role(s)} & \textbf{Description} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+Auth & POST & /api/Auth/login & None (public) & Authenticate a user with email and password; returns JWT Bearer token and expiry \\
+\hline
+Devices & POST & /api/devices/\{labId\}/event & Device (JWT) & Receive sensor event from ESP32; evaluate automation engine; return relay command response (lightOn, fanOn, relay3On, relay4On, occupancyCount, motionIgnored) \\
+\hline
+Devices & POST & /api/devices/token & None (device password) & Issue a JWT token to an authenticated ESP32 device using labId, deviceId, and device password \\
+\hline
+Devices & POST & /api/devices & Admin & Register a new IoT device in the system \\
+\hline
+Devices & GET & /api/devices/light & Admin, Staff & Retrieve current light state for all registered devices \\
+\hline
+Schedules & POST & /api/admin/schedules/import-image & Admin & Upload a timetable image for AI-assisted schedule extraction \\
+\hline
+Schedules & POST & /api/admin/schedules/import-data & Admin & Manually submit parsed schedule data for a laboratory \\
+\hline
+Schedules & GET & /api/admin/schedules/imports & Admin & List all schedule import records \\
+\hline
+Schedules & POST & /api/admin/schedules/analyze-image & Admin & Trigger AI analysis of the most recently uploaded schedule image \\
+\hline
+Schedules & POST & /api/admin/schedules/analyze-import/\{importId\} & Admin & Trigger AI analysis of a specific uploaded schedule image by import ID \\
+\hline
+Schedules & POST & /api/admin/schedules/apply-analysis & Admin & Apply the results of an analysed schedule import to the LabSectionSchedules table \\
+\hline
+Staff & GET & /api/staff/me/current-labs & Staff & Return the list of laboratories currently assigned to the authenticated instructor \\
+\hline
+Staff & POST & /api/staff/labs/\{labId\}/override & Staff & Issue a manual override command for the specified laboratory (activates ForceLightOn or ForceRelay2On) \\
+\hline
+Staff & POST & /api/staff/lab-change-requests & Staff & Submit a laboratory transfer request (Pending status) \\
+\hline
+Staff & GET & /api/staff/lab-change-requests/mine & Staff & List all transfer requests submitted by the authenticated instructor \\
+\hline
+AdminLabs & GET & /api/admin/labs & Admin & List all registered laboratories \\
+\hline
+AdminLabs & POST & /api/admin/labs & Admin & Create a new laboratory record \\
+\hline
+AdminLabs & GET & /api/admin/labs/\{id\} & Admin & Retrieve a single laboratory by ID \\
+\hline
+AdminLabs & PUT & /api/admin/labs/\{id\} & Admin & Update laboratory configuration (name, thresholds, club code) \\
+\hline
+AdminLabs & DELETE & /api/admin/labs/\{id\} & Admin & Delete a laboratory record (soft or hard delete per policy) \\
+\hline
+AdminLabs & POST & /api/admin/labs/\{id\}/sections & Admin & Add a timetable section directly to a laboratory \\
+\hline
+AdminLabs & GET & /api/admin/labs/\{labId\}/devices & Admin & List all devices registered to a laboratory \\
+\hline
+AdminLabs & POST & /api/admin/labs/\{labId\}/devices & Admin & Register a new device for a laboratory \\
+\hline
+AdminLabs & GET & /api/admin/labs/\{labId\}/devices/\{deviceId\} & Admin & Retrieve a specific device record \\
+\hline
+AdminLabs & PUT & /api/admin/labs/\{labId\}/devices/\{deviceId\} & Admin & Update device configuration \\
+\hline
+AdminLabs & DELETE & /api/admin/labs/\{labId\}/devices/\{deviceId\} & Admin & Remove a device from a laboratory \\
+\hline
+AdminLabs & POST & /api/admin/labs/\{labId\}/devices/\{deviceId\}/token & Admin & Regenerate the device password / JWT credential for a specific device \\
+\hline
+AdminLabs & POST & /api/admin/labs/light/on & Admin & Force lights ON across all laboratories under administrator authority \\
+\hline
+AdminLabs & POST & /api/admin/labs/light/off & Admin & Force lights OFF across all laboratories \\
+\hline
+AdminLabs & POST & /api/admin/labs/fan/on & Admin & Force fans ON across all laboratories \\
+\hline
+AdminLabs & POST & /api/admin/labs/fan/off & Admin & Force fans OFF across all laboratories \\
+\hline
+\end{longtable}
+}
+
+\subsection{Sensor Event Request and Response Contract}
+The most critical endpoint --- POST /api/devices/\{labId\}/event --- defines the primary
+
+communication contract between the hardware layer and the backend. The request body
+
+is:
+
+POST /api/devices/\{labId\}/event
+
+Authorization: Bearer <device\_JWT>
+
+Content-Type: application/json
+
+\{
+
+"motionDetected": true,
+
+"distanceCm": 35,
+
+"ldrValue": 1450,
+
+"temperatureCelsius": 28.5,
+
+"humidity": 62.0
+
+\}
+
+The response body is:
+
+\{
+
+"lightOn": true,
+
+"fanOn": false,
+
+"relay3On": false,
+
+"relay4On": false,
+
+"occupancyCount": 4,
+
+"motionIgnored": false
+
+\}
+
+The motionIgnored field is set to true when the backend's automation engine determines
+
+that the event should not trigger a relay state change --- for example when a
+
+LabControlOverride with MotionSensorDisabled = true is active for this laboratory. The
+
+firmware treats motionIgnored = true as a terminal condition and does not apply the
+
+lightOn
+
+or fanOn values.
+
+
+\section{Security Design}
+
+\subsection{Authentication Architecture}
+GreenLab uses a dual-credential authentication architecture. Human users (instructors
+
+and
+
+administrators) authenticate against the Users table through POST /api/Auth/login using
+
+email and BCrypt-hashed password. IoT devices authenticate through POST
+
+/api/devices/token using a device-specific password stored in
+
+LabDevices.DevicePasswordHash. Both paths return a JWT Bearer token with a
+
+configurable expiry (50 minutes in the current firmware, matching the server-side token
+
+lifetime).
+
+
+\subsection{Role-Based Access Control}
+The Users.Role column carries one of three values that map directly to ASP.NET Core
+
+authorization policies:
+
+\begin{longtable}{|L{2.0cm}|L{2.5cm}|L{4.5cm}|L{4.5cm}|}
+\caption{Role definitions and permitted endpoint groups.} \label{tab:4-9} \\
+\hline
+\rowcolor{tableheadergray}
+\textbf{Role} & \textbf{Holder} & \textbf{Permitted Endpoint Groups} & \textbf{Key Restrictions} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{tableheadergray}
+\textbf{Role} & \textbf{Holder} & \textbf{Permitted Endpoint Groups} & \textbf{Key Restrictions} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+Admin & Faculty IT administrators and lab coordinators & All --- Auth, Devices, Schedules, Staff (read-only view), AdminLabs & Full system access; can override any lab, approve/reject transfer requests, manage users \\
+\hline
+Staff & Instructors assigned to one or more laboratories & Auth, Staff endpoints only & Scoped to assigned labs only; cannot access AdminLabs endpoints; override is time-limited and logged \\
+\hline
+Device & ESP32 firmware (service account) & POST /api/devices/token, POST /api/devices/\{labId\}/event only & Cannot access any human-facing endpoints; identity is per-device, not per-user \\
+\hline
+\end{longtable}
+
+
+\subsection{Audit Logging Design}
+Every state-changing action --- automated relay command, manual override activation,
+
+override cancellation, transfer request submission, administrator approval, user
+
+creation, device registration, schedule import --- results in an INSERT into the AuditLogs
+
+table. The AuditLogs table carries no UPDATE or DELETE grant for the application
+
+database user, making every record effectively immutable from the application layer.
+
+Each record contains: Action (the operation type), Details (a JSON-serialisable description
+
+of the change), Entity (the affected entity type and ID), UserId (the authenticated actor),
+
+and CreatedAt (server-assigned timestamp). This design satisfies NFR-SEC-02 (tamper-
+
+resistant audit trail) and supports the administrative audit-log review view described in
+
+Section 4.8.
+
+
+\section{Angular Dashboard Design}
+
+\subsection{View Architecture}
+The Angular dashboard is a single-page application structured around a role-gated
+
+routing module. On login, the JWT response's role claim determines which navigation
+
+group is activated: Staff users see only their assigned laboratory views; Admin users see
+
+both the administrative panel and can access all laboratory monitoring views.
+
+Unauthenticated routes redirect to the login page. The HTTP interceptor attaches the
+
+stored JWT as a Bearer token to every outbound API call and redirects to login on 401
+
+responses.
+
+
+\subsection{View Inventory}
+\begin{longtable}{|L{2.5cm}|L{2.0cm}|L{1.0cm}|L{3.0cm}|L{5.0cm}|}
+\caption{Angular dashboard views, their authorised roles, and primary data sources.} \label{tab:4-10} \\
+\hline
+\rowcolor{tableheadergray}
+\textbf{View} & \textbf{Route (indicative)} & \textbf{Role} & \textbf{Primary API Endpoints} & \textbf{Key User Actions} \\
+\hline
+\endfirsthead
+\hline
+\rowcolor{tableheadergray}
+\textbf{View} & \textbf{Route (indicative)} & \textbf{Role} & \textbf{Primary API Endpoints} & \textbf{Key User Actions} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+Login & /login & Public & POST /api/Auth/login & Enter email and password; receive JWT; redirect to role-appropriate home view \\
+\hline
+My Labs --- Real-Time Monitor & /staff/labs & Staff & GET /api/staff/me/current-labs & View live sensor readings (temperature, humidity, LDR, distance), relay states, occupancy count, and active overrides for each assigned laboratory \\
+\hline
+Manual Override Panel & /staff/labs/:id/override & Staff & POST /api/staff/labs/\{labId\}/override & Toggle light or fan relay state; set override duration; cancel active override; view current override holder and expiry \\
+\hline
+Transfer Request Form & /staff/change-requests/new & Staff & POST /api/staff/lab-change-requests & Select FromLab, ToLab, session time window; submit request for administrator review \\
+\hline
+My Transfer Requests & /staff/change-requests & Staff & GET /api/staff/lab-change-requests/mine & View status (Pending/Approved/Rejected) and admin notes for all submitted transfer requests \\
+\hline
+Admin --- All Labs Dashboard & /admin/labs & Admin & GET /api/admin/labs & Monitor all laboratories simultaneously; see occupancy, relay states, sensor readings, and active overrides at a glance; quick-access light/fan master controls \\
+\hline
+Admin --- Lab Configuration & /admin/labs/:id & Admin & GET/PUT /api/admin/labs/\{id\} & Edit lab name, LightThreshold, TempFanOnThreshold, ClubCode; manage lab-specific sensor and device records \\
+\hline
+Admin --- Device Management & /admin/labs/:id/devices & Admin & GET/POST/PUT/DELETE /api/admin/labs/\{labId\}/devices/... & Register, update, or deregister ESP32 devices; regenerate device credentials; view LastSeen timestamp \\
+\hline
+Admin --- Schedule Import & /admin/schedules/ & Admin & POST/GET /api/admin/schedules/... & Upload timetable image; trigger AI analysis; review parsed result; apply import to LabSectionSchedules \\
+\hline
+Admin --- Master Lab Controls & /admin/labs/controls & Admin & POST /api/admin/labs/light/on|off, fan/on|off & Force all lights or all fans ON/OFF across the entire laboratory estate in one action; each action is audit-logged \\
+\hline
+Admin --- Audit Log Viewer & /admin/audit & Admin & Derived from AuditLogs via admin endpoint & Filter by date range, actor, entity type, or action; view full detail of each log entry; export as CSV for compliance reporting \\
+\hline
+Admin --- Transfer Request Review & /admin/change-requests & Admin & Derived from LabChangeRequests & Review pending transfer requests; approve or reject with notes; view history of all requests by status and date \\
+\hline
+\end{longtable}
+
+
+\subsection{Real-Time Update Strategy}
+The dashboard uses a polling strategy for real-time status updates: the laboratory
+
+monitoring views poll their respective API endpoints every 5 seconds using Angular's
+
+interval-based observable pattern. This interval is configurable and was chosen to
+
+balance freshness (the sensor-event loop fires approximately every 100 ms on the
+
+firmware side, but the backend aggregates state between polls) against unnecessary
+
+HTTP load. A future enhancement identified in Chapter 7 is to replace polling with
+
+SignalR WebSocket push notifications, which would reduce latency for time-sensitive
+
+override feedback.
+
+
+\section{Chapter Summary}
+This chapter presented the complete system design for GreenLab across all four tiers.
+
+Section 4.2 specified the hardware layer's component topology (five GPIO-connected
+
+components on a single ESP32), pin assignments, firmware architecture including JWT
+
+lifecycle management, event-triggered reporting, local WebServer override reception,
+
+and network fallback logic. Section 4.3 specified the Python AI service's streaming
+
+inference pipeline (yolo11n.pt + ByteTrack, FRAME\_SKIP=3, conf=0.5, imgsz=320), camera
+
+source abstraction, and the backend integration contract. Section 4.4 described all eleven
+
+database tables with their key columns and design intent. Section 4.5 defined the
+
+automation engine through two explicit control matrices --- the lighting decision matrix
+
+and the fan activation table --- both anchored to per-lab calibration values stored in the
+
+database. Section 4.6 catalogued all 31 REST API endpoints across five groups with their
+
+HTTP methods, paths, authorised roles, and descriptions, and specified the full sensor-
+
+event request/response contract. Section 4.7 described the dual JWT authentication
+
+architecture, the three-role RBAC model, and the INSERT-only audit log design. Section
+
+4.8 inventoried the twelve Angular dashboard views with their routes, roles, API sources,
+
+and user actions, and described the polling-based real-time update strategy.
+
+Chapter 5 takes these design specifications and describes their direct implementation:
+
+representative ESP32 firmware excerpts, ASP.NET Core controller and service class
+
+structures, Python FastAPI route handlers, and Angular component architecture. Every
+
+implementation decision in Chapter 5 traces back to a design decision made in this
+
+chapter.
+
+

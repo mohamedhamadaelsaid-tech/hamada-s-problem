@@ -1,66 +1,112 @@
-% ============================================
-% GreenLab -- Intelligent Laboratory Energy Management System
-% Main document
-% ============================================
+\documentclass[11pt,a4paper,twoside]{book}
 
-\input{preamble}
+% ==========================================
+% 1. PACKAGES
+% ==========================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{pifont}
+\usepackage{graphicx}
+\usepackage[table,dvipsnames]{xcolor}
+\usepackage[hmargin=2.2cm, vmargin=2.2cm, headsep=8pt, footskip=12pt]{geometry}
+\usepackage{framed}
+\usepackage[font=small,skip=4pt]{caption}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{makecell}
+\usepackage{csquotes}
+\usepackage[most]{tcolorbox}
+\usepackage{emptypage}
+\usepackage[titletoc]{appendix}
+\usepackage[acronym,toc]{glossaries}
+\usepackage{setspace}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,arrows,arrows.meta,positioning,decorations.pathreplacing,matrix,fit,calc}
+\usepackage{fontawesome5}
+\usepackage{ragged2e}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{colortbl}
+
+% ==========================================
+% 3. CONFIGURATIONS (Compact Layout)
+% ==========================================
+\singlespacing
+\setlength{\parskip}{0.4em}
+\setlength{\parindent}{0em}
+\setlength{\headheight}{14pt}
+\setlength{\topskip}{6pt}
+\setlength{\floatsep}{8pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{10pt plus 3pt minus 3pt}
+\setlength{\intextsep}{8pt plus 2pt minus 2pt}
+\setlist{nolistsep,noitemsep}
+\raggedbottom
+\setlength{\LTpre}{0pt}
+\setlength{\LTpost}{0pt}
+
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[LO]{\footnotesize{ \nouppercase{\leftmark}} }
+\fancyhead[RE]{\footnotesize{ \nouppercase{\rightmark}} }
+\renewcommand{\headrulewidth}{0.3pt}
+
+\newcommand*{\listingautorefname}{Listing}
+\newcommand*{\Appendixautorefname}{Appendix}
+
+% ==========================================
+% 4. TABLE TEMPLATE STYLE (from pasted code)
+% ==========================================
+\definecolor{tableheadergray}{HTML}{D9D9D9}
+\definecolor{listinggray}{HTML}{F5F5F5}
+\newcolumntype{L}[1]{>{\RaggedRight\setlength{\rightskip}{0pt plus 2em}\setlength{\parfillskip}{0pt}\arraybackslash}p{#1}}
+\newcolumntype{Y}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\tableheaderrow}[1]{\rowcolor{tableheadergray}\textbf{#1}}
+\newcommand{\tablebodyfont}{\small}
+\newtcolorbox{listingbox}[1][]{enhanced,breakable,colback=listinggray,colframe=black,boxrule=0.75pt,arc=0pt,left=6pt,right=6pt,top=4pt,bottom=4pt,sharp corners,#1}
+
+% ==========================================
+% 5. FRONTMATTER METADATA
+% ==========================================
+\input{backmatter/acronyms}
+\makeglossaries
+
+\title{GreenLab: Intelligent Laboratory Energy Management System}
+\author{Your Name Here}
+\date{2026}
 
 \begin{document}
+\pagestyle{fancy}
 
-% --- Front matter ---
 \frontmatter
-\input{titlepage}
-\cleardoublepage
 
-% --- Abstract ---
-\chapter*{Abstract}
-\addcontentsline{toc}{chapter}{Abstract}
+\input{frontmatter/coverpage.tex}
+\input{frontmatter/abstract.tex}
 
-\GreenLab{} is an intelligent energy management system designed for computer science faculty laboratories. The system combines embedded sensing, automated appliance control, computer-vision occupancy estimation, backend decision logic, role-based monitoring, and manual override through a web dashboard. The hardware layer is centred on an ESP32 microcontroller connected to environmental sensors and a relay module. The artificial-intelligence layer uses camera frames and a YOLO-based model to estimate the number of occupants. The backend layer receives sensor and occupancy data, applies operational rules, stores audit records, and exposes secure REST endpoints. The frontend layer presents real-time status, laboratory assignments, manual controls, and administrative actions through an Angular single-page application dashboard.
-
-The project addresses the limitations of purely manual control and purely schedule-based automation by providing a multimodal, governed approach that integrates authentication, authorisation, override management, transfer approvals, fault handling, and audit logging within a single four-tier architecture.
-
-\vspace{0.5cm}
-\textbf{Keywords:} IoT, energy management, smart building, ESP32, YOLO, occupancy detection, laboratory automation, Angular, ASP.NET Core
-
-% --- Table of Contents ---
-\newpage
 \tableofcontents
-\cleardoublepage
 
-% --- List of Figures ---
-\listoffigures
-\cleardoublepage
-
-% --- List of Tables ---
-\listoftables
-\cleardoublepage
-
-% --- Main content ---
 \mainmatter
 
-% Part I: Foundation
-\part{Foundation and Analysis}
-\include{chapters/chapter1}    % Introduction
-\include{chapters/chapter2}    % Literature Review
-\include{chapters/chapter3}    % System Analysis
+% ==========================================
+% 6. CHAPTERS
+% ==========================================
 
-% Part II: Design and Implementation
-\part{Design and Implementation}
-\include{chapters/chapter4}    % System Design
-\include{chapters/chapter5}    % Implementation
+\input{ch01/ch01.tex}
+\input{ch02/ch02.tex}
+\input{ch03/ch03.tex}
+\input{ch04/ch04.tex}
+\input{ch05/ch05.tex}
+\input{ch06/ch06.tex}
 
-% Part III: Closure
-\part{Closure}
-\include{chapters/chapter6}    % Conclusions, Limitations, Future Work
+% ==========================================
+% 7. BACKMATTER & APPENDICES
+% ==========================================
 
-% --- Appendices ---
-\begin{appendices}
-\include{chapters/appendix_a}  % Bill of Materials
-\end{appendices}
-
-% --- Bibliography ---
 \backmatter
-\printbibliography[heading=bibintoc]
-
 \end{document}

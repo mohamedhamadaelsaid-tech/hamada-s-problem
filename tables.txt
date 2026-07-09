@@ -1,0 +1,397 @@
+
+
+Table | Page
+1.1 | GreenLab Monthly Project Timeline (October–June) | 21
+2.1 | Comprehensive Feature Comparison Matrix | 42
+3.1 | GreenLab four-tier architecture and tier responsibilities | 49
+3.2 | Feature dependency chain across the four-tier architecture | 50
+3.3 | Stakeholder analysis summary | 53
+3.4 | Use case descriptions and traceability to functional requirements | 57
+3.5 | Area: System Initialisation and Startup | 58
+3.6 | Area: Entry and Exit Detection | 59
+3.7 | Area: Occupancy Detection and Classification | 60
+3.8 | Area: Lighting Control | 60
+3.9 | Area: Ventilation Control | 61
+3.10 | Area: Monitoring and Dashboard | 62
+3.11 | Area: Manual Override | 62
+3.12 | Area: Fault Handling and Safety | 63
+3.13 | Area: Authentication and Access Control | 64
+3.14 | Non-functional requirements — Performance | 65
+3.15 | Non-functional requirements — Reliability | 65
+3.16 | Non-functional requirements — Security | 66
+3.17 | Non-functional requirements — Usability | 66
+3.18 | Non-functional requirements — Maintainability | 67
+3.19 | Non-functional requirements — Scalability | 67
+4.1 | GreenLab four-tier architecture — tiers, responsibilities, and technologies | 78
+4.2 | ESP32 pin assignments and sensor specifications | 81
+4.3 | Python AI service inference configuration parameters | 84
+4.4 | GreenLab database table definitions and key columns | 87
+4.5 | Occupancy classification thresholds | 90
+4.6 | Lighting decision matrix (LDR Zone × Occupancy Classification → lightOn) | 91
+4.7 | Fan activation table (Temperature Zone × Occupancy Classification → fanOn) | 91
+4.8 | Full GreenLab REST API endpoint catalogue | 92
+4.9 | Role definitions and permitted endpoint groups | 98
+4.10 | Angular dashboard views, their authorised roles, and primary data sources | 99
+5.1 | Implementation traceability matrix | 150
+5.2 | Known limitations and technical debt | 154
+6.1 | Objective-by-objective achievement status | 159
+6.2 | Implementation deviations carried forward as project limitations | 161
+A.1 | Bill of Materials — GreenLab hardware node | 165
+A.2 | Alternative sensor configuration for scaled future deployments | 166
+
+Month | Phase | Focus | Core Deliverable
+October | Phase 1 | Literature Review & Requirements Foundation | Literature review document; draft requirements specification
+November | Phase 2 | Use Cases & Feature Definition | Use case diagram; feature definition document
+December | Phase 3 | Architecture & Database Schema | Four-tier architecture diagram; 11-table database schema; API specification
+January | Phase 4 | ESP32 Firmware Development | Working firmware with sensor polling and relay control
+February | Phase 5 | ASP.NET Core Backend Development | Functional REST API with automation engine and audit middleware
+March | Phase 6 | Python YOLO Occupancy Service | Working YOLO service integrated with backend
+April | Phase 7 | Angular Dashboard & Full-System Integration | Working dashboard; end-to-end integration test log
+May | Phase 8a | Report Writing & Consolidation | Draft Chapters 3–6 of the LaTeX report
+June | Phase 8b | Final Compilation & Submission | Compiled seven-chapter PDF and submission package
+
+Dimension | Challa et al. (2025) [4] | Waghchour e et al.(2025) [3] | Wibowo et al. (2023)[6] | Ahmed et al. (2020) [7] | Project A— Ingole et al. (2024)[8] | Project B—SmartHaus [9] | GreenLab
+Target environment | Classroom | Classroom | University laboratory | Classroom | Classroom | Generic home/IoT | Faculty laboratory
+Sensing (multimodal) | ✓ Camera +gas sensor | ✓ PIR +camera | ✓ IoT sensor network | ✓ Motion + environment al | ✓ LDR +temperature | ✗ No environment al sensing | ✓ LDR + DHT11 + HC-SR04
+
+AI / Computer vision | ✓ YOLOv4(face-based) | Partial(cameraverification, no count) | ✗ | ✗ | ✗ | ✗ | ✓ YOLO-basedpersoncounting
+Automated lighting control | ✗ | ✓ | ✓ | ✓ | ✓ | Partial (manual pin write) | ✓ Decision-matrix driven
+Automated ventilation/HVA C control | ✓ HVAC-linked | ✓ Fans | ✓ Partial | ✓ Fans | ✓ Fans | Partial (manual pin write) | ✓ Fan activation table
+Web dashboard | ✗ | ✗ | ✓ Monitoringonly | ✓ Monitoring + basic override | Partial (Wi- Fi command only, no UI) | ✓ Angulardashboard | ✓ Angular SPA dashboard
+Role-based access control (Governance) | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ Instructor / Administrat or / Service roles
+Manual override with expiry | ✗ | ✗ | Basic, no expiry | Basic, no expiry | ✓ Wi-Fi only, unauthentic ated | ✗ | ✓ Time- limited, authenticat ed, auditable
+Audit logging / accountability | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ Tamper-resistant audit log
+Laboratory transfer workflow | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ Request and approval workflow
+Backend persistence layer | Partial (local processing only) | ✗ | ✓ Centralisedmonitoring | Partial | ✗ | ✓ Node.jsserver | ✓ ASP.NET Core + SQL Server
+
+Tier | Exact Term | Technology | Responsibility
+Tier 1 | the hardware layer | ESP32 + Sensors + Relay | Sensing, relay control, entry/exit counting
+Tier 2 | the Python AI service | Python + YOLOv11n | Visual occupancy detection, person counting
+Tier 3 | the ASP.NET Core backend | ASP.NET Core 8 + SQL Server | Automation engine, API, RBAC, audit logging
+Tier 4 | the Angular dashboard | Angular SPA | Real-time monitoring, override, admin governance
+
+Feature(s) | Depends On | Reason
+FE-01, FE-02, FE-03, FE-04 | BE-03 | All frontend features require authentication (JWT)
+BE-01 | HW-01, AI-01, AI-02 | Automation engine needs live sensor + occupancy data
+HW-02 | BE-01, BE-02 | Relay control driven by automation engine or override
+BE-02 | BE-03, BE-04 | Override requires auth and generates audit log entries
+
+Stakeholder | Role | Primary Concern | System Features
+Instructor | Conducts sessions, monitors assigned labs, overrides automation when teaching needs it, requests transfers | Automatic control must not interfere with teaching | Real-time dashboard, manual override with timed expiry, transfer request form
+Administrator | Manages users, schedules, transfers, and configuration; reviews audit logs and faults | Operational oversight, policy compliance, accountability | User management, schedule management, transfer approval, audit log, fault acknowledgement
+Laboratory Staff | Monitors hardware integrity, responds to fault alerts, maintains equipment | Hardware faults detected and resolved before they compromise safety | Fault alert dashboard, sensor status display, relay feedback
+
+Stakeholder | Role | Primary Concern | System Features
+Student | Occupies the laboratory; an indirect beneficiary | A comfortable environment without needing to interact with the system | Indirect benefit through occupancy-driven lighting and ventilation
+IT Department | Maintains network, server, and security infrastructure | Reliable infrastructure, security compliance, updateable firmware | HTTPS, JWT, service accounts, firmware update support, network configuration
+Faculty Management | Reviews energy trends and policy compliance; authorises budget | Energy cost reduction, environmental responsibility, auditability | Energy reports, audit log review, configuration oversight
+
+ID | Use Case | Actor(s) | Description | TracedRequirements
+UC-01 | Login to Dashboard | Instructor, Administrator | Authenticate and receive a role-scoped JWT. | FR-AC-01, FR-AC-02
+UC-02 | View Real-Time Monitoring Data | Instructor, Administrator | Display live sensor, occupancy, and relay state for one or all labs. | FR-MD-01–FR-MD-04
+UC-03 | Manual Override Control Lights and Fans | Instructor, Administrator | Issue a timed override on a specific relay, superseding automation. | FR-MO-01–FR- MO-04, FR-LC-02, FR-VC-04
+UC-04 | Submit Laboratory Transfer Request | Instructor | Request a session move to a different laboratory. | TransferRequests table; Endpoint 13
+UC-05 | Manage Laboratory Schedule | Administrator | Create or update a laboratory's session schedule. | Endpoint 12
+UC-06 | Approve/Reject Transfer Requests | Administrator | Review and resolve a pending transfer request. | Endpoints 14–16
+UC-07 | Manage User Accounts | Administrator | Create or update user accounts and role assignment. | Endpoints 17–19, FR-AC-04
+UC-08 | View System Logs and Reports | Administrator | Inspect the audit trail and active fault events. | FR-FH-03, FR- FH-04, AuditLog
+UC-09 | Automatic Occupancy-Based Lighting Control | Hardware System (Automatic) | Apply the lighting decision matrix on every sensor cycle. | FR-LC-01, FR- LC-03, FR-LC-04
+UC-10 | Automatic Temperature-Based Ventilation Control | Hardware System (Automatic) | Apply the fan activation table on every sensor cycle. | FR-VC-01–FR-VC-04
+UC-11 | Continuous Monitoring | Hardware System (Automatic) | Poll all three sensors every 5 seconds. | FR-SI-01–FR- SI-04, FR-EE-01–FR-EE-04
+UC-12 | End of Session Reset | Hardware System (Automatic) | Return relays to OFF once occupancy is Empty and no override is active. | FR-LC-03, FR-VC-03
+UC-13 | Perform Occupancy Detection (YOLO-based) | AI Processing System | Run YOLOv8n inference and report a classified person count. | FR-OD-01–FR-OD-04
+
+FR-ID | Requirement | Priority
+FR-SI-01 | The ESP32 shall verify all three sensor interfaces on power-up before entering the normal polling loop; if any sensor fails, log fault and proceed. | P1
+FR-SI-02 | The ESP32 shall attempt Wi-Fi connection with up to 3 retries on startup; if all fail, enter Degraded Mode with all relays holding last state. | P1
+FR-SI-03 | On first successful Wi-Fi connection after startup, the ESP32 shall retrieve the current active relay command from GET /relay/state/{labId}. | P1
+FR-SI-04 | The backend shall reject any sensor POST from an ESP32 presenting an invalid or expired Service-role JWT, returning HTTP 401. | P1
+
+FR-ID | Requirement | Priority
+FR-EE-01 | The ESP32 shall classify an entry event when an HC-SR04 reading drops below 200 cm and increment the local occupancy counter. | P1
+FR-EE-02 | The ESP32 shall enforce a minimum 3-second debounce interval between consecutive HC-SR04 entry or exit events. | P1
+FR-EE-03 | The ESP32 shall include the current occupancy counter value in every sensor POST payload sent to /sensor/readings. | P2
+FR-EE-04 | If the HC-SR04 returns no echo within 30 ms (out of effective range), the ESP32 shall record the reading as null in SensorReadings. | P2
+
+FR-ID | Requirement | Priority
+FR-OD-01 | The Python AI service shall run YOLOv8n inference every 5 seconds per lab, filter detections to class 0 with confidence ≥ 0.6. | P1
+FR-OD-02 | The ASP.NET Core backend shall map the received person count to exactly one of four classifications: Empty (0), Low (1–5), Moderate (6–15), High (>15). | P1
+FR-OD-03 | If the IP camera stream is unreachable, the AI service shall POST a CAMERA_UNAVAILABLE fault and cease sending occupancy updates. | P1
+FR-OD-04 | If YOLO and HC-SR04 classifications disagree by more than one tier, the backend shall use the higher classification as the active value. | P2
+
+FR-ID | Requirement | Priority
+FR-LC-01 | The automation engine shall evaluate the lighting decision matrix on every sensor cycle and issue a relay command only when state changes. | P1
+FR-LC-02 | When an active OverrideCommand exists for Relay 1 or Relay 2, the automation engine shall not issue any lighting relay commands. | P1
+FR-LC-03 | When occupancy classification is Empty and no active override exists for light relays, the automation engine shall command both light relays OFF. | P1
+
+FR-ID | Requirement | Priority
+FR-LC-04 | Every relay state change shall produce one row in RelayStates (CommandSource = Automation or Override) and one row in AuditLog. | P1
+
+FR-ID | Requirement | Priority
+FR-VC-01 | The automation engine shall evaluate the fan activation table on every sensor cycle and command Relay 3 and Relay 4 accordingly. | P1
+FR-VC-02 | When temperature zone is Hot (above 30°C), the automation engine shall command Relay 3 (Fan 1) to ON regardless of occupancy. | P1
+FR-VC-03 | When occupancy is Empty and temperature zone is Cool or Comfortable, both Relay 3 and Relay 4 shall be commanded OFF. | P1
+FR-VC-04 | When an active OverrideCommand exists for Relay 3 or Relay 4, the automation engine shall not issue any ventilation relay commands. | P1
+
+FR-ID | Requirement | Priority
+FR-MD-01 | The Angular dashboard shall refresh each lab state every 10 seconds via GET /labs/{id}, showing LDR value/zone, temperature, humidity, occupancy, relay states. | P1
+FR-MD-02 | An instructor shall only view data for the LabId in their JWT AssignedLabId claim; a mismatched GET /labs/{id} request returns HTTP 403. | P1
+FR-MD-03 | An administrator shall view LabStatusCards for all active laboratories from one view, with fault banners visible without scrolling. | P2
+FR-MD-04 | Active fault events shall appear as a styled banner showing fault type, timestamp, and a Resolve button visible only to administrators. | P1
+
+FR-ID | Requirement | Priority
+FR-MO-01 | An instructor shall issue a manual override for any relay in their assigned lab only, specifying relay target, desired state, duration, and reason. | P1
+FR-MO-02 | An administrator shall issue a manual override for any relay in any lab; an administrator override supersedes any existing instructor override. | P1
+FR-MO-03 | When an override ExpiresAt is reached, the backend shall set IsActive = 0 and resume automation engine control of the affected relay. | P1
+FR-MO-04 | Every override creation, automatic expiry, and manual cancellation shall be recorded in AuditLog with ActorId, ActorRole, and Outcome. | P1
+
+FR-ID | Requirement | Priority
+FR-FH-01 | The backend shall generate SENSOR_TIMEOUT if no SensorReadings row arrives within 15 seconds, and CAMERA_TIMEOUT if no occupancy update arrives within 30 seconds. | P1
+FR-FH-02 | When any fault is active, the automation engine shall hold safe state: Relay 1 ON (lights), Relays 2–4 hold last known state. | P1
+FR-FH-03 | Active faults appear as fault banners on the relevant LabStatusCard; administrators see all labs; instructors see their assigned lab only. | P1
+FR-FH-04 | An administrator resolves a fault via PUT /faults/{id}/resolve; the backend sets IsResolved = 1, ResolvedAt = UTC now, ResolvedByAdminId. | P1
+
+FR-ID | Requirement | Priority
+FR-AC-01 | POST /auth/login shall validate username and verify password against bcrypt PasswordHash; on success return a JWT signed with HMAC-SHA256, expiring in 60 minutes. | P1
+FR-AC-02 | Every endpoint except POST /auth/login requires a valid non-expired JWT bearer token; missing/invalid token returns HTTP 401. | P1
+FR-AC-03 | The backend shall enforce that an instructor's JWT AssignedLabId claim matches the labId in every request; any mismatch returns HTTP 403. | P1
+FR-AC-04 | All passwords shall be stored exclusively as bcrypt hashes; plaintext passwords shall never be stored, logged, or returned. | P1
+
+NFR-ID | Requirement | Design Target | Rationale
+NFR-PERF-01 | Backend responds to all API requests under normal load (≤20 labs, ≤50 concurrent users). | < 500 ms | Dashboard 10 s polling must feel instantaneous.
+NFR-PERF-02 | End-to-end sensor-reading → relay-command latency under normal load. | ≤ 2 seconds | One 5 s polling cycle must complete within it.
+NFR-PERF-03 | Python AI service completes one full YOLOv8n inference cycle per lab. | ≤ 5 seconds | Keeps occupancy classification fresh every polling cycle.
+
+NFR-ID | Requirement | Design Target | Rationale
+NFR-REL-01 | ESP32 in Degraded Mode maintains last known relay state without reset until connectivity returns. | No time limit | Prevents relay flapping on intermittent network.
+NFR-REL-02 | Backend uptime during lab operating hours (08:00–22:00, Mon–Sat). | ≥ 99% | Faculty operations depend on continuous availability.
+NFR-REL-03 | On ESP32 reconnection, device retrieves current relay command before resuming automation. | Within 1 poll cycle | Prevents stale relay states after reconnection.
+
+NFR-ID | Requirement | Design Target | Rationale
+NFR-SEC-01 | All tier communication uses HTTPS; backend redirects any HTTP request to HTTPS. | TLS 1.2+ | Protects JWT tokens and sensor data in transit.
+NFR-SEC-02 | Role enforcement implemented at middleware level, not inside individual controller methods. | Middleware-level | Single enforcement point; no gap from missing checks.
+NFR-SEC-03 | AuditLog has no UPDATE or DELETE permissions for any role; only INSERT by audit middleware. | INSERT-only | Records must be tamper-evident and legally defensible.
+
+NFR-ID | Requirement | Design Target | Rationale
+NFR-USA-01 | A first-time instructor can locate and issue a manual override without reading documentation. | ≤ 3 clicks | Instructors are not IT specialists.
+
+NFR-ID | Requirement | Design Target | Rationale
+NFR-USA-02 | Fault banners visible on LabStatusCard without scrolling, up to 6 cards on screen. | 1920×1080, no scroll | Faults must be immediately visible.
+
+NFR-ID | Requirement | Design Target | Rationale
+NFR-MAIN-01 | All control thresholds (LDR zones, YOLO confidence, polling intervals, JWT expiry, fan levels) stored in SystemConfig. | 0 hardcoded thresholds | Enables tuning without code changes or redeployment.
+NFR-MAIN-02 | Each of the four tiers is independently deployable; updating one tier requires no changes to any other tier, provided the API contract is stable. | Zero cross-tier coupling | Supports iterative improvement of individual tiers.
+
+NFR-ID | Requirement | Design Target | Rationale
+NFR-SCAL-01 | System supports simultaneously active laboratories, each posting sensor data every 5 s, without architecture or schema changes. | ≥ 20 labs | Faculty has >10 IT labs; future growth must be supported.
+NFR-SCAL-02 | Adding a new laboratory requires only: one Laboratories row, one user account, one ESP32 configured, one camera configured. | 0 schema changes per new lab | Reduces IT Department effort for lab additions.
+
+Tier | Name | Primary Responsibility | Core Technology
+Hardware Layer | Sense the physical laboratory environment every polling cycle; actuate relay-controlled appliances on command received from the backend; maintain JWT- authenticated HTTP communication; fall back to local logic on network loss. | ESP32 microcontroller, DHT11, HC-SR04, LDR, 2- channel relay module, Arduino C++ firmware, WiFi HTTP client
+Python AI Service | Receive IP camera stream frames; run YOLO-based person detection using ByteTrack persistent tracking; maintain per-camera state and return a stable, de-duplicated person count on demand. | Python 3, FastAPI, Ultralytics YOLO (yolo11n.pt), OpenCV, ByteTrack tracker, uvicorn
+ASP.NET Core Backend | Receive sensor telemetry from the hardware layer; query the AI service for occupancy count; evaluate the lighting decision matrix and fan activation table;persist all state changes and issue authenticated relay commands; enforce role-based access control and maintain an immutable audit log. | ASP.NET Core 8, Entity Framework Core, SQL Server, JWT Bearer authentication, REST API (Swagger/OpenAPI)
+Angular Dashboard | Present real-time laboratory status to authenticated instructors and administrators; issue timed manual override commands; submit laboratory transfer requests; expose administrative controls for labs, devices, users, schedules, and audit logs. | Angular 17, TypeScript, HTTP Client, reactive forms, REST API consumer
+
+Component | GPIO Pin(s) | Signal Type | Function | Threshold / Range
+HC-SR04 Ultrasonic | TRIG: GPIO 4 / ECHO: GPIO 2 | Digital PWM | Entry and proximity detection — triggers a sensor event when an object is within threshold distance | Trigger if distance ≤ 50 cm; timeout at 30 000 µs
+DHT11 Temperature & Humidity | GPIO 5 | Single-wire digital | Environmental monitoring — temperature and humidity readings included in every sensor event payload | Temperature 0–50 °C; Humidity 20– 90% RH; read on every loop iteration
+LDR (Light-Dependent Resistor) | GPIO 34 (ADC) | Analogue 0–4095 | Natural-light levelmonitoring — determines whether artificial lighting is needed | Dark < 1000; Dim1000–2500; Bright > 2500 (12-bit ADC, 3.3 V reference)
+Relay Channel 1 (Light) | GPIO 26 | Digital output | Controls laboratory lighting circuit 1 | LOW = ON (active-low relay); HIGH = OFF; default HIGH (safe-off) at startup
+Relay Channel 2 (Fan) | GPIO 27 | Digital output | Controls laboratory ventilation fan circuit 1 | LOW = ON (active-low relay); HIGH = OFF; default HIGH (safe-off) at startup
+
+Parameter | Value | Rationale
+Model | yolo11n.pt | Nano variant — lowest parameter count; runs within CPU budget for real-time building automation
+Tracker | bytetrack.y aml | ByteTrack persistent tracking assigns stable IDs across frames, preventing the ID-fragmentation overcounting problem documented by Kim et al. (Section 2.6)
+imgsz | Reduced input size — halves inference time relative to 640 with acceptable accuracy loss for occupancy counting
+conf (CONFIDENC E_THRESHOL D) | 0.5 | Minimum detection confidence; filters spurious low-confidence boxes while retaining seated occupants partially occluded by desk equipment
+classes | [0] | Person class only — eliminates false positives from chairs, bags, and other indoor objects
+FRAME_SKIP | Inference runs every 3rd frame, reducing CPU load by ~67% while maintaining adequate count update frequency
+persist | true | Enables ByteTrack cross-frame ID persistence — the key to stable, non-inflated counts
+
+Table | Purpose | Key Columns | Notable Constraints
+Labs | Master record for each physical laboratory | Id (PK), Name, Directory, LightThreshold, TempFanOnThreshold, ClubCode, CameraResult, LabOccupancyCount | LightThreshold and TempFanOnThreshold store per-lab calibration values; LabOccupancyCount is updated on every sensor event
+Users | Authenticated system users (instructors,administrators, service accounts) | Id (PK), Email, FullName, PasswordHash, Role, CreatedAt | Role is an enum (Admin, Staff, Device); PasswordHash storesBCrypt-hashed credential; Email is unique
+LabSensors | Registered sensor hardware within each laboratory | Id (PK), LabDeviceId (FK), LabId (FK), Name, SensorType, Unit, IsActive | SensorType constrains the reading interpretation; IsActive allows soft-disable without deletion
+LabDevices | ESP32 or other IoT controller nodes registered per laboratory | Id (PK), LabId (FK), Name, DevicePasswordHash, DeviceType, IsActive, LastSeen | DevicePasswordHash enables the device- level JWT token endpoint; LastSeen updated on every event receipt
+StaffLabAssign ment | Tracks which instructor is currently assigned to which laboratory | Id (PK), UserId (FK), LabId (FK), DayOfWeek, StartTime, EndTime, ValidFrom, ValidUntil, AssignmentSource | ValidFrom/ValidUntil support time-bounded assignments; AssignmentSource distinguishes manual vs schedule-import assignments
+LabControlOver rides | Records the current manual override state for each laboratory | LabId (FK), MotionSensorDisabled, ForceLightOn, ForceRelayOn, ForceRelay2On, ForceRelay3On, ForceRelay4On, SetByUserId, UpdatedAt | One row per lab; SetByUserId provides the actor link to AuditLogs; UpdatedAt enables expiry evaluation
+ManualControlC ommands | Log of every manual relay command issued through the dashboard | Id (PK), LabId (FK), RequestedByUserId (FK), Target, RequestedValue, CommandStatus, RequestedAt, AcknowledgedAt | Target identifies which relay; CommandStatus tracks pending/executed/faile d lifecycle; AcknowledgedAt records ESP32 confirmation
+LabSectionSche dules | Timetable sessions imported or manually created for each laboratory | Id (PK), LabId (FK), DayOfWeek, StartTime, EndTime, CourseName, AcademicTerm | Imported from ScheduleImageImports pipeline; used by the backend to determine scheduled-active periods
+LabChangeReq uests | Instructor requests to transfer a laboratory assignment | Id (PK), RequestedByUserId (FK), FromLabId (FK), ToLabId (FK), SectionStart, SectionEnd, RequestedAt, Status, ReviewedByUserId, ReviewedAt | Status lifecycle: Pending → Approved/Rejected; ReviewedByUserId records the administrator who actioned it
+ScheduleImageI mports | Metadata for schedule images uploaded for AI-assisted parsing | Id (PK), FileName, StoredPath, ContentType, FileSizeBytes, UploadedByUserId, UploadedAt, Notes | Supports the schedule-import workflow (POST /api/admin/schedules/i mport-image → analyze → apply)
+AuditLogs | Immutable record of every state-changing action in the system | Id (PK), Action, Details, Entity, UserId (FK), CreatedAt | INSERT-only by design; no UPDATE or DELETE permissions granted to the application user; CreatedAt is server- assigned
+
+
+Classification | people_count Range | Relay Behaviour Default
+Empty | All relays forced OFF — hardcoded safe-off rule that cannot be overridden by lighting/fan matrices
+Low | 1–5 | Lighting decision matrix evaluated with LDR; Fan activation table evaluated with temperature
+Moderate | 6–15 | As Low — same matrix evaluation; fan may activate at a lower temperature threshold
+High | > 15 | As Low/Moderate — fan activation priority elevated; lighting assumed required regardless of LDR
+
+LDR Zone | Threshold | Empty | Low | Moderate | High
+Dark | ADC < LightThreshold × 0.5 | OFF (safe-off) | ON | ON | ON
+Dim | LightThreshold × 0.5 – LightThreshold | OFF (safe-off) | ON | ON | ON
+Adequate | LightThreshold – LightThreshold | OFF (safe-off) | OFF (natural light sufficient) | OFF (natural light sufficient) | ON (high density overrides natural light)
+
+× 1.5
+Bright | > LightThreshold × 1.5 | OFF (safe-off) | OFF | OFF | OFF
+
+Temperature Zone | Range | Empty | Low | Moderate | High
+Cool | < TempFanOnThr eshold − 5°C | OFF | OFF | OFF | OFF
+Comfortable | TempFanOnThr eshold − 5°C to TempFanOnThr eshold | OFF | OFF | OFF | ON
+Warm | TempFanOnThr eshold to TempFanOnThr eshold + 5°C | OFF | ON | ON | ON
+Hot | > TempFanOnThr eshold + 5°C | OFF | ON | ON | ON
+
+Group | Meth od | Path | Authorised Role(s) | Description
+Auth | POS T | /api/Auth/login | None (public) | Authenticate a user with email and password; returns JWT Bearer token and expiry
+Devices | POS T | /api/devices/{labId}/event | Device (JWT) | Receive sensor event from ESP32; evaluate automation engine; return relay command response (lightOn, fanOn, relay3On, relay4On, occupancyCount, motionIgnored)
+Devices | POS T | /api/devices/token | None (device password) | Issue a JWT token to an authenticated ESP32 device using labId, deviceId, and device password
+Devices | POS T | /api/devices | Admin | Register a new IoT device in the system
+Devices | GET | /api/devices/light | Admin / Staff | Retrieve current light state for all registered devices
+Schedules | POS T | /api/admin/schedules/import-image | Admin | Upload a timetable image for AI-assisted schedule extraction
+Schedules | POS T | /api/admin/schedules/import-data | Admin | Manually submit parsed schedule data for a laboratory
+Schedules | GET | /api/admin/schedules/imports | Admin | List all schedule import records
+Schedules | POS T | /api/admin/schedules/analyze-image | Admin | Trigger AI analysis of the most recently uploaded schedule image
+Schedules | POS T | /api/admin/schedules/analyze-import/{importId} | Admin | Trigger AI analysis of a specific uploaded schedule image by import ID
+Schedules | POS T | /api/admin/schedules/apply-analysis | Admin | Apply the results of an analysed schedule import to the LabSectionSchedules table
+Staff | GET | /api/staff/me/current-labs | Staff | Return the list of laboratories currently assigned to the authenticated instructor
+Staff | POS T | /api/staff/labs/{labId}/override | Staff | Issue a manual override command for the specified laboratory (activates ForceLightOn or ForceRelay2On)
+Staff | POS T | /api/staff/lab-change-requests | Staff | Submit a laboratory transfer request (Pending status)
+Staff | GET | /api/staff/lab-change-requests/mine | Staff | List all transfer requests submitted by the authenticated instructor
+AdminLab s | GET | /api/admin/labs | Admin | List all registered laboratories
+AdminLab s | POS T | /api/admin/labs | Admin | Create a new laboratory record
+AdminLab s | GET | /api/admin/labs/{id} | Admin | Retrieve a single laboratory by ID
+AdminLab s | PUT | /api/admin/labs/{id} | Admin | Update laboratory configuration (name, thresholds, club code)
+AdminLab s | DELE TE | /api/admin/labs/{id} | Admin | Delete a laboratory record (soft or hard delete per policy)
+AdminLab s | POS T | /api/admin/labs/{id}/sections | Admin | Add a timetable section directly to a laboratory
+AdminLab s | GET | /api/admin/labs/{labId}/devices | Admin | List all devices registered to a laboratory
+AdminLab s | POS T | /api/admin/labs/{labId}/devices | Admin | Register a new device for a laboratory
+AdminLab s | GET | /api/admin/labs/{labId}/devices/ {deviceId} | Admin | Retrieve a specific device record
+AdminLab s | PUT | /api/admin/labs/{labId}/devices/ {deviceId} | Admin | Update device configuration
+AdminLab s | DELE TE | /api/admin/labs/{labId}/devices/ {deviceId} | Admin | Remove a device from a laboratory
+AdminLab s | POS T | /api/admin/labs/{labId}/devices/ {deviceId}/token | Admin | Regenerate the device password / JWT credential for a specific device
+AdminLab s | POS T | /api/admin/labs/light/on | Admin | Force lights ON across all laboratories under administrator authority
+AdminLab s | POS T | /api/admin/labs/light/off | Admin | Force lights OFF across all laboratories
+AdminLab s | POS T | /api/admin/labs/fan/on | Admin | Force fans ON across all laboratories
+AdminLab s | POS T | /api/admin/labs/fan/off | Admin | Force fans OFF across all laboratories
+
+Role | Holder | Permitted Endpoint Groups | Key Restrictions
+Admin | Faculty IT administrators and lab coordinators | All — Auth, Devices, Schedules, Staff (read-only view), AdminLabs | Full system access; can override any lab, approve/reject transfer requests, manage users
+Staff | Instructors assigned to one or more laboratories | Auth, Staff endpoints only | Scoped to assigned labs only; cannot access AdminLabs endpoints; override is time-limited and logged
+Device | ESP32 firmware (service account) | POST /api/devices/token, POST /api/devices/{labId}/event only | Cannot access any human-facing endpoints; identity is per-device, not per-user
+
+View | Route (indicative) | Role | Primary API Endpoints | Key User Actions
+Login | /login | Public | POST /api/Auth/login | Enter email and password; receive JWT; redirect to role-
+
+appropriate home view
+My Labs — Real-Time Monitor | /staff/labs | Staff | GET /api/staff/me/current-labs | View live sensor readings (temperature, humidity, LDR, distance), relay states, occupancy count, and active overrides for each assigned laboratory
+Manual Override Panel | /staff/labs/:id/ override | Staff | POST /api/staff/labs/{labId}/ov erride | Toggle light or fan relay state; set override duration; cancel active override; view current override holder and expiry
+Transfer Request Form | /staff/change-requests/new | Staff | POST /api/staff/lab-change-requests | Select FromLab, ToLab, session time window; submit request for administrator review
+My Transfer Requests | /staff/change-requests | Staff | GET /api/staff/lab- change-requests/mine | View status (Pending/Approved/Re jected) and admin notes for all submitted transfer requests
+Admin — All Labs Dashboard | /admin/labs | Admin | GET /api/admin/labs | Monitor all laboratories simultaneously; see occupancy, relay states, sensor readings, and active overrides at a glance; quick-access light/fan master controls
+Admin — Lab Configuration | /admin/labs/:id | Admin | GET/PUT /api/admin/labs/{id} | Edit lab name, LightThreshold, TempFanOnThreshold , ClubCode; manage lab-specific sensor and device records
+Admin — Device Management | /admin/labs/:id/ devices | Admin | GET/POST/PUT/ DELETE /api/admin/labs/{labId}/ devices/... | Register, update, or deregister ESP32 devices; regenerate device credentials; view LastSeen timestamp
+Admin — Schedule Import | /admin/schedules/ import | Admin | POST/GET /api/admin/schedules/... | Upload timetable image; trigger AI analysis; review parsed result; apply to LabSectionSchedules
+Admin — Master Lab Controls | /admin/labs/ controls | Admin | POST /api/admin/labs/light/on| off, fan/on|off | Force all lights or all fans ON/OFF across the entire laboratory
+
+estate in one action; each action is audit-logged
+Admin — Audit Log Viewer | /admin/audit | Admin | Derived from AuditLogs via admin endpoint | Filter by date range, actor, entity type, or action; view full detail of each log entry; export as CSV for compliance reporting
+Admin — Transfer Request Review | /admin/change-requests | Admin | Derived from LabChangeRequests | Review pending transfer requests; approve or reject with notes; view history of all requests by status and date
+
+Constant | Value | Purpose | Configurable via Add Lab?
+DISTANCE_THRE SHOLD | 50 cm | Defines "presence" zone for HC-SR04 | No — hardcoded (see §5.8)
+
+Constant | Value | Purpose | Configurable via Add Lab?
+COOLDOWN | 2000 ms | Minimum gap between motion reports | No — hardcoded
+LIGHT_THRESHO LD | 2000 (ADC) | LDR threshold for local fallback | No — must match Add Lab form manually
+LIGHT_INTERVAL | 5000 ms | Reserved for periodic light checks | N/A — unused in current build
+
+Route | Metho d | GPIO write | Response body | State tracker updated
+/light/on | GET | RELAY_PIN → LOW | {"status":"ok","light":"o n"} | lastLightState = true
+/light/off | GET | RELAY_PIN → HIGH | {"status":"ok","light":"of f"} | lastLightState = false
+/fan/on | GET | RELAY_PIN2 → LOW | {"fan":"on"} | lastFanState = true
+/fan/off | GET | RELAY_PIN2 → HIGH | {"fan":"off"} | lastFanState = false
+
+Input example | Branch taken | Output
+usb:0 | USB prefix | int: 0
+usb:2 | USB prefix | int: 2
+http:// 192.168.1.3:4747/ video | Network scheme | str: http://192.168.1.3:4747/video (unchanged)
+rtsp:// admin:pass@10.0.0.5 /live | Network scheme | str: rtsp://admin:pass@10.0.0.5/live (unchanged)
+/recordings/ lab_d7.mp4 | File extension (.mp4) | str: /recordings/lab_d7.mp4
+192.168.1.3 | Bare IP regex | str: http://192.168.1.3:4747/video
+192.168.1.3 port=8080 | None (ValueError) | ValueError: Unrecognised source
+ftp://camera/stream | None (ValueError) | ValueError: Unrecognised source
+
+Field | Type | Default | Purpose and code connection
+Lab name | Text, required | (none) | Human-readable identifier shown on all dashboard views. Maps to the LabName column in the Labs table.
+Device key (optional) | Text, optional | (none) | Credential used to pair the ESP32. The firmware sends this in the token-exchange POST to
+
+Field | Type | Default | Purpose and code connection
+/api/devices/token alongside labId and deviceId.
+Light threshold | Integer, required | Server-side copy of LIGHT_THRESHOLD. Matches the firmware constant (Section 5.2.1). Not yet fetched by the firmware at boot (NFR-MAIN-01 gap).
+Fan-on temperature (°C) | Integer, required | Server-side copy of the fan-on threshold. Matches the firmware's implicit comparison (temp >= 28 → fanOn). Same NFR-MAIN-01 gap.
+CV lab code (optional) | Text, optional | (none) | Associates the lab with a computer-vision tracking context. Used by the AI service as a label for camera registry keys.
+Camera RTSP URL (optional) | Text, optional | (none) | Passed to camera_sources.py's resolve_source(). Accepts usb:N, http/https/rtsp URL, or bare IPv4 (all five formats from Section 5.3.2.2).
+
+Req. ID | Requirement Summary | Evidence in Ch. 5 | Status
+FR-AC-01 | Device/user authentication on login | §5.5.1 Fig.5.6; §5.2.4 Listings 5.8–5.10 | Implemented
+FR-AC-02 | All non-login endpoints require valid JWT | §5.2.4 (device); §5.5.1 (users); §5.4.3 | Implemented
+FR-AC-03 | Role-checked JWT on every endpoint | §5.4.3–5.4.4 three-role model | Implemented
+FR-AC-04 | Passwords hashed server-side; never redisplayed | §5.4.4 Add user form analysis | Implemented
+FR-EE-02 | Debounce / minimum-interval between motion reports | §5.2.6 Listing 5.14 (edge-trigger + COOLDOWN) | Implemented
+FR-FH-01 | Timeout-based fault detection at AI boundary | §5.3.3.9 Listing 5.39 READY_TIMEOUT 503 | Implemented
+FR-FH-02 | Hold last relay state during connectivity fault | §5.2.6 Listing 5.15 fallback (re-evaluates, not freezes) | Partial
+FR-FH-03 | Faults visible on dashboard without navigation | §5.5.2 Fig.5.7 Active alerts panel | Implemented
+FR-MD-01 | Live sensor-state and relay-state view per lab | §5.5.3 Fig.5.8 device-state pills | Implemented
+FR-MD-03 | System-wide status at a glance | §5.5.2 Fig.5.7 full dashboard layout | Implemented
+FR-OD-01 | Person detection ≥ 0.5 confidence, ≤ 5 s cadence | §5.3.3.7 Listing 5.36; FRAME_SKIP=3 | Implemented
+FR-OD-02 | Empty/Low/Moderate/High occupancy classification | Dashboard occupancy labels Figs.5.7–5.8 | Implemented
+FR-SI-04 | Device re-authenticates after 401 | §5.2.5 Listing 5.12 retry block | Implemented
+NFR- MAIN-01 | Firmware thresholds fetched from API at runtime | Hardcoded constants §5.2.1 — not fetched | Not yet implemented
+NFR- PERF-03 | AI service sampling within 5-second cadence | §5.3.3.6 FRAME_SKIP=3 at 30 fps → 10 inferences/s | Implemented
+NFR- SCAL-02 | Adding a lab requires no schema/architecture change | §5.4.1 Fig.5.2 Add Lab form | Implemented
+
+Item | Description | Req. | Recommended fix
+Firmware thresholds hardcoded | LIGHT_THRESHOLD (2000) and fan-on temperature (28°C) are compile-time constants. Changing a threshold requires reflashing the device. No /api/devices/{id}/config endpoint exists yet. | NFR- MAIN-01 | Add a config endpoint; call it at boot; cache in EEPROM for offline use.
+Two relay channels unwired | relay3On and relay4On are parsed and logged but not connected to GPIO outputs. Only RELAY_PIN and RELAY_PIN2 are physically wired. Hardware not yet expanded beyond two channels. | Architectur e diagram | Add #define RELAY_PIN3/4; add actuation logic — no backend change needed.
+Local fallback re-evaluates vs.freezes | Fallback logic re-evaluates LDR rather than holding the last backend-commanded state as FR-FH-02 specifies. Designed for simplicity over strict spec compliance. | FR-FH-02 | Store last backend- commanded light state; restore it on fallback rather than re-evaluating.
+Teaching Assistant role unmodelled | The role was added during implementation but is absent from the Chapter 3 use case model. Discovered during implementation as a real organisational need. | FR- AC-02/03 | Add Teaching Assistant as a named actor in the use case diagram and stakeholder analysis.
+"Occupancy outside session" alert unspecified | The dashboard raises this alert when occupancy is detected outside scheduled hours. No FR-ID exists for it. Emergent feature identified during dashboard implementation. | FR-FH (future) | Write back as FR-FH-04 in a revised Chapter 3.
+Device identity compiled in | labId and deviceId are integer literals in the firmware. Deploying to a second lab requires recompiling. No provisioning API was designed for device self- registration. | NFR- MAIN-01 | Read labId/deviceId from EEPROM, provisioned via QR code or BLE commissioning.
+FRAME_SKIP is count-based not time-based | At variable camera frame rates, the effective inference cadence varies. At 15 fps FRAME_SKIP=3 gives 5 inferences/s; at 5 fps it gives only 1.7/s. | NFR- PERF-03 | Replace FRAME_SKIP with a minimum-elapsed-time gate based on time.monotonic().
+
+# | Objective | Status | Evidence
+Layered four-tier architecture with clear interface contracts | Achieved | The hardware, AI, backend, and dashboard tiers communicate exclusively through the defined REST interfaces described in Section 4.1 and exercised in Chapter 5: the ESP32 firmware never bypasses the backend to reach the AI service or dashboard directly, and each tier's internal implementation (§5.2–5.5) can be replaced without altering another tier's contract.
+Functional and non-functional requirements in formal IEEE 830 style | Achieved | Sections 3.5 and 3.6 specify 135 requirements across nine functional areas and six non-functional quality dimensions. The Section 5.6 traceability matrix confirms every sampled requirement traces to implementation evidence or an explicitly recorded gap.
+Multimodal occupancy detection combining embedded sensors and YOLO-based vision | Achieved | The Section 5.7 worked trace demonstrates HC-SR04, DHT11, and LDR readings combining with the YOLO service's tracked person count within a single automation decision (FR-OD-01, FR-OD-02: Implemented).
+Lighting control via a decision matrix | Achieved | The LDR-zone × occupancy-classification matrix (Table 4.6) is implemented as a data-driven rule lookup, satisfying the auditability and configurability goal stated in Objective 4.
+Ventilation control via a fan activation table | Achieved | The temperature-zone × occupancy-classification table (Table 4.7) follows the same pattern as the lighting matrix and is exercised directly in the Section 5.7 worked example.
+Secure ASP.NET Core REST API with authentication, RBAC, and audit logging | Achieved | FR-AC-01 through FR-AC-04 are marked Implemented in the Section 5.6 traceability matrix, supported by JWT-based authentication (§4.7.1), a three-role access model (§4.7.2), and an append-only audit log (§4.7.3), each demonstrated against concrete request/response evidence in Chapter 5.
+Angular dashboard for monitoring, override, scheduling, and administration | Achieved | Sections 5.4–5.5 document eight distinct dashboard views spanning all four required capabilities, with FR-MD-01 and FR-MD-03 both marked Implemented. One presentational inconsistency — a third device-state pill rendered for a currently-unwired relay channel — is recorded as a known limitation in Section 5.8 and does not affect the four core capabilities this objective requires.
+Complete, print-ready project report | Achieved by this revision | The report's figures, tables, and formatting satisfy Objective 8. The report was previously incomplete against its own six-chapter structure (no Chapter 6) and carried an unresolved citation-numbering placeholder in Chapter 2; both are resolved as part of this revision.
+
+Limitation | Requirement affected | Nature of deviation
+Firmware control thresholds are compile-time constants | NFR-MAIN-01 | Changing a lighting or temperature threshold requires reflashing the device rather than calling a runtime configuration endpoint.
+Two of four modelled relay channels are unwired | Architecture (§4.2, §5.8) | The backend's response contract models four relay channels (lightOn, fanOn, relay3On, relay4On); only the first two are physically connected to GPIO output in the current prototype.
+Local network-fallback logic re-evaluates rather than freezes | FR-FH-02 | On connectivity loss, the firmware re-evaluates the LDR reading against a local threshold rather than holding the last backend-commanded relay state, as originally specified.
+The Teaching Assistant role is unmodelled | FR-AC-02, FR-AC-03 | This role was introduced during implementation to reflect a real organisational need but does not appear in the Chapter 3 use case model or stakeholder analysis.
+The “occupancy outside session” alert has no formal requirement ID | Fault handling (§5.5.2) | This alert type is implemented and functions correctly but was not anticipated by the Chapter 3 functional requirement set.
+Device identity is compiled into firmware | NFR-MAIN-01 | labId and deviceId are integer literals in the firmware rather than provisioned at runtime, meaning each new device deployment requires a firmware rebuild.
+Inference sampling cadence is frame-count-based, not time-based | NFR-PERF-03 | FRAME_SKIP=3 yields a variable inference rate depending on the camera's actual frame rate rather than a fixed elapsed-time interval.
+
+# | Component | Spec / Model | Qty per node | Unit price (USD) | Line total (USD)
+Microcontroller | ESP32 DevKit V1 (WROOM-32, WiFi/BT) | $7.50 | $7.50
+Ultrasonic distance sensor | HC-SR04 | $2.00 | $2.00
+Temperature/humidity sensor | DHT11 | $2.20 | $2.20
+Light-dependent resistor module | LDR + comparator breakout | $1.20 | $1.20
+Relay module | 5V single-channel, opto-isolated (SRD-05VDC-SL-C based) | $2.50 | $5.00
+Jumper wires | M-F / M-M assortment, 20cm | 1 pack | $3.50 | $3.50
+Breadboard or perfboard | Half-size prototyping board | $3.00 | $3.00
+USB power supply | 5V/2A wall adapter + micro-USB cable | $4.50 | $4.50
+Enclosure | ABS project box, ventilated, ~100×70×40mm | $6.00 | $6.00
+Mounting hardware | Screws, standoffs, cable ties | 1 set | $1.50 | $1.50
+Node subtotal | $36.40
+
+Component | Spec / Model | Unit price (USD) | Rationale
+DHT22 (AM2302) | ±0.5°C / ±2–5% RH accuracy | $6.50 | Roughly 3× the cost of DHT11, but meaningfully tighter accuracy and wider operating range — worth considering if Phase 4 field data shows DHT11 accuracy is a limiting factor.
+PIR motion sensor (HC-SR501) | Passive infrared, adjustable sensitivity/delay | $1.80 | Would supplement, not replace, the HC-SR04: PIR detects heat-signature motion (lower false-positive rate for human presence) while HC-SR04 detects proximity/distance. Combining both would strengthen the multimodal detection design (Objective 3) but requires an additional GPIO pin and firmware logic not currently implemented.

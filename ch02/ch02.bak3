@@ -1,0 +1,1201 @@
+\chapter{Literature Review}
+Literature Review
+
+
+\section{Review Strategy}
+The literature review was restricted to sources that directly contribute to GreenLab's core
+
+design concerns: IoT energy management, occupancy-driven smart-building control, YOLO-
+
+based visual detection, ESP32 or Arduino-class device control, laboratory or classroom au-
+
+tomation, and web dashboards for real-time IoT monitoring. Sources were not included
+
+merely because they used IoT terminology or addressed building energy in general. Each
+
+considered source is preceded by an explicit relevance analysis comment, and only relevant
+
+papers and projects are reviewed in detail. The review strategy follows an inclusion and ex-
+
+clusion methodology: a source is included if it addresses at least two of GreenLab's design
+
+concerns and provides veriﬁable technical content that can be accurately summarised and
+
+attributed; a source is excluded if it addresses only tangentially related topics, if its full text
+
+is unavailable for veriﬁcation, or if more recent and directly relevant sources supersede it.
+
+Eight sources met this standard and are reviewed in Sections 2.2.1 through 2.2.8.
+
+Each review follows the same analytical structure: a description of the methodology and
+
+the hardware or software choices made by the original authors, the core ﬁndings reported in
+
+the source, an explicit breakdown of advantages and disadvantages relative to GreenLab's
+
+design concerns, and a statement of what GreenLab adopts, adapts, or deliberately departs
+
+from.
+
+Section 2.3 consolidates all eight sources into a single comparative matrix, and Sec-
+
+tion 2.4 synthesises the literature gap that GreenLab is designed to close.
+
+
+\section{Related Work}
+
+\subsection{Challa et al. (2025) --- Multimodal Classroom Occupancy for HVAC}
+Methodology and Technical Summary Challa et al. proposed a classroom occupancy-
+
+detection method that combines real-time video analysis with gas-sensor data for HVAC
+
+optimisation [?]. The paper is directly relevant to GreenLab because both systems treat
+
+educational spaces as variable-occupancy environments and use visual occupancy informa-
+
+tion to support energy-related control decisions. The study integrates a webcam for visual
+
+capture, an MS1100 gas sensor for environmental monitoring, Arduino-class hardware for
+
+data collection, Python and OpenCV for image processing, and a YOLOv4 detection model
+
+for person counting. The authors report that the model was trained using more than 20,000
+
+labelled human face images and that multimodal sensing was used to improve reliability
+
+under conditions where visual detection alone may be affected by lighting, occlusion, or
+
+camera blind spots. The gas sensor provides an independent signal that can corroborate or
+
+contradict the camera-derived occupancy estimate, reducing the risk that a single modality
+
+failure leads to an incorrect HVAC response [?].
+
+The methodology is important for GreenLab because it demonstrates the value of com-
+
+bining environmental signals with computer vision. GreenLab similarly avoids reliance on
+
+one sensing method by using environmental sensors through the ESP32 and camera frames
+
+through the AI processing service. The gas-sensor approach used by Challa et al. is anal-
+
+ogous to GreenLab's use of the DHT11 temperature sensor and the HC-SR04 ultrasonic
+
+sensor as corroborating inputs alongside the YOLO-derived occupancy count. The key in-
+
+sight from this paper is that HVAC or ventilation decisions should not be based solely on
+
+camera detection, because camera accuracy can degrade under variable lighting, occlusion
+
+from furniture or equipment, and camera placement constraints that are common in labora-
+
+tory environments.
+
+Challa et al. also emphasise that occupancy information can be connected to dynamic
+
+HVAC control, which supports GreenLab's decision to link occupancy and temperature
+
+context to fan or ventilation states. The results reported in the cited paper, including im-
+
+proved HVAC response times and reduced false-positive occupancy classiﬁcations, are not
+
+transferred to GreenLab as project results; rather, they justify the design principle that mul-
+
+timodal occupancy estimation can be more robust than isolated motion sensing. GreenLab
+
+extends the multimodal principle by adding natural-light sensing for lighting control, a
+
+backend rule engine for governance, and a role-based dashboard for human supervision,
+
+none of which are present in the Challa et al. system.
+
+
+\subsubsection*{Advantages}
+\begin{itemize}
+	\item Multimodal corroboration. Combining gas sensing with visual detection reduces
+\end{itemize}
+the risk that a single sensor failure (poor lighting, occlusion) produces an incorrect
+
+HVAC decision.
+
+\begin{itemize}
+	\item Large training dataset. The YOLOv4 model was trained on more than 20,000 la-
+\end{itemize}
+belled images, giving the detector a substantial data foundation relative to many com-
+
+parable classroom studies.
+
+\begin{itemize}
+	\item Direct HVAC linkage. Occupancy output is connected explicitly to dynamic HVAC
+\end{itemize}
+control rather than left as a standalone detection result, demonstrating a complete
+
+sense-to-actuate pipeline.
+
+
+\subsubsection*{Disadvantages / Limitations}
+\begin{itemize}
+	\item Privacy-sensitive training data. Reliance on face-based image detection (rather
+\end{itemize}
+than whole-person or silhouette detection) raises privacy considerations that are less
+
+acceptable in many educational deployment contexts.
+
+\begin{itemize}
+	\item Gas sensor suitability. The MS1100 gas sensor may not be appropriate or neces-
+\end{itemize}
+sary for all educational environments, adding hardware cost and calibration overhead
+
+without a clearly transferable beneﬁt to a laboratory setting.
+
+\begin{itemize}
+	\item No governance layer. The system has no web-based dashboard, no role-based access
+\end{itemize}
+control, and no audit trail for override or administrative action --- it is a detection-
+
+and-actuation pipeline, not an operationally governed platform.
+
+Relevance to GreenLab GreenLab adopts the multimodal-corroboration principle but
+
+departs from Challa et al.'s speciﬁc sensor choices: person detection is used instead of face
+
+detection to reduce privacy sensitivity, and temperature and light sensors are used instead
+
+of a gas sensor, since they are less privacy-sensitive and more directly tied to GreenLab's
+
+lighting and ventilation decisions. Most signiﬁcantly, GreenLab adds the complete backend
+
+and dashboard governance layer that this paper does not attempt.
+
+
+\subsection{Chaudhari et al. (2024) --- Occupancy Detection Survey for Smart}
+Buildings
+
+Methodology and Technical Summary Chaudhari, Xiao, Cheng, and Li presented a
+
+broad survey of occupancy detection technologies for smart buildings using IoT sensors
+
+	[?]. The survey is relevant because GreenLab requires reliable occupancy information for
+
+lighting, ventilation, monitoring, and safety-related decisions, and the survey provides a
+
+comprehensive taxonomy of the available sensing methods, their strengths, and their limi-
+
+tations. The paper explains that occupancy information can reduce energy consumption by
+
+automating lighting and HVAC systems, improve indoor air quality by operating ventilation
+
+only where needed, and support security and emergency response by providing real-time
+
+occupancy data. The survey covers ﬁve principal sensing methods: passive infrared sen-
+
+sors, carbon dioxide sensors, camera-based detection, Wi-Fi-based device counting, and
+
+Bluetooth Low Energy proximity sensing [?].
+
+The survey identiﬁes several practical limitations that are directly relevant to Green-
+
+Lab's design. Sensor placement affects detection accuracy because a PIR sensor positioned
+
+near an air conditioner vent may produce false positives from moving air, while a camera
+
+placed behind a projector screen may have an obstructed ﬁeld of view. Privacy concerns
+
+limit the deployment of camera-based systems in some educational contexts, and real-time
+
+constraints require that occupancy decisions be made within the control-loop budget rather
+
+than after lengthy batch processing. The survey also highlights interference between sens-
+
+ing modalities, such as Wi-Fi counting that may overestimate occupancy when students
+
+carry multiple wireless devices.
+
+The survey's contribution to GreenLab is conceptual and architectural rather than im-
+
+plementational, since the paper does not describe a deployed system. It supports the deci-
+
+sion to treat occupancy detection as a system-level capability rather than as a single sensor
+
+reading. If occupancy is a system-level capability, then the system must be designed to fuse
+
+evidence from multiple sensors, resolve contradictions, and present a consistent occupancy
+
+state to downstream control logic. It also reinforces the need for privacy-aware design,
+
+maintainability, and fault handling. GreenLab therefore uses a backend decision layer and
+
+dashboard audit trail so that sensor readings, vision-based counts, manual overrides, and
+
+faults can be interpreted in context rather than in isolation. The survey provides the em-
+
+pirical and theoretical foundation for GreenLab's multimodal approach, while GreenLab
+
+provides the governance layer that the survey identiﬁes as a practical gap in many existing
+
+systems.
+
+
+\subsubsection*{Advantages}
+\begin{itemize}
+	\item Comprehensive taxonomy. Covers ﬁve distinct sensing modalities with a consistent
+\end{itemize}
+comparative framework, giving a structured basis for evaluating sensor trade-offs
+
+rather than relying on a single technology's marketing claims.
+
+\begin{itemize}
+	\item Practical limitation analysis. Documents concrete, deployment-relevant failure
+\end{itemize}
+modes (sensor placement, occlusion, multi-device overcounting) rather than only the-
+
+oretical accuracy ﬁgures.
+
+\begin{itemize}
+	\item System-level framing. Treats occupancy detection as a property of the system as
+\end{itemize}
+a whole rather than of any one sensor, supporting fusion-based architectures like
+
+GreenLab's.
+
+
+\subsubsection*{Disadvantages / Limitations}
+\begin{itemize}
+	\item No deployed system. As a survey, the paper does not describe or validate an end-
+\end{itemize}
+to-end automation platform, so its conclusions are necessarily general rather than
+
+speciﬁc to a laboratory deployment.
+
+\begin{itemize}
+	\item No governance discussion. The survey focuses on detection accuracy and does not
+\end{itemize}
+address authentication, role-based access, override management, or audit logging.
+
+\begin{itemize}
+	\item No quantitative system comparison. Because the survey aggregates ﬁndings from
+\end{itemize}
+many underlying studies, it does not provide a single, consistent benchmark across
+
+all ﬁve modalities under identical conditions.
+
+Relevance to GreenLab Because this paper is a survey rather than a deployable system,
+
+it is excluded from the system comparison table in Section 2.3 but is drawn on throughout
+
+this chapter to justify GreenLab's multimodal sensing rationale and its emphasis on fusing
+
+rather than relying on a single sensing modality.
+
+
+% --- FIGURE PLACEHOLDER: Figure 2.1 ---
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{ch02/figures/chaudhari-2024-figure.pdf}
+	\caption{Occupancy-detection taxonomy and sensing modalities discussed by Chaudhari et al}
+	\label{fig:2-1}
+\end{figure}
+
+Figure 2.1: Occupancy-detection taxonomy and sensing modalities discussed by Chaudhari et al.
+
+for smart-building applications.
+
+
+\subsection{Zhang et al. (2026) --- Modiﬁed Lightweight YOLOv8 for Indoor}
+Occupancy
+
+Methodology and Technical Summary Zhang et al. proposed a modiﬁed lightweight
+
+YOLOv8 model for fast and precise indoor occupancy detection [?]. The paper is relevant
+
+to GreenLab's AI processing layer because GreenLab depends on person detection or occu-
+
+pancy estimation from laboratory camera frames. The authors identify a common problem
+
+in image-based indoor occupancy detection: small human targets and resource constraints
+
+can reduce real-time performance. In a typical laboratory or classroom, occupants may
+
+be seated at desks with only their upper bodies visible, they may be partially occluded by
+
+monitors and equipment, and the camera may be mounted at a height and angle that makes
+
+person detection more challenging than in open pedestrian scenes. These factors reduce
+
+the detection accuracy of standard YOLO models that are trained primarily on outdoor or
+
+full-body datasets [?].
+
+The proposed architecture modiﬁes YOLOv8 using feature-map improvements and
+
+convolutional adjustments, and the paper reports reduced parameters and computational
+
+complexity relative to a baseline YOLOv8 model while improving detection performance
+
+on the evaluated indoor dataset. The authors demonstrate that lightweight architectures
+
+can achieve competitive detection accuracy with fewer computational resources, which is
+
+important for deployment scenarios where a dedicated GPU may not be available or where
+
+multiple camera streams must be processed concurrently. The paper also discusses the
+
+trade-off between model complexity and inference speed, noting that real-time occupancy
+
+detection for building automation requires inference times compatible with the control-loop
+
+budget, typically a few seconds per frame.
+
+For GreenLab, this paper supports the selection of a YOLO-family detector and in-
+
+forms future optimisation. The present report does not claim that GreenLab implements the
+
+modiﬁed architecture exactly. Instead, the paper is used to justify why lightweight detec-
+
+tion is a meaningful concern if the AI layer is deployed on constrained local hardware or
+
+expected to process multiple laboratory streams. GreenLab's design therefore separates the
+
+AI processing service from the ESP32 controller, allowing the model to be improved with-
+
+out changing the embedded relay-control ﬁrmware. This separation is consistent with the
+
+layered architecture principle described in the project objectives and with the broader litera-
+
+ture on modular IoT systems. The paper also supports a future optimisation direction where
+
+GreenLab could adopt a lightweight YOLO variant to reduce inference latency and server
+
+resource consumption, particularly as the number of monitored laboratories increases.
+
+
+\subsubsection*{Advantages}
+\begin{itemize}
+	\item Reduced computational cost. Reports lower parameter count and computational
+\end{itemize}
+complexity relative to baseline YOLOv8 while improving detection performance on
+
+indoor data, directly relevant to constrained-hardware deployment.
+
+\begin{itemize}
+	\item Indoor-speciﬁc optimisation. Explicitly targets the small-target and occlusion prob-
+\end{itemize}
+lems that arise in seated, desk-based occupancy scenarios --- the same scenario class
+
+as a computer science laboratory.
+
+\begin{itemize}
+	\item Compatibility with real-time control-loop budgets. Demonstrates inference times
+\end{itemize}
+suitable for building-automation control loops rather than only ofﬂine batch analysis.
+
+
+\subsubsection*{Disadvantages / Limitations}
+\begin{itemize}
+	\item Algorithmic paper, not a deployed system. The paper validates a detection model
+\end{itemize}
+in isolation; it does not address sensor fusion, relay control, governance, or any end-
+
+to-end automation workﬂow.
+
+\begin{itemize}
+	\item Single-dataset evaluation. Results are reported on the authors' evaluated indoor
+\end{itemize}
+dataset, and transferability to a speciﬁc laboratory's camera placement, lighting, and
+
+occupant density is not independently veriﬁed.
+
+\begin{itemize}
+	\item No discussion of multimodal fusion. The model is evaluated purely on visual input,
+\end{itemize}
+without considering how its output should be reconciled with environmental sensor
+
+signals.
+
+Relevance to GreenLab This is the second of the two sources excluded from the sys-
+
+tem comparison table in Section 2.3, since it is an algorithmic contribution rather than a
+
+complete automation platform. GreenLab does not claim to implement Zhang et al.'s exact
+
+modiﬁed architecture; rather, the paper justiﬁes why model lightness is a legitimate de-
+
+sign concern and supports a stated future-work direction (Chapter 7) in which a lightweight
+
+YOLO variant could be adopted to reduce inference latency as the number of monitored
+
+laboratories scales.
+
+
+% --- FIGURE PLACEHOLDER: Figure 2.2 ---
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{figures/zhang-2026-figure.png}
+	\caption{Modiﬁed lightweight YOLOv8 architecture used for indoor occupancy detection by}
+	\label{fig:2-2}
+\end{figure}
+
+Figure 2.2: Modiﬁed lightweight YOLOv8 architecture used for indoor occupancy detection by
+
+Zhang et al.
+
+
+\subsection{Waghchoure et al. (2025) --- IoT Classroom Appliance Control}
+with PIR and Camera
+
+Methodology and Technical Summary Waghchoure et al. described a classroom energy-
+
+saving system using IoT, PIR motion sensing, camera-based detection, a microcontroller,
+
+and relay control for lights and fans [?]. The paper is relevant because it addresses the
+
+same educational-building problem that GreenLab targets: appliances may remain active
+
+in unoccupied rooms, increasing electricity bills and environmental impact. The proposed
+
+system detects human presence using a PIR sensor, checks whether devices are on or off,
+
+controls appliances based on detection, and continuously monitors entry and exit activity.
+
+The camera is activated when the PIR sensor detects motion, providing visual veriﬁcation
+
+that reduces false positives from non-human heat sources such as sunlight or heating vents
+
+	[?].
+
+The methodology contributes to GreenLab by showing a practical classroom automa-
+
+tion pattern: low-cost sensing triggers device control through relays. The PIR-and-camera
+
+combination demonstrates that sensor-triggered camera activation can reduce continuous
+
+camera processing overhead while still providing visual veriﬁcation when it is most needed.
+
+GreenLab adopts a similar approach in principle: the HC-SR04 ultrasonic sensor and other
+
+embedded sensors provide the initial activity signal, and the YOLO service performs de-
+
+tailed occupancy counting when triggered. However, GreenLab extends this pattern signif-
+
+icantly by adding a backend rule engine for governance, role-based user access, laboratory
+
+assignment workﬂows, audit logging, and a web dashboard for instructors and administra-
+
+tors. The Waghchoure et al. system operates as a standalone microcontroller application
+
+without a backend server, without user accounts, and without operational auditability.
+
+The paper also reveals several practical challenges that GreenLab must address. PIR
+
+sensors have limited detection range and may not detect stationary occupants, leading to
+
+false vacancy detection. Camera-based veriﬁcation introduces latency that must be man-
+
+aged within the control-loop budget. Relay control must handle the physical characteristics
+
+of the controlled appliances, such as inrush current for ﬂuorescent lighting and minimum
+
+on-off cycling intervals for fans. GreenLab addresses these challenges through grace peri-
+
+ods before vacancy-based appliance shutdown, conﬁdence thresholds for YOLO occupancy
+
+decisions, and conﬁgurable command intervals that prevent rapid relay cycling. These de-
+
+sign choices are directly informed by the limitations identiﬁed in the Waghchoure et al.
+
+work.
+
+
+\subsubsection*{Advantages}
+\begin{itemize}
+	\item Low processing overhead. PIR-triggered camera activation avoids continuous video
+\end{itemize}
+processing, conserving compute resources until visual veriﬁcation is actually needed.
+
+\begin{itemize}
+	\item Practical false-positive reduction. Camera veriﬁcation after a PIR trigger ﬁlters
+\end{itemize}
+out non-human heat sources (sunlight, heating vents) that would otherwise cause
+
+unnecessary appliance activation.
+
+\begin{itemize}
+	\item Demonstrated low-cost feasibility. Conﬁrms that commodity microcontroller and
+\end{itemize}
+relay hardware is sufﬁcient for classroom-scale appliance automation.
+
+
+\subsubsection*{Disadvantages / Limitations}
+\begin{itemize}
+	\item No backend server or persistence. The system operates entirely on the microcon-
+\end{itemize}
+troller, with no central data store, no historical record of occupancy or appliance state,
+
+and no way to review past behaviour.
+
+\begin{itemize}
+	\item No user accounts or access control. Anyone with physical or network access to the
+\end{itemize}
+system can interact with it; there is no concept of an instructor or administrator role.
+
+\begin{itemize}
+	\item Stationary-occupant blind spot. Like all PIR-based systems, it cannot reliably de-
+\end{itemize}
+tect a seated, motionless occupant, risking false vacancy classiﬁcation during quiet
+
+study or exam periods.
+
+Relevance to GreenLab GreenLab retains the PIR-style trigger-then-verify principle,
+
+implemented through the HC-SR04 sensor initiating a YOLO-based check, but replaces
+
+the standalone-microcontroller model with a full backend and dashboard. The grace peri-
+
+ods, conﬁdence thresholds, and relay-cycling safeguards in GreenLab's design are direct,
+
+traceable responses to the limitations this paper documents.
+
+
+\subsection{Wibowo et al. (2023) --- IoT Energy Management in a University}
+Laboratory
+
+Methodology and Technical Summary Wibowo et al. presented an IoT-based energy
+
+management system designed speciﬁcally for university laboratory environments [?]. The
+
+paper is relevant to GreenLab because it targets the same environment, university labora-
+
+tories, and the same goal, reducing energy waste through IoT-based monitoring and au-
+
+tomation. The authors describe a centralised IoT sensor network that monitors laboratory
+
+appliance status, environmental conditions, and energy consumption, and uses this data to
+
+automate appliance switching and provide monitoring dashboards for laboratory admin-
+
+istrators. The system demonstrates that centralised monitoring reduces energy waste in
+
+academic labs by ensuring that appliances are switched off when laboratories are not in use
+
+and that energy consumption patterns are visible to decision-makers [?].
+
+The key contribution of this paper to GreenLab is the validation of the university labo-
+
+ratory context as a meaningful target for IoT energy management. While many IoT energy
+
+systems target commercial ofﬁces or residential buildings, university laboratories have dis-
+
+tinct characteristics: irregular schedules, variable occupancy, shared equipment, and mul-
+
+tiple responsible parties. Wibowo et al. show that a centralised monitoring approach can
+
+address these characteristics by providing real-time visibility and automated control.
+
+However, the paper's system does not include computer-vision occupancy detection,
+
+role-based access control, manual override with audit trails, or laboratory transfer work-
+
+ﬂows. These governance features are essential for a real faculty deployment where in-
+
+structors must retain pedagogical authority, administrators must manage schedules and ap-
+
+provals, and all actions must be auditable.
+
+GreenLab extends the Wibowo et al. approach by adding YOLO-based occupancy
+
+detection that provides person counts rather than binary occupied or vacant signals, a role-
+
+based dashboard that separates instructor and administrator functions, override manage-
+
+ment with time-limited expiry and audit logging, and transfer request workﬂows that pre-
+
+vent informal room changes from bypassing access control. The centralised monitoring
+
+principle is retained, but the governance layer is signiﬁcantly enhanced to meet the opera-
+
+tional requirements of a faculty environment where accountability and safety are as impor-
+
+tant as energy savings.
+
+
+\subsubsection*{Advantages}
+\begin{itemize}
+	\item Direct context match. Targets the university laboratory environment speciﬁcally,
+\end{itemize}
+rather than a generic ofﬁce or residential setting, making its ﬁndings about irregular
+
+schedules and shared equipment directly transferable to GreenLab.
+
+\begin{itemize}
+	\item Centralised visibility. Provides administrators with a single monitoring point for
+\end{itemize}
+appliance status and energy consumption across the laboratory network, rather than
+
+per-room isolated control.
+
+\begin{itemize}
+	\item Demonstrated energy-waste reduction. Conﬁrms that centralised IoT monitoring,
+\end{itemize}
+even without vision-based occupancy detection, can reduce energy waste in an aca-
+
+demic laboratory setting.
+
+
+\subsubsection*{Disadvantages / Limitations}
+\begin{itemize}
+	\item Binary occupancy signal only. Without computer-vision integration, the system can
+\end{itemize}
+only report occupied/vacant states rather than person counts or occupancy classiﬁca-
+
+tion levels.
+
+\begin{itemize}
+	\item No role-based access control. All users of the monitoring dashboard appear to have
+\end{itemize}
+equivalent access, without separation between instructor and administrator privileges.
+
+\begin{itemize}
+	\item No override audit trail or transfer workﬂow. The paper does not describe a mech-
+\end{itemize}
+anism for authorised manual override with expiry, nor a workﬂow for handling labo-
+
+ratory transfer requests.
+
+Relevance to GreenLab GreenLab retains Wibowo et al.'s centralised-monitoring prin-
+
+ciple as the architectural foundation for its own dashboard but treats it as a necessary, not
+
+sufﬁcient, condition for a real faculty deployment --- the governance features absent from
+
+this paper (role separation, override audit trails, transfer workﬂows) are precisely the fea-
+
+tures GreenLab adds on top of the validated centralised-monitoring pattern.
+
+
+\subsection{Ahmed et al. (2020) --- IoT Classroom Automation with Sensor-}
+Driven Control
+
+Methodology and Technical Summary Ahmed et al. described an IoT-based classroom
+
+automation system that uses motion detection, environmental sensors, a microcontroller,
+
+and a web dashboard for classroom appliance switching [?]. The paper is relevant because
+
+it demonstrates the feasibility of low-cost IoT classroom automation using off-the-shelf
+
+components. The system detects classroom occupancy using motion sensors, reads envi-
+
+ronmental conditions such as temperature and light level, and uses a microcontroller to
+
+switch lights and fans through relays. A web dashboard provides remote monitoring and
+
+manual control, allowing instructors to check classroom status and override automatic de-
+
+cisions from a web browser [?].
+
+The paper highlights several challenges that are directly relevant to GreenLab's de-
+
+sign. Sensor placement affects detection reliability, because a motion sensor mounted in
+
+a corner may not detect occupants near the door, and a temperature sensor placed near a
+
+window may be affected by solar gain. False positives from non-human motion sources,
+
+such as curtains moved by air conditioning, can trigger unnecessary appliance activation.
+
+Delayed response after class changes, when the motion sensor has not yet detected vacancy,
+
+can leave appliances running for extended periods after occupants have left. Ahmed et al.
+
+note that these challenges can be partially mitigated through sensor calibration, debounc-
+
+ing, and grace periods, but that a more robust solution would require additional sensing
+
+modalities and a centralised rule engine.
+
+GreenLab addresses these challenges through multimodal sensing that combines ul-
+
+trasonic, temperature, and light sensors with YOLO-based visual veriﬁcation, grace peri-
+
+ods that delay vacancy-based shutdown until occupancy absence is conﬁrmed, conﬁdence
+
+thresholds that ﬁlter transient detections, and a backend rule engine that applies consistent,
+
+auditable control logic. The web dashboard in the Ahmed et al. system provides basic
+
+remote control but does not implement role-based access, time-limited override with auto-
+
+matic expiry, laboratory transfer approvals, or audit logging. GreenLab provides all of these
+
+governance features, ensuring that the convenience of remote control does not compromise
+
+operational accountability or safety.
+
+
+\subsubsection*{Advantages}
+\begin{itemize}
+	\item Early validation of web-based remote control. Demonstrates, as early as 2020,
+\end{itemize}
+that a web dashboard can provide useful remote monitoring and manual override
+
+for classroom automation, anticipating the dashboard-centred pattern GreenLab also
+
+follows.
+
+\begin{itemize}
+	\item Transparent limitation analysis. The authors explicitly document sensor-placement
+\end{itemize}
+and false-positive challenges rather than presenting an idealised result, providing
+
+concrete, citable design lessons.
+
+\begin{itemize}
+	\item Low-cost, off-the-shelf feasibility. Conﬁrms that classroom automation does not
+\end{itemize}
+require specialised or expensive hardware to achieve basic occupancy-driven control.
+
+
+\subsubsection*{Disadvantages / Limitations}
+\begin{itemize}
+	\item No role-based access control. The web dashboard's manual override is available
+\end{itemize}
+without distinguishing between instructor and administrator authority.
+
+\begin{itemize}
+	\item No time-limited override or audit logging. Manual overrides, once issued, have no
+\end{itemize}
+documented expiry mechanism or persistent audit record.
+
+\begin{itemize}
+	\item Single-modality occupancy detection. Relies on motion sensing alone, without a
+\end{itemize}
+corroborating modality, leaving it exposed to the same false-positive and stationary-
+
+occupant problems documented elsewhere in this chapter.
+
+Relevance to GreenLab GreenLab directly inherits the lesson that debouncing and grace
+
+periods alone are insufﬁcient mitigations for single-modality sensing; this is part of the
+
+justiﬁcation for combining ultrasonic and YOLO-based detection rather than relying on
+
+motion sensing in isolation. The basic remote-override pattern in this paper is the concep-
+
+tual precursor to GreenLab's fully governed override mechanism, with time-limited expiry,
+
+role validation, and audit logging added on top.
+
+
+\subsection{Ingole et al. (2024) --- ESP32 Classroom Automation}
+Methodology and Technical Summary The IRJMETS classroom automation project
+
+by Ingole et al. integrates ESP32 technology, LDR sensing, temperature sensing, relay-
+
+controlled lighting and fan systems, entry management, two operational modes, and a
+
+Wi-Fi manual control interface [?]. This project is highly relevant because its hardware
+
+stack closely matches the GreenLab hardware concept. The ESP32 serves as the central
+
+controller for sensor acquisition and actuator control, reading LDR values to determine
+
+natural-light conditions, reading temperature values to determine ventilation requirements,
+
+and activating relays to switch lights and fans. The system supports two operating modes:
+
+an automatic mode in which the ESP32 applies sensor-based control rules independently,
+
+and a manual mode in which the user can override automatic decisions through a Wi-Fi
+
+interface [?].
+
+The two-mode design is a useful reference for GreenLab because GreenLab also needs
+
+to support both automatic and manual operation. However, the Ingole et al. implementation
+
+treats manual control as a direct Wi-Fi command to the ESP32, without authentication, role-
+
+based access, time-limited expiry, or audit logging. Any device on the same Wi-Fi network
+
+can send a control command to the ESP32, which is acceptable for a prototype but not for a
+
+production faculty system where unauthorised control could create safety hazards or oper-
+
+ational disruptions. GreenLab adopts the embedded-control philosophy of this project but
+
+places it inside a broader multi-tier architecture. In GreenLab, the ESP32 does not operate
+
+as an isolated classroom controller; it communicates with an ASP.NET backend, receives
+
+authorised control states, reports sensor data, and participates in audit-backed workﬂows.
+
+Manual override is issued through the authenticated dashboard, validated by the backend,
+
+recorded in the audit log, and subject to conﬁgurable expiry and cancellation policies.
+
+The hardware similarity extends to the sensor types and relay conﬁguration. Both
+
+systems use an LDR for light sensing, a temperature sensor for ventilation decisions, and
+
+a relay module for light and fan control. GreenLab adds the HC-SR04 ultrasonic sensor
+
+for entry and activity detection, an IP camera for YOLO occupancy veriﬁcation, and addi-
+
+tional relay channels for multi-fan control. These additions are motivated by the limitations
+
+of the Ingole et al. approach: without occupancy veriﬁcation, the system cannot distin-
+
+guish between a laboratory that is scheduled but empty and one that is actually occupied,
+
+and without visual veriﬁcation, sensor-based occupancy decisions are vulnerable to false
+
+positives and false negatives.
+
+
+\subsubsection*{Advantages}
+\begin{itemize}
+	\item Closest hardware match to GreenLab. Uses the same core controller (ESP32) and
+\end{itemize}
+overlapping sensor types (LDR, temperature), making this the most directly transfer-
+
+able hardware reference in the literature reviewed.
+
+\begin{itemize}
+	\item Working dual-mode design. Demonstrates a functional automatic/manual mode
+\end{itemize}
+switch, validating the basic premise that an embedded controller can support both
+
+autonomous and user-directed operation.
+
+\begin{itemize}
+	\item Simple, low-latency override path. Direct Wi-Fi commands to the ESP32 achieve
+\end{itemize}
+minimal latency for manual control, since no intermediate server is involved.
+
+
+\subsubsection*{Disadvantages / Limitations}
+\begin{itemize}
+	\item No authentication on manual control. Any device on the local Wi-Fi network can
+\end{itemize}
+issue control commands, with no login, no role check, and no protection against
+
+unauthorised or accidental interference.
+
+\begin{itemize}
+	\item No occupancy veriﬁcation beyond environmental sensors. The system cannot dis-
+\end{itemize}
+tinguish a scheduled-but-empty laboratory from an actually occupied one, since it
+
+has no camera or vision-based conﬁrmation.
+
+\begin{itemize}
+	\item No backend, persistence, or audit trail. The ESP32 operates in isolation; there
+\end{itemize}
+is no central record of historical sensor data, override events, or system state for
+
+administrative review.
+
+Relevance to GreenLab GreenLab adopts the embedded sensing and relay-control phi-
+
+losophy of this project almost directly but relocates authority for manual control from the
+
+device itself to an authenticated backend, closing the most signiﬁcant safety and gover-
+
+nance gap this project leaves open. The sensor set is also extended with the HC-SR04 and
+
+the YOLO-based camera pipeline to address the occupancy-veriﬁcation limitation identiﬁed
+
+above.
+
+
+% --- FIGURE PLACEHOLDER: Figure 2.3 ---
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{figures/ingole-2024-figure.png}
+	\caption{ESP32-based classroom automation hardware prototype reported by Ingole et al}
+	\label{fig:2-3}
+\end{figure}
+
+Figure 2.3: ESP32-based classroom automation hardware prototype reported by Ingole et al.
+
+
+\subsection{SmartHaus --- Angular and REST API IoT Dashboard}
+Methodology and Technical Summary SmartHaus is an open-source home automa-
+
+tion system for monitoring and controlling IoT devices through real-time dashboards and
+
+a RESTful API [?]. Its repository describes an Angular client, a Node.js server, REST
+
+communication, microcontroller compatibility with Arduino, ESP8266, and ESP32, and
+
+API functions for reading and writing digital and analogue pins. The project is relevant to
+
+GreenLab because GreenLab also relies on a dashboard-centred architecture in which users
+
+monitor device state and issue authorised control commands. SmartHaus demonstrates that
+
+an Angular single-page application can serve as an effective IoT monitoring and control
+
+interface, with real-time device status updates and responsive command submission [?].
+
+The main contribution of SmartHaus to GreenLab is architectural rather than domain-
+
+speciﬁc. It illustrates how a web dashboard can expose device-level operations through
+
+REST abstractions while keeping IoT devices on a local network. The REST API decou-
+
+ples the dashboard from the device communication protocol, allowing the dashboard to be
+
+developed and deployed independently of the microcontroller ﬁrmware. This decoupling is
+
+essential for GreenLab because the Angular dashboard must work with the ASP.NET Core
+
+backend rather than directly with the ESP32, and the backend must enforce business rules,
+
+authentication, and audit logging that are not present in the SmartHaus architecture.
+
+GreenLab follows a similar separation between dashboard controls and embedded
+
+devices but adapts the pattern for faculty laboratories. The SmartHaus system treats all
+
+users as equivalent controllers with access to all devices, which is appropriate for a home
+
+environment but not for a faculty laboratory where instructors should only control their
+
+assigned laboratories, administrators should manage schedules and approvals, and some
+
+actions should require explicit authorisation and audit logging. GreenLab adds role-based
+
+access that distinguishes instructor, administrator, and service roles; laboratory scheduling
+
+and transfer approvals that prevent unauthorised room changes; audit logs that record every
+
+state-changing action with actor, timestamp, and outcome; and YOLO occupancy integra-
+
+tion that provides automated occupancy-aware control beyond simple on-off switching.
+
+
+\subsubsection*{Advantages}
+\begin{itemize}
+	\item Validated Angular + REST pattern. Demonstrates a working, decoupled architec-
+\end{itemize}
+ture in which an Angular client communicates with IoT devices entirely through a
+
+REST abstraction layer, directly informing GreenLab's frontend-to-backend design.
+
+\begin{itemize}
+	\item Broad microcontroller compatibility. Supports Arduino, ESP8266, and ESP32 de-
+\end{itemize}
+vices, showing that the REST abstraction generalises across common low-cost mi-
+
+crocontroller platforms.
+
+\begin{itemize}
+	\item Open-source transparency. As an open repository, the architecture and API design
+\end{itemize}
+can be inspected directly, giving a veriﬁable, citable technical reference rather than a
+
+description relying solely on a paper's claims.
+
+
+\subsubsection*{Disadvantages / Limitations}
+\begin{itemize}
+	\item No role differentiation. All dashboard users have equivalent access to all connected
+\end{itemize}
+devices, which is unsuitable for a multi-instructor, multi-administrator faculty envi-
+
+ronment with differentiated authority.
+
+\begin{itemize}
+	\item No domain-speciﬁc automation logic. SmartHaus exposes raw pin read/write oper-
+\end{itemize}
+ations rather than higher-level automation concepts such as occupancy classiﬁcation,
+
+lighting decision matrices, or fan activation tables.
+
+\begin{itemize}
+	\item No audit logging or accountability mechanism. State-changing actions are not
+\end{itemize}
+recorded in a persistent, reviewable audit trail.
+
+Relevance to GreenLab GreenLab inherits the architectural decoupling principle from
+
+SmartHaus --- keeping the dashboard's REST contract independent of the embedded device
+
+protocol --- but replaces SmartHaus's ﬂat, single-tier user model with role-based access
+
+control, laboratory-scoped permissions, transfer approval workﬂows, and comprehensive
+
+audit logging, none of which the SmartHaus architecture provides.
+
+
+\section{Comparative Analysis}
+The reviewed sources collectively show that existing works address individual parts of
+
+smart-building automation, including detection, control, or dashboards, but none combines
+
+all the governance features that a real faculty laboratory requires. Chaudhari et al. provide
+
+a survey of sensing technologies rather than a deployed system, and Zhang et al. contribute
+
+an improved YOLO algorithm rather than a complete automation platform; consistent with
+
+Sections 2.2.2 and 2.2.3, these two works are discussed in the text but excluded from the
+
+comparison table below. The remaining six reviewed works and GreenLab are compared
+
+across the technical dimensions that most directly distinguish GreenLab from the existing
+
+body of work.
+
+	{\small
+		\begin{longtable}{|L{2.0cm}|L{1.5cm}|L{1.6cm}|L{1.6cm}|L{1.5cm}|L{1.5cm}|L{1.4cm}|L{1.7cm}|}
+			\caption{Comprehensive Feature Comparison Matrix} \label{tab:2-1}                                                                                                                                                                                                                                                                          \\
+			\hline
+			\rowcolor{gray!25}
+			\textbf{Dimension}                     & \textbf{Challa et al. (2025)}   & \textbf{Waghchoure et al. (2025)}       & \textbf{Wibowo et al. (2023)}      & \textbf{Ahmed et al. (2020)}            & \textbf{Ingole et al. (2024)}           & \textbf{SmartHaus}                  & \textbf{GreenLab}                                      \\
+			\hline
+			\endfirsthead
+			\hline
+			\rowcolor{gray!25}
+			\textbf{Dimension}                     & \textbf{Challa et al. (2025)}   & \textbf{Waghchoure et al. (2025)}       & \textbf{Wibowo et al. (2023)}      & \textbf{Ahmed et al. (2020)}            & \textbf{Ingole et al. (2024)}           & \textbf{SmartHaus}                  & \textbf{GreenLab}                                      \\
+			\hline
+			\endhead
+			\hline
+			\endfoot
+			\hline
+			\endlastfoot
+			Target environment                     & Classroom                       & Classroom                               & University laboratory              & Classroom                               & Classroom                               & Generic home/IoT                    & Faculty laboratory                                     \\
+			\hline
+			Sensing (multi-modal)                  & \checkmark\ Camera + gas sensor & \checkmark\ PIR + camera                & \checkmark\ IoT sensor network     & \checkmark\ Motion + environmental      & \checkmark\ LDR + temperature           & \ding{55}\ No environmental sensing & \checkmark\ LDR + DHT11 + HC-SR04                      \\
+			\hline
+			AI / Computer vision                   & \checkmark\ YOLOv4 (face-based) & Partial (camera verification, no count) & \ding{55}                          & \ding{55}                               & \ding{55}                               & \ding{55}                           & \checkmark\ YOLO-based person counting                 \\
+			\hline
+			Automated lighting control             & \ding{55}                       & \checkmark                              & \checkmark                         & \checkmark                              & \checkmark                              & Partial (manual pin write)          & \checkmark\ Decision-matrix driven                     \\
+			\hline
+			Automated ventilation / HVAC control   & \checkmark\ HVAC-linked         & \checkmark\ Fans                        & Partial                            & \checkmark\ Fans                        & \checkmark\ Fans                        & Partial (manual pin write)          & \checkmark\ Fan activation table                       \\
+			\hline
+			Web dashboard                          & \ding{55}                       & \ding{55}                               & \checkmark\ Monitoring only        & \checkmark\ Monitoring + basic override & Partial (Wi-Fi command only, no UI)     & \checkmark\ Angular dashboard       & \checkmark\ Angular SPA dashboard                      \\
+			\hline
+			Role-based access control (Governance) & \ding{55}                       & \ding{55}                               & \ding{55}                          & \ding{55}                               & \ding{55}                               & \ding{55}                           & \checkmark\ Instructor / Administrator / Service roles \\
+			\hline
+			Manual override with expiry            & \ding{55}                       & \ding{55}                               & Basic, no expiry                   & Basic, no expiry                        & \checkmark\ Wi-Fi only, unauthenticated & \ding{55}                           & \checkmark\ Time-limited, authenticated, auditable     \\
+			\hline
+			Audit logging / accountability         & \ding{55}                       & \ding{55}                               & \ding{55}                          & \ding{55}                               & \ding{55}                               & \ding{55}                           & \checkmark\ Tamper-resistant audit log                 \\
+			\hline
+			Laboratory transfer workflow           & \ding{55}                       & \ding{55}                               & \ding{55}                          & \ding{55}                               & \ding{55}                               & \ding{55}                           & \checkmark\ Request and approval workflow              \\
+			\hline
+			Backend persistence layer              & Partial (local processing only) & \ding{55}                               & \checkmark\ Centralised monitoring & Partial                                 & \ding{55}                               & \checkmark\ Node.js server          & \checkmark\ ASP.NET Core + SQL Server                  \\
+			\hline
+		\end{longtable}
+	}
+
+	{\small \textit{Sources: Challa et al. [?]; Waghchoure et al. [?]; Wibowo et al. [?]; Ahmed et al. [?]; Ingole et al. [?]; SmartHaus [?].}}
+
+
+The comparison table conﬁrms that no single reviewed source combines laboratory
+
+scheduling, role-based dashboard governance, ESP32 relay control, YOLO occupancy de-
+
+tection, manual override with audit trails, and accountability logging. Challa et al. provide
+
+strong computer-vision occupancy detection but no web-based governance. Wibowo et al.
+
+target university laboratories but lack YOLO integration and role-based access. Ahmed et
+
+al. demonstrate classroom automation but without computer vision or audit logging. In-
+
+gole et al. provide the closest hardware match but operate an isolated ESP32 controller
+
+without backend authority or governance. SmartHaus validates the dashboard-and-REST
+
+architectural pattern but provides no domain-speciﬁc automation logic and no role differ-
+
+entiation. GreenLab ﬁlls this gap by integrating sensing, AI-based detection, automated
+
+control, dashboard governance, and audit accountability within a single layered architec-
+
+ture designed speciﬁcally for faculty laboratory deployment.
+
+
+\section{Literature Gap Addressed by GreenLab}
+The literature review reveals a clear gap in the existing body of work: no single reviewed
+
+source combines laboratory scheduling, role-based governance, ESP32 relay control, YOLO
+
+occupancy detection, manual override with time-limited expiry and automatic policy restora-
+
+tion, and audit logging with tamper-resistant operational records. Each reviewed source
+
+addresses one or two aspects of smart-building automation, but the governance layer re-
+
+quired for a real faculty deployment is consistently absent. Occupancy detection papers
+
+focus on algorithmic accuracy without addressing who may view or act on the detection
+
+results. Classroom automation projects focus on sensor-to-relay control without providing
+
+role-based access or audit trails. Dashboard projects focus on user interface and REST
+
+architecture without integrating occupancy-aware automation or laboratory scheduling.
+
+This gap can be stated precisely along three structural lines, each grounded in the eight
+
+reviewed sources above:
+
+\begin{itemize}
+	\item The detection-without-governance gap. Challa et al. [?], Chaudhari et al. [?],
+\end{itemize}
+and Zhang et al. [?] demonstrate that occupancy can be detected accurately and
+
+efﬁciently through multimodal sensing and lightweight computer vision, but none
+
+of these sources extends detection into an accountable control system: there is no
+
+concept of who is authorised to act on a detection result, and no record of who did.
+
+\begin{itemize}
+	\item The automation-without-accountability gap. Waghchoure et al. [?], Ahmed et
+\end{itemize}
+al. [?], and Ingole et al. [?] demonstrate that sensor-to-relay automation is achiev-
+
+able with low-cost embedded hardware, but each treats manual override as an unau-
+
+thenticated, unaudited convenience feature rather than a governed operation, leaving
+
+unauthorised or unaccountable control as an open risk in any production deployment.
+
+\begin{itemize}
+	\item The dashboard-without-domain-logic gap. Wibowo et al. [?] and SmartHaus [?]
+\end{itemize}
+demonstrate that centralised web dashboards can provide visibility and control over
+
+distributed IoT devices, but neither integrates occupancy-aware automation logic,
+
+laboratory-speciﬁc scheduling, or the role separation that a multi-instructor, multi-
+
+administrator faculty environment requires.
+
+GreenLab addresses this three-part gap by designing a system in which energy man-
+
+agement is not merely a sensor-to-relay control problem but a governance problem that
+
+requires authentication, authorisation, override management, transfer approvals, fault han-
+
+dling, and audit logging. The four-tier architecture ensures that each concern is handled by
+
+the appropriate tier: the ESP32 handles local sensor reading and relay actuation, the Python
+
+YOLO service handles occupancy inference, the ASP.NET Core backend handles business
+
+rules and persistence, and the Angular dashboard handles presentation and user interaction.
+
+This integration of automation and governance is the distinguishing contribution of Green-
+
+Lab relative to the reviewed literature, and it is motivated by the practical requirements of
+
+faculty laboratories where automation must coexist with teaching authority, administrative
+
+oversight, and safe equipment operation.
+
+
