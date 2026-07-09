@@ -23,7 +23,7 @@ direction for continued development. Chapter 5 traced individual functional and 
 
 functional requirements to their implementation evidence (Section 5.6) and recorded
 
-seven specific implementation deviations as they were discovered (Section 5.8). This
+seven specific implementation deviations as they were discovered (Section 6.4). This
 
 chapter operates at the level of the project as a whole: it evaluates whether GreenLab
 
@@ -37,43 +37,27 @@ Table 6.1 evaluates each objective from Section 1.4 against the evidence accumul
 
 across Chapters 3--5, principally the requirements traceability matrix in Section 5.6.
 
-\begin{longtable}{|L{0.7cm}|L{3.2cm}|L{2.2cm}|L{9.5cm}|}
-\caption{Objective-by-objective achievement status.} \label{tab:6-1} \\
-\hline
-\rowcolor{tableheadergray}
-\textbf{\#} & \textbf{Objective} & \textbf{Status} & \textbf{Evidence} \\
-\hline
-\endfirsthead
-\hline
-\rowcolor{tableheadergray}
-\textbf{\#} & \textbf{Objective} & \textbf{Status} & \textbf{Evidence} \\
-\hline
-\endhead
-\hline
-\endfoot
-\hline
-\endlastfoot
-1 & Layered four-tier architecture with clear interface contracts & Achieved & The hardware, AI, backend, and dashboard tiers communicate exclusively through the defined REST interfaces described in Section 4.1 and exercised in Chapter 5: the ESP32 firmware never bypasses the backend to reach the AI service or dashboard directly, and each tier's internal implementation (§5.2--5.5) can be replaced without altering another tier's contract. \\
-\hline
-2 & Functional and non-functional requirements in formal IEEE 830 style & Achieved & Sections 3.5 and 3.6 specify 135 requirements across nine functional areas and six non-functional quality dimensions. The Section 5.6 traceability matrix confirms every sampled requirement traces to implementation evidence or an explicitly recorded gap. \\
-\hline
-3 & Multimodal occupancy detection combining embedded sensors and YOLO-based vision & Achieved & The Section 5.7 worked trace demonstrates HC-SR04, DHT11, and LDR readings combining with the YOLO service's tracked person count within a single automation decision (FR-OD-01, FR-OD-02: Implemented). \\
-\hline
-4 & Lighting control via a decision matrix & Achieved & The LDR-zone x occupancy-classification matrix (Table 4.6) is implemented as a data-driven rule lookup, satisfying the auditability and configurability goal stated in Objective 4. \\
-\hline
-5 & Ventilation control via a fan activation table & Achieved & The temperature-zone x occupancy-classification table (Table 4.7) follows the same pattern as the lighting matrix and is exercised directly in the Section 5.7 worked example. \\
-\hline
-6 & Secure ASP.NET Core REST API with authentication, RBAC, and audit logging & Achieved & FR-AC-01 through FR-AC-04 are marked Implemented in the Section 5.6 traceability matrix, supported by JWT-based authentication (§4.7.1), a three-role access model (§4.7.2), and an append-only audit log (§4.7.3), each demonstrated against concrete request/response evidence in Chapter 5. \\
-\hline
-7 & Angular dashboard for monitoring, override, scheduling, and administration & Achieved & Sections 5.4--5.5 document eight distinct dashboard views spanning all four required capabilities, with FR-MD-01 and FR-MD-03 both marked Implemented. One presentational inconsistency --- a third device-state pill rendered for a currently-unwired relay channel --- is recorded as a known limitation in Section 5.8 and does not affect the four core capabilities this objective requires. \\
-\hline
-8 & Complete, print-ready project report by this revision & Achieved & The report's figures, tables, and formatting satisfy Objective 8. The report was previously incomplete against its own six-chapter structure (no Chapter 6) and carried an unresolved citation-numbering placeholder in Chapter 2; both are resolved as part of this revision. \\
-\hline
-\end{longtable}
+\begin{itemize}
+	\item \textbf{Objective 1 --- Layered four-tier architecture with clear interface contracts} (Achieved). The hardware, AI, backend, and dashboard tiers communicate exclusively through the defined REST interfaces described in Section 4.1 and exercised in Chapter 5: the ESP32 firmware never bypasses the backend to reach the AI service or dashboard directly, and each tier's internal implementation (§5.2--5.5) can be replaced without altering another tier's contract.
+
+	\item \textbf{Objective 2 --- Functional and non-functional requirements in formal IEEE 830 style} (Achieved): Sections 3.5 and 3.6 specify 135 functional requirements across nine functional areas and six non-functional quality dimensions. The Section 5.6 traceability matrix confirms every sampled requirement traces to implementation evidence or an explicitly recorded gap.
+
+	\item \textbf{Objective 3 --- Multimodal occupancy detection combining embedded sensors and YOLO-based vision} (Achieved): The Section 5.7 worked trace demonstrates HC-SR04, DHT11, and LDR readings combining with the YOLO service's tracked person count within a single automation decision (FR-OD-01, FR-OD-02: Implemented).
+
+	\item \textbf{Objective 4 --- Lighting control via a decision matrix} (Achieved): The LDR-zone x occupancy-classification matrix (Table 4.6) is implemented as a data-driven rule lookup, satisfying the auditability and configurability goal stated in Objective 4.
+
+	\item \textbf{Objective 5 --- Ventilation control via a fan activation table} (Achieved): The temperature-zone x occupancy-classification table (Table 4.7) follows the same pattern as the lighting matrix and is exercised directly in the Section 5.7 worked example.
+
+	\item \textbf{Objective 6 --- Secure ASP.NET Core REST API with authentication, RBAC, and audit logging} (Achieved): FR-AC-01 through FR-AC-04 are marked Implemented in the Section 5.6 traceability matrix, supported by JWT-based authentication (§4.7.1), a three-role access model (§4.7.2), and an append-only audit log (§4.7.3), each demonstrated against concrete request/response evidence in Chapter 5.
+
+	\item \textbf{Objective 7 --- Angular dashboard for monitoring, override, scheduling, and administration} (Achieved): Sections 5.4--5.5 document eight distinct dashboard views spanning all four required capabilities, with FR-MD-01 and FR-MD-03 both marked Implemented. One presentational inconsistency --- a third device-state pill rendered for a currently-unwired relay channel --- is recorded as a limitation in Section 6.4 and does not affect the four core capabilities this objective requires.
+
+	\item \textbf{Objective 8 --- Complete, print-ready project report by this revision} (Achieved): The report's figures, tables, and formatting satisfy Objective 8. The report was previously incomplete against its own six-chapter structure (no Chapter 6) and carried an unresolved citation-numbering placeholder in Chapter 2; both are resolved as part of this revision.
+\end{itemize}
 
 Seven of the eight objectives were fully achieved by the delivered system with no
 
-qualification beyond the implementation-level deviations recorded in Section 5.8.
+qualification beyond the implementation-level deviations recorded in Section 6.4.
 
 Objective 8, concerning the report itself, is brought to completion by this chapter and the
 
@@ -109,43 +93,25 @@ end, supporting the practical feasibility of the design.
 \section{Limitations}
 
 \subsection{Implementation Deviations}
-Section 5.8 recorded seven deviations between the Chapter 3/4 specification and the as-
+Seven deviations between the Chapter 3/4 specification and the as-built system were
 
-built system as they were discovered during implementation. They are restated here as
+discovered during implementation. They are documented here as formal project limitations.
 
-formal project limitations.
+\begin{itemize}
+	\item \textbf{Firmware thresholds hardcoded} (NFR-MAIN-01): LIGHT\_THRESHOLD (2000) and the fan-on temperature (28\textdegree{}C) are compile-time constants. Changing a threshold requires reflashing the device. No /api/devices/\{id\}/config endpoint exists yet. \textit{Recommended fix:} Add a config endpoint; call it at boot; cache in EEPROM for offline use.
 
-\begin{longtable}{|L{3.5cm}|L{3.0cm}|L{9.0cm}|}
-\caption{Implementation deviations carried forward as project limitations.} \label{tab:6-2} \\
-\hline
-\rowcolor{tableheadergray}
-\textbf{Limitation} & \textbf{Requirement affected} & \textbf{Nature of deviation} \\
-\hline
-\endfirsthead
-\hline
-\rowcolor{tableheadergray}
-\textbf{Limitation} & \textbf{Requirement affected} & \textbf{Nature of deviation} \\
-\hline
-\endhead
-\hline
-\endfoot
-\hline
-\endlastfoot
-Firmware control thresholds are compile-time constants & NFR-MAIN-01 & Changing a lighting or temperature threshold requires reflashing the device rather than calling a runtime configuration endpoint. \\
-\hline
-Two of four modelled relay channels are unwired & Architecture (§4.2, §5.8) & The backend's response contract models four relay channels (lightOn, fanOn, relay3On, relay4On); only the first two are physically connected to GPIO output in the current prototype. \\
-\hline
-Local network-fallback logic re-evaluates rather than freezes & FR-FH-02 & On connectivity loss, the firmware re-evaluates the LDR reading against a local threshold rather than holding the last backend-commanded relay state, as originally specified. \\
-\hline
-The Teaching Assistant role is unmodelled & FR-AC-02, FR-AC-03 & This role was introduced during implementation to reflect a real organisational need but does not appear in the Chapter 3 use case model or stakeholder analysis. \\
-\hline
-The "occupancy outside session" alert has no formal requirement ID & Fault handling (§5.5.2) & This alert type is implemented and functions correctly but was not anticipated by the Chapter 3 functional requirement set. \\
-\hline
-Device identity is compiled into firmware & NFR-MAIN-01 & labId and deviceId are integer literals in the firmware rather than provisioned at runtime, meaning each new device deployment requires a firmware rebuild. \\
-\hline
-Inference sampling cadence is frame-count-based, not time-based & NFR-PERF-03 & FRAME\_SKIP=3 yields a variable inference rate depending on the camera's actual frame rate rather than a fixed elapsed-time interval. \\
-\hline
-\end{longtable}
+	\item \textbf{Two of four relay channels unwired} (Architecture \S4.2): relay3On and relay4On are parsed and logged but not connected to GPIO outputs. Only RELAY\_PIN and RELAY\_PIN2 are physically wired. Hardware not yet expanded beyond two channels. \textit{Recommended fix:} Add \#define RELAY\_PIN3/4; add actuation logic --- no backend change needed.
+
+	\item \textbf{Local fallback re-evaluates rather than freezes} (FR-FH-02): Fallback logic re-evaluates the LDR reading rather than holding the last backend-commanded state as FR-FH-02 specifies. Designed for simplicity over strict spec compliance. \textit{Recommended fix:} Store last backend-commanded light state; restore it on fallback rather than re-evaluating.
+
+	\item \textbf{Teaching Assistant role unmodelled} (FR-AC-02, FR-AC-03): The role was added during implementation but is absent from the Chapter 3 use case model. Discovered during implementation as a real organisational need. \textit{Recommended fix:} Add Teaching Assistant as a named actor in the use case diagram and stakeholder analysis.
+
+	\item \textbf{Occupancy outside session alert unspecified} (Fault handling): The dashboard raises this alert when occupancy is detected outside scheduled hours. No FR ID exists for it. Emergent feature identified during dashboard implementation. \textit{Recommended fix:} Write back as FR-FH-04 in a revised Chapter 3.
+
+	\item \textbf{Device identity compiled into firmware} (NFR-MAIN-01): labId and deviceId are integer literals in the firmware. Deploying to a second lab requires recompiling. No provisioning API was designed for device self-registration. \textit{Recommended fix:} Read labId/deviceId from EEPROM, provisioned via QR code or BLE commissioning.
+
+	\item \textbf{FRAME\_SKIP is count-based, not time-based} (NFR-PERF-03): At variable camera frame rates the effective inference cadence varies. At 15 fps, FRAME\_SKIP=3 gives 5 inferences/s; at 5 fps it gives only 1.7/s. \textit{Recommended fix:} Replace FRAME\_SKIP with a minimum-elapsed-time gate based on time.monotonic().
+\end{itemize}
 
 
 \subsection{Project-Level Limitations}
@@ -201,7 +167,7 @@ the network-fallback logic to hold rather than re-evaluate the last commanded re
 
 (resolving FR-FH-02). These four items close every specification-level gap recorded in
 
-Section 5.8 without requiring new architecture.
+Section 6.4 without requiring new architecture.
 
 Phase 3 --- Hardware completion (mid-term). Wire the two currently-unused relay
 
@@ -224,29 +190,6 @@ measured energy consumption before and after deployment, and instructor-reported
 usability feedback. This phase converts the project's design-time claims into empirically
 
 supported results and is the single highest-value step toward a production-ready system.
-
-
-\section{Concluding Remarks}
-GreenLab demonstrates that occupancy-aware laboratory automation and operational
-
-governance are complementary layers of the same system rather than competing
-
-concerns: the same event that triggers an automatic lighting decision is, in the same code
-
-path, written to an immutable audit record and surfaced on an administrator's
-
-dashboard. Seven of the project's eight objectives were fully achieved by the delivered
-
-system, with the eighth --- completion of the report itself --- closed by this chapter. The
-
-limitations recorded in Section 6.4 mark the specific, named boundary between what has
-
-been built and demonstrated on a development network, and what remains to be proven
-
-through field deployment. The four-phase roadmap in Section 6.5 defines the path from
-
-that boundary to a validated, production-ready deployment.
-
 
 
 \end{document}

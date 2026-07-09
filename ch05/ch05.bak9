@@ -1,0 +1,4094 @@
+\chapter{Implementation}
+Implementation
+
+
+\section{Introduction}
+This chapter presents the fully as-built GreenLab system: every line of source code that runs on
+
+each tier of the architecture dened in Chapter 3, paired with annotated screenshots of the running
+
+administration and monitoring interface. Where Chapter 3 xed what the system must do and
+
+Chapter 4 xed how it would be structured, Chapter 5 is the proof that the structure was realised
+
+in working software. Every code listing that follows is taken verbatim from the project's committed
+
+source les; every screenshot is from the live deployed dashboard, not a mock-up or wireframe.
+
+GreenLab is a four-tier IoT system for smart energy management in university computer-science
+
+laboratories. The four tiers are: a hardware layer running on the ESP32 microcontroller, a Python
+
+AI processing service performing real-time person detection and tracking, a.NET Core REST API
+
+that hosts the business logic and database access layer, and an Angular web dashboard through
+
+which administrators and instructors monitor and congure the system. This chapter covers the rst
+
+two tiers in full source-code depth  rmware (Section 5.2) and the Python AI service (Section 5.3)
+
+and covers the dashboard interface (Sections 5.4 and 5.5) through annotated screenshots tied to
+
+functional requirements.
+
+The chapter is structured as follows:
+
+Section 5.2 covers the ESP32 rmware in six subsections, each presenting a complete function
+
+or logical block with line-by-line commentary, design rationale, and requirement tracebacks.
+
+Section 5.3 covers the Python AI processing service in two stages: rst the single-camera
+
+prototype (), then the production multi-camera tracking API (
+
+and ).
+
+Section 5.4 covers every screen of the Angular administration interface with annotated screen-
+
+shots.
+
+Section 5.5 covers the monitoring dashboard.
+
+Section 5.6 provides a complete requirement traceability matrix.
+
+Section 5.7 walks one complete end-to-end motion event through all four tiers with real JSON
+
+payloads.
+
+Section 5.8 summarises the chapter.
+
+Two editorial decisions are stated up front. First, Wi-Fi credentials and device passwords that
+
+appear as plain string literals in the rmware are redacted in every listing in this chapter; only the
+
+surrounding logic that consumes them is shown. Second, this chapter is honest about the small
+
+number of places where the as-built code diverges from the Chapter 3 design  for example, the
+
+rmware's API paths use /api/devices/ rather than /sensor/readings, and relay channels three
+
+and four are parsed but not yet physically wired. These deviations are reported explicitly, not
+
+smoothed over.
+
+
+\section{Hardware Layer Implementation  ESP32 Firmware}
+The hardware layer is a single Arduino sketch,, that runs on an ESP32 mi-
+
+crocontroller permanently installed in each smart laboratory. The sketch is 487 lines long and
+
+implements six coherent responsibilities: including the required libraries and declaring all hardware
+
+constants (Section 5.2.1); reading the three sensors (Section 5.2.2); responding to direct HTTP
+
+commands from the dashboard (Section 5.2.3); authenticating with the backend using JSON Web
+
+Tokens (Section 5.2.4); packaging sensor data and communicating it to the backend on motion events
+
+(Section 5.2.5); and running the main event loop that ties all of the above together (Section 5.2.6).
+
+Each section below presents the relevant code in full, followed by a detailed explanation.
+
+
+\subsection{Library Includes, Hardware Pin Denitions, and Global Constants}
+The top of the sketch begins with ve library includes and a WebServer instance, followed by all
+
+\#define macros for sensor and relay pins, all tunable constants, and all global variables used across
+
+functions.
+
+\begin{listingbox}
+	\begin{verbatim}
+1 \#include <WiFi.h>
+
+2 \#include <HTTPClient.h>
+
+3 \#include <DHT.h>
+
+4 \#include <ArduinoJson.h>
+
+5 \#include <WebServer.h>
+
+7 WebServer server(80);
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.1: Library includes and local web server declaration (, lines 410).
+
+Each library serves a specic architectural role. WiFi.h provides the ESP32's Wi-Fi stack, expos-
+
+ing the WiFi.begin() and WiFi.status() primitives used in setup() and in the loop's connectivity
+
+guard. HTTPClient.h provides the high-level HTTP client used for both the token-exchange POST
+
+and the motion-event POST; it handles TCP connection management, keep-alive, and response body
+
+buering internally, which would otherwise require hundreds of lines of socket code. DHT.h is the
+
+Adafruit DHT sensor library that abstracts the one-wire protocol used by the DHT11; without it, the
+
+rmware would need to implement precise microsecond-level bit-banging for temperature and humid-
+
+ity acquisition. ArduinoJson.h is Benoit Blanchon's widely-used embedded JSON library; it pro-
+
+vides a document-oriented parser and serialiser that avoids dynamic heap allocation by working from
+
+a statically-sized DynamicJsonDocument or StaticJsonDocument. WebServer.h wraps the ESP32's
+
+built-in TCP server and provides the server.on() route-registration and server.handleClient()
+
+polling API used for the local light and fan control endpoints described in Section 5.2.3.
+
+Design note. WebServer runs on port 80 in addition to the main backend communication. This
+
+gives the Angular dashboard a direct HTTP path to toggle the light and fan without sending a
+
+round-trip through the.NET Core backend  useful for manual override during demos or when the
+
+backend is unrestarting.
+
+\begin{listingbox}
+	\begin{verbatim}
+1 \#define TRIG\_PIN 4 // HC-SR04 ultrasonic trigger output
+
+2 \#define ECHO\_PIN 2 // HC-SR04 ultrasonic echo input
+
+3 \#define RELAY\_PIN 26 // Relay channel 1 -- controls laboratory lights
+
+4 \#define RELAY\_PIN2 27 // Relay channel 2 -- controls laboratory fan
+
+5 \#define LDR\_PIN 34 // Analogue input for LDR (light-dependent resistor)
+
+6 \#define DHT\_PIN 5 // Digital data pin for DHT11 temperature/humidity sensor
+
+7 \#define DHT\_TYPE DHT11
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.2: GPIO pin assignments for all sensors and relay channels (, lines 11
+
+17).
+
+Pin selection is not arbitrary. GPIO 34 is chosen for the LDR because it is one of the ESP32's
+
+input-only ADC pins  it cannot be accidentally congured as an output. GPIO 4 for TRIG\_PIN
+
+and GPIO 2 for ECHO\_PIN are general-purpose I/O pins; GPIO 2 is also connected to the ESP32's
+
+built-in LED on most development boards, which gives a visual icker on every ultrasonic pulse
+
+during debugging. GPIO 26 and 27 are DAC-capable pins on the ESP32, but they are used here
+
+purely as digital outputs to drive the relay module's control inputs; no analogue output is needed.
+
+GPIO 5 for DHT\_PIN is chosen because it is one of the few pins that does not have a boot-mode
+
+conict on the ESP32.
+
+\begin{listingbox}
+	\begin{verbatim}
+1 int labId = 1;
+
+2 int deviceId = 1;
+
+4 const char* Devicepassword = "[REDACTED]";
+
+5 const char* ssid = "[REDACTED]";
+
+6 const char* password = "[REDACTED]";
+
+8 const char* serverUrl = "http://192.168.1.7:5076/api/devices/1/event";
+
+9 const char* lightApi = "http://192.168.1.7:5076/api/devices/light";
+
+10 const char* TokenGen = "http://192.168.1.7:5076/api/devices/token";
+
+12 String jwtToken = "";
+
+13 unsigned long tokenExpireMillis = 0;
+
+15 static bool lastLightState = false;
+
+16 static bool lastFanState = false;
+
+18 const int DISTANCE\_THRESHOLD = 50; // centimetres
+
+19 const unsigned long COOLDOWN = 2000; // milliseconds
+
+20 const int LIGHT\_THRESHOLD = 2000; // LDR ADC value
+
+21 const unsigned long LIGHT\_INTERVAL = 5000; // ms (reserved for future periodic checks
+
+\end{verbatim}
+\end{listingbox}
+)
+
+\begin{listingbox}
+	\begin{verbatim}
+23 bool wasNear = false;
+
+24 unsigned long lastToggleTime = 0;
+
+26 DHT dht(DHT\_PIN, DHT\_TYPE);
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.3: Device identity, network endpoints, JWT state, relay state trackers, and tuning
+
+constants (, lines 1946).
+
+labId and deviceId are the identiers that the backend uses to look up which laboratory this
+
+ESP32 belongs to and which device record to authenticate against. They are compiled-in integer
+
+literals in the current build, which means reashing is required to deploy the same rmware binary
+
+to a second laboratory with a dierent ID  a maintainability gap noted in Section 5.8 and tracked
+
+against NFR-MAIN-01.
+
+The three API endpoint strings embed the local network IP address 192.168.1.7 and port 5076,
+
+which are the host:port of the.NET Core backend process on the development network. serverUrl
+
+points to the motion-event endpoint; lightApi points to an endpoint used for direct light-state
+
+queries (reserved for future use); TokenGen points to the device authentication endpoint.
+
+jwtToken and tokenExpireMillis implement the client side of the JWT caching strategy:
+
+after a successful token exchange, jwtToken holds the bearer token string and tokenExpireMillis
+
+holds the millis() value at which the rmware will proactively refresh it. lastLightState and
+
+lastFanState are the dierential-update guards that prevent unnecessary relay switching chatter
+
+a relay is only toggled when the commanded state diers from the last applied state.
+
+DISTANCE\_THRESHOLD (50 cm) denes the boundary within which the HC-SR04 considers a
+
+COOLDOWN (2000 ms) is the minimum gap between consecutive
+
+person to be near the sensor.
+
+motion-event POSTs, preventing the rmware from ooding the backend if a person lingers near the
+
+sensor. LIGHT\_THRESHOLD (2000) is the ADC reading below which the local fallback logic considers
+
+the room too dark to leave the light o. LIGHT\_INTERVAL is declared but currently unused  it was
+
+intended for a periodic light-level check independent of motion events, which remains as planned
+
+future work.
+
+Table 5.1: Firmware constants and their alignment with the Add Lab form defaults.
+
+Constant Value Purpose Congurable via Add
+
+Lab?
+
+DISTANCE\_THRESHOLD
+
+\begin{listingbox}
+	\begin{verbatim}
+50 cm Denes presence zone No  hardcoded (see
+
+\end{verbatim}
+\end{listingbox}
+for HC-SR04 5.8)
+
+COOLDOWN 2000 ms Minimum gap between No  hardcoded
+
+motion reports
+
+LIGHT\_THRESHOLD 2000 LDR threshold for local No  must match
+
+(ADC) fallback Add Lab form de-
+
+faults manually
+
+LIGHT\_INTERVAL 5000 ms Reserved for periodic N/A  unused in
+
+light checks current build
+
+The table above conrms the alignment between rmware constants and the Add Lab form
+
+defaults (Section 5.4.1): the values were set consistently by hand on both sides during integration,
+
+not by the rmware reading them from the backend API.
+
+
+\subsection{Sensor Reading Functions}
+Three sensor-reading functions are dened before any of the communication or authentication logic.
+
+Keeping them short and side-eect-free makes the main loop's intent clear: sensors are read, a
+
+decision is made, and then  only if necessary  a network request is sent.
+
+\begin{listingbox}
+	\begin{verbatim}
+1 // HC-SR04 Ultrasonic Distance Measurement
+
+2 long readDistanceCM() \{
+
+3 // Step 1: ensure trigger is low for a clean pulse
+
+4 digitalWrite(TRIG\_PIN, LOW);
+
+5 delayMicroseconds(2);
+
+7 // Step 2: fire a 10-microsecond HIGH pulse on the trigger pin
+
+8 digitalWrite(TRIG\_PIN, HIGH);
+
+9 delayMicroseconds(10);
+
+10 digitalWrite(TRIG\_PIN, LOW);
+
+12 // Step 3: measure the duration of the echo pulse
+
+13 // timeout of 30000 us corresponds to \textasciitilde{}5 m -- beyond lab sensor range
+
+14 long duration = pulseIn(ECHO\_PIN, HIGH, 30000);
+
+16 // Step 4: guard against timeout (no echo returned)
+
+17 if (duration == 0) return -1;
+
+19 // Step 5: convert travel time to distance
+
+20 // sound travels 0.034 cm/us; divide by 2 for one-way trip
+
+21 return duration * 0.034 / 2;
+
+22 \}
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.4: readDistanceCM(): HC-SR04 ultrasonic distance measurement with timeout guard
+
+(, lines 4859).
+
+The HC-SR04 works by emitting eight 40 kHz ultrasonic pulses when the trigger pin is held
+
+HIGH for at least 10 microseconds. The sensor then raises the echo pin HIGH for a duration
+
+proportional to the round-trip travel time of the rst reected pulse. pulseIn(ECHO\_PIN, HIGH,
+
+30000) blocks until the echo pin goes HIGH and then measures how long it stays HIGH, with a
+
+30,000-microsecond timeout. The 30 ms timeout is chosen to correspond to a maximum measurable
+
+distance of approximately 510 cm  well beyond the 50 cm threshold the rmware cares about,
+
+ensuring the timeout only res when there is genuinely no reecting object in range. The -1 sentinel
+
+return on timeout allows the caller to distinguish no target from a legitimately short distance of
+
+zero centimetres.
+
+The conversion formula  duration * 0.034 / 2  derives from the speed of sound at room
+
+temperature being approximately 340 m/s = 0.034 cm/µs. Dividing by two accounts for the signal
+
+travelling to the target and back.
+
+Physics note. At 26 degreesC (the temperature logged in the Section 5.7 worked example), the speed
+
+of sound is approximately 346 m/s rather than the assumed 340 m/s, introducing a $\sim$1.8\% mea-
+
+surement error. For a 50 cm threshold this is a 0.9 cm error  negligible for presence detection but
+
+worth noting for any future use case that requires precise ranging.
+
+\begin{listingbox}
+	\begin{verbatim}
+1 // LDR Ambient Light Reading
+
+2 int readLight() \{
+
+3 return analogRead(LDR\_PIN);
+
+4 \}
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.5: readLight(): single-line LDR analogue read returning 04095 on the ESP32's 12-bit
+
+ADC (, line 62).
+
+readLight() is intentionally a single-expression function. The ESP32's ADC is 12-bit, returning
+
+values from 0 (no voltage) to 4095 (3.3 V). A lower LDR reading means more light is present
+
+the LDR's resistance falls as light intensity increases, which reduces the voltage at the analogue pin
+
+when the LDR is wired in a voltage-divider conguration with a xed resistor. LIGHT\_THRESHOLD
+
+= 2000 therefore corresponds to a mid-scale brightness level; readings below 2000 indicate a well-lit
+
+room and readings above 2000 indicate a darker room. The rmware's local fallback turns the
+
+light on when the reading is above this threshold (i.e., the room is dark), matching the expected
+
+behaviour.
+
+A known limitation of the ESP32's ADC is signicant non-linearity near 0 V and 3.3 V, and
+
+sensitivity to crosstalk from Wi-Fi radio activity. The ADC readings are therefore treated as a
+
+relative brightness indicator rather than a calibrated lux measurement, which is sucient for the
+
+binary room is dark / room is bright decision the rmware needs to make.
+
+\begin{listingbox}
+	\begin{verbatim}
+1 // DHT11 temperature and humidity (called in loop())
+
+2 float temp = dht.readTemperature();
+
+3 float humidity = dht.readHumidity();
+
+5 if (isnan(temp) || isnan(humidity)) \{
+
+6 Serial.println("Sensor error");
+
+7 return;
+
+8 \}
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.6: DHT11 read and NaN guard in loop() (, lines 321328).
+
+The DHT11 sensor is read inline in loop() rather than in a dedicated function because both
+
+readTemperature() and readHumidity() must be called in the same loop iteration to remain
+
+synchronised. The DHT library internally caches the last successful reading and can return NaN
+
+(Not a Number) when the one-wire protocol communication fails  a common occurrence if the
+
+sensor is read more frequently than once per two seconds, or if there is electrical noise on the
+
+data line. The isnan() guard causes loop() to return immediately without sending any network
+
+request, avoiding a sensor-error value of NaN being serialised into the JSON body and causing a
+
+deserialization failure on the backend.
+
+The DHT11's rated accuracy is ±2 degreesC for temperature and ±5\% for relative humidity, with a
+
+measurement range of 050 degreesC and 2090\% RH. For the fan-control decision (turn fan on if tem-
+
+perature > 28 degreesC), this accuracy is adequate  the 2 degreesC uncertainty means the fan may switch on
+
+slightly early or slightly late, but it will not fail to respond to a genuinely hot room.
+
+
+\subsection{Local HTTP Server  Direct Relay Control Endpoints}
+In addition to communicating with the.NET Core backend, the ESP32 runs a lightweight HTTP
+
+server on port 80. This server accepts four routes that allow the Angular dashboard  or any
+
+HTTP client on the local network  to directly command the light and fan relays without going
+
+through the backend. This is the manual-override mechanism used during demonstrations and when
+
+the backend is temporarily unavailable.
+
+\begin{listingbox}
+	\begin{verbatim}
+1 void handleLightOff() \{
+
+2 digitalWrite(RELAY\_PIN, HIGH); // HIGH = relay open = light OFF
+
+3 Serial.println("Light OFF from API Button");
+
+4 server.send(200, "application/json",
+
+5 "{\"status\":\"ok\",\"light\":\"off\"}");
+
+6 lastLightState = false; // keep state tracker in sync
+
+7 \}
+
+9 void handleLightOn() \{
+
+10 digitalWrite(RELAY\_PIN, LOW); // LOW = relay closed = light ON
+
+11 Serial.println("Light ON from API Button");
+
+12 server.send(200, "application/json",
+
+13 "{\"status\":\"ok\",\"light\":\"on\"}");
+
+14 lastLightState = true;
+
+15 \}
+
+17 void handleFanOn() \{
+
+18 digitalWrite(RELAY\_PIN2, LOW); // LOW = relay closed = fan ON
+
+19 Serial.println("Fan ON from API");
+
+20 server.send(200, "application/json", "{\"fan\":\"on\"}");
+
+21 lastFanState = true;
+
+22 \}
+
+24 void handleFanOff() \{
+
+25 digitalWrite(RELAY\_PIN2, HIGH); // HIGH = relay open = fan OFF
+
+26 Serial.println("Fan OFF from API");
+
+27 server.send(200, "application/json", "{\"fan\":\"off\"}");
+
+28 lastFanState = false;
+
+29 \}
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.7: Four direct relay-control HTTP handlers: /light/on, /light/o, /fan/on, /fan/o
+
+(, lines 64102).
+
+The relay logic convention used throughout the rmware deserves an explicit note: HIGH on
+
+a relay control pin opens the relay (disconnects the load), and LOW closes it (connects the load).
+
+This is the active-low convention used by the opto-isolated relay module connected to the ESP32.
+
+Writing HIGH on RELAY\_PIN therefore turns the light o; writing LOW turns it on. This is counter-
+
+intuitive when reading the code for the rst time but is correct for the hardware conguration in
+
+use.
+
+Each handler updates the lastLightState or lastFanState tracker immediately after the GPIO
+
+write. This is critical: if the dashboard sends a direct /light/on command and then, moments later,
+
+the main loop processes a new backend response that contains lightOn: false, the dierential
+
+update guard (lightOn != lastLightState) will correctly detect the discrepancy and toggle the
+
+relay back o. Without updating the tracker in the handler, the guard would think the light was
+
+already o and do nothing, leaving the relay in a state the backend did not command.
+
+These four routes are registered in setup() and polled on every loop() iteration via server.handleClient().
+
+Because handleClient() is non-blocking  it processes at most one pending request per call
+
+it does not interfere with the motion-detection and sensor-reading logic that runs in the same loop
+
+iteration. The server responds to requests synchronously within the handler function, so no asyn-
+
+chronous callback or interrupt is needed.
+
+
+\subsection{Device Authentication  JWT Token Lifecycle}
+Every HTTP request the ESP32 makes to the.NET Core backend must carry a valid JSON Web To-
+
+ken issued specically to that device. The rmware manages this token lifecycle through three coop-
+
+erating functions: handleTokenResponse() parses a token-exchange response and stores the result;
+
+refreshToken() performs the actual credential exchange with the backend; and ensureTokenValid()
+
+is a lightweight guard called before every outgoing request to ensure the stored token is still usable.
+
+Table 5.2: Local HTTP server routes for direct relay control.
+
+Route Method GPIO write Response body State tracker
+
+updated
+
+/light/on GET RELAY\_PIN -> \{"status":"ok","light":"on"\}
+
+lastLightState
+
+LOW = true
+
+/light/off GET RELAY\_PIN -> \{"status":"ok","light":"off"\}
+
+lastLightState
+
+HIGH = false
+
+/fan/on GET RELAY\_PIN2 -> \{"fan":"on"\} lastFanState
+
+LOW = true
+
+/fan/off GET RELAY\_PIN2 -> \{"fan":"off"\} lastFanState
+
+HIGH = false
+
+\begin{listingbox}
+	\begin{verbatim}
+1 bool handleTokenResponse(String response) \{
+
+2 DynamicJsonDocument doc(512);
+
+3 DeserializationError error = deserializeJson(doc, response);
+
+4 if (error) \{
+
+5 Serial.println("Token Parse Failed");
+
+6 return false;
+
+7 \}
+
+9 jwtToken = doc["token"].as<String>();
+
+10 String expiresAt = doc["expiresAt"].as<String>();
+
+12 Serial.println("Token: " + jwtToken);
+
+13 Serial.println("ExpiresAt: " + expiresAt);
+
+15 // Conservative assumed expiry: 50 minutes from now
+
+16 // Real expiry is in expiresAt but we avoid ISO-8601 parsing on ESP32
+
+17 tokenExpireMillis = millis() + (50UL * 60UL * 1000UL);
+
+19 return jwtToken != "";
+
+20 \}
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.8: handleTokenResponse(): JWT extraction and conservative 50-minute assumed expiry
+
+(, lines 104124).
+
+handleTokenResponse() is called by refreshToken() after a successful HTTP response. It
+
+allocates a 512-byte JSON document on the stack, parses the response body into it, and extracts
+
+two elds: token (the JWT string to be used as a bearer credential) and expiresAt (an ISO-8601
+
+timestamp string representing when the server considers the token expired).
+
+The expiresAt string is read and printed to the serial monitor for diagnostic purposes but is
+
+not parsed into a comparable timestamp value.
+
+The reason for not parsing expiresAt is pragmatic: the ESP32 runs FreeRTOS and has access
+
+to millis() (milliseconds since boot) but does not have a calibrated real-time clock. Converting
+
+an ISO-8601 string like "2026-06-04T09:00:00Z" into a millis() value would require knowing the
+
+current Unix timestamp, which would need an NTP synchronisation step that is not in the current
+
+build. Instead, tokenExpireMillis is set to millis() + 3,000,000 (50 minutes in milliseconds),
+
+using unsigned long arithmetic with the UL sux to prevent 32-bit overow on the multiplication.
+
+This is deliberately shorter than the server's congured token lifetime, so the device refreshes early
+
+and never risks sending a request with a token that expired moments ago.
+
+Security note. Although the device password appears in the rmware source as a plain string
+
+constant, it is transmitted over the local network in a JSON POST body  not sent as a query
+
+parameter or in a URL. The /api/devices/token endpoint should be restricted to the local subnet
+
+in a production deployment to prevent credential interception from outside the laboratory network.
+
+\begin{listingbox}
+	\begin{verbatim}
+1 bool ensureTokenValid() \{
+
+2 // Refresh if token is missing (first boot or parse failure)
+
+3 // or if millis() has passed the assumed expiry timestamp
+
+4 if (jwtToken == "" || millis() > tokenExpireMillis) \{
+
+5 Serial.println("Token expired or missing -> Refreshing...");
+
+6 return refreshToken();
+
+7 \}
+
+8 return true; // token is present and within assumed lifetime
+
+9 \}
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.9: ensureTokenValid(): lazy refresh guard  zero network calls when token is fresh
+
+(, lines 126133).
+
+ensureTokenValid() is called at the top of sendMotionRequest() before any HTTP activity.
+
+If the token is present and millis() has not yet passed tokenExpireMillis, the function returns
+
+immediately with no network activity  no HTTP connection is opened, no socket is allocated.
+
+This is the normal path on the vast majority of loop() iterations. Only when the token is missing
+
+or presumed expired does the function call refreshToken(), which takes hundreds of milliseconds
+
+due to the network round-trip.
+
+The millis() overow edge case deserves mention. millis() returns an unsigned long on
+
+the ESP32, which overows back to zero after approximately 49.7 days of continuous uptime. If
+
+tokenExpireMillis was set close to the overow boundary and millis() subsequently overows,
+
+the condition millis() > tokenExpireMillis will be false when it should be true  causing the
+
+rmware to use a possibly-expired token. For a laboratory that is powered o overnight (fewer than
+
+49.7 continuous days), this edge case is irrelevant. For a permanently-powered deployment, this
+
+should be addressed by using elapsed-time arithmetic rather than an absolute timestamp.
+
+\begin{listingbox}
+	\begin{verbatim}
+1 bool refreshToken() \{
+
+2 if (WiFi.status() != WL\_CONNECTED) return false;
+
+4 HTTPClient http;
+
+5 http.begin(TokenGen);
+
+6 http.addHeader("Content-Type", "application/json");
+
+8 DynamicJsonDocument doc(128);
+
+9 doc["labId"] = labId;
+
+10 doc["deviceId"] = deviceId;
+
+11 doc["password"] = Devicepassword; // credential sent in body, not URL
+
+13 String json;
+
+14 serializeJson(doc, json);
+
+16 Serial.println("Token Request:");
+
+17 Serial.println(json);
+
+19 int code = http.POST(json);
+
+20 if (code <= 0) \{
+
+21 Serial.println("HTTP failed");
+
+22 http.end();
+
+23 return false;
+
+24 \}
+
+26 String response = http.getString();
+
+27 Serial.println("Token response:");
+
+28 Serial.println(response);
+
+30 http.end();
+
+31 return handleTokenResponse(response);
+
+32 \}
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.10: refreshToken(): full device-credential exchange with the /api/devices/token endpoint
+
+(, lines 157191).
+
+refreshToken() opens a new HTTPClient connection to TokenGen, adds the Content-Type
+
+header, builds a 128-byte JSON document containing labId, deviceId, and the device password,
+
+serialises it to a String, and POSTs it. A return code of 0 or negative from http.POST() indicates
+
+a transport-level failure (TCP connection refused, DNS failure, timeout) and causes the function to
+
+return false without attempting to parse an empty response. A positive return code  including
+
+\begin{listingbox}
+	\begin{verbatim}
+401 Unauthorized or 500 Internal Server Error  indicates the server responded; the response body
+
+\end{verbatim}
+\end{listingbox}
+is retrieved and passed to handleTokenResponse(). If handleTokenResponse() fails to nd a
+
+non-empty token string, it returns false, and refreshToken() propagates that failure to its caller.
+
+The code <= 0 guard is important: on the ESP32, HTTPClient returns negative values for
+
+library-level errors (e.g., HTTPC\_ERROR\_CONNECTION\_REFUSED = -1, HTTPC\_ERROR\_SEND\_HEADER\_FAILED
+
+= -2). Without this guard, attempting to call getString() on a failed request would return an
+
+empty string and handleTokenResponse() would fail to parse it, achieving the same result but
+
+generating confusing debug output. The guard makes the failure path explicit.
+
+
+\subsection{Motion-Triggered Sensor Reporting  sendMotionRequest()}
+sendMotionRequest() is the rmware's primary communication function. It is called once per
+
+detected motion event and is responsible for packaging all ve sensor readings into a JSON body,
+
+attaching the JWT, POSTing to the backend, handling a 401 response by refreshing the token and
+
+retrying, and returning the backend's response body for the relay-actuation logic in Section 5.2.6.
+
+\begin{listingbox}
+	\begin{verbatim}
+1 String sendMotionRequest(bool motion, long distance, int ldr, float temp, float hum)
+
+\end{verbatim}
+\end{listingbox}
+\{
+
+\begin{listingbox}
+	\begin{verbatim}
+2 // Guard 1: ensure a valid JWT is cached before any HTTP activity
+
+3 if (!ensureTokenValid()) \{
+
+4 Serial.println("Token invalid");
+
+5 return "";
+
+6 \}
+
+8 // Guard 2: confirm Wi-Fi is still connected
+
+9 if (WiFi.status() != WL\_CONNECTED) \{
+
+10 Serial.println("WiFi not connected");
+
+11 return "";
+
+12 \}
+
+14 HTTPClient http;
+
+15 http.begin(serverUrl);
+
+16 http.setTimeout(10000); // 10-second timeout for this request
+
+17 http.addHeader("Authorization", "Bearer " + String(jwtToken));
+
+18 http.addHeader("Content-Type", "application/json");
+
+20 // Build JSON payload manually (avoids another 512-byte DynamicJsonDocument)
+
+21 String json = "\{";
+
+22 json += "\"motionDetected\":" + String(motion ? "true" : "false") + ",";
+23 json += "\"distanceCm\":" + String(distance) + ",";
+24 json += "\"ldrValue\":" + String(ldr) + ",";
+25 json += "\"temperatureCelsius\":" + String(temp, 1) + ",";
+26 json += "\"humidity\":" + String(hum, 1);
+
+27 json += "\}";
+
+29 Serial.println("Sending JSON:");
+
+30 Serial.println(json);
+
+32 int code = http.POST(json);
+
+33 String response = "";
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.11: sendMotionRequest() Part A: guards, header setup, JSON body construction, and
+
+initial POST (, lines 195236).
+
+The function begins with two pre-ight guards. The rst calls ensureTokenValid(), which
+
+may itself call refreshToken() and incur a network round-trip if the token has expired. If token
+
+validation fails for any reason, the function returns an empty string immediately without attempting
+
+the motion POST  a fast-fail that prevents a request that is guaranteed to be rejected. The second
+
+guard checks WiFi.status() again even though ensureTokenValid() also checks it internally,
+
+because a race condition is theoretically possible: the Wi-Fi connection could drop between the
+
+token validation check and the HTTP POST attempt. In practice, on a stable local network this
+
+race is extremely unlikely, but the second guard makes the failure path explicit for diagnostics.
+
+The JSON body is built using manual string concatenation rather than a DynamicJsonDocument
+
+because the structure is xed and known at compile time: ve named elds, no nesting, no arrays.
+
+Manual construction avoids allocating another JSON document on the heap and produces smaller,
+
+faster code for this specic case. The String(temp, 1) call serialises the oat temperature to one
+
+decimal place, which is the precision the DHT11 can reliably provide.
+
+\begin{listingbox}
+	\begin{verbatim}
+1 // 401 Retry: if the backend rejects the token, refresh once and retry
+
+2 if (code == 401) \{
+
+3 Serial.println("401 -> Refresh token");
+
+4 if (refreshToken()) \{
+
+5 http.end();
+
+6 http.begin(serverUrl);
+
+7 http.addHeader("Authorization", "Bearer " + String(jwtToken));
+
+8 http.addHeader("Content-Type", "application/json");
+
+9 code = http.POST(json);
+
+10 \}
+
+11 \}
+
+13 if (code > 0) \{
+
+14 response = http.getString();
+
+15 Serial.println("Response: " + response);
+
+16 \} else \{
+
+17 Serial.println("HTTP Request Failed");
+
+18 \}
+
+20 http.end();
+
+21 return response;
+
+22 \}
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.12: sendMotionRequest() Part B: 401 retry logic, response collection, and cleanup
+
+(, lines 237264).
+
+The 401-retry block is the rmware's implementation of self-healing authentication. If the back-
+
+end returns HTTP 401, the rmware calls refreshToken() to obtain a new JWT, ends the current
+
+HTTPClient session (freeing its socket), opens a new session to the same URL with the new token
+
+in the Authorization header, and retries the POST with the same JSON body. The JSON body
+
+string is intentionally declared before the retry block so that it is available without reconstruction.
+
+This retry happens at most once per motion event  if the refreshed token is also rejected, the code
+
+falls through to the code > 0 check, which will be false, and the function returns an empty string.
+
+A second retry is not attempted, to avoid an innite authentication loop in the event of a backend
+
+misconguration.
+
+The http.end() call in the retry block is critical: the ESP32's HTTP client internally holds a
+
+TCP socket open after a request. Without calling end() before calling begin() again, a second
+
+connection to the same host would either reuse the existing socket (which is in an undened state
+
+after a 401 response) or open a second socket and leak the rst. Either outcome would eventually
+
+exhaust the ESP32's limited socket pool.
+
+
+\subsection{Main Firmware Logic  setup() and loop()}
+setup() runs once on boot and performs the following initialisation steps in order: pin mode congu-
+
+ration, relay initialisation to safe-o state, serial monitor at 115200 baud, DHT sensor initialisation,
+
+Wi-Fi connection, initial token acquisition, HTTP route registration, and local web server start.
+
+loop() is called continuously by the Arduino runtime and handles Wi-Fi reconnection, local server
+
+request polling, sensor reading, motion-edge detection, and relay actuation.
+
+\begin{listingbox}
+	\begin{verbatim}
+1 void setup() \{
+
+2 // Configure sensor and relay pins
+
+3 pinMode(TRIG\_PIN, OUTPUT);
+
+4 pinMode(ECHO\_PIN, INPUT);
+
+5 pinMode(RELAY\_PIN, OUTPUT);
+
+6 pinMode(RELAY\_PIN2, OUTPUT);
+
+8 // Safe initial state: both relays open (light and fan OFF)
+
+9 // HIGH = relay open on active-low relay module
+
+10 digitalWrite(RELAY\_PIN, HIGH);
+
+11 digitalWrite(RELAY\_PIN2, HIGH);
+
+13 Serial.begin(115200);
+
+14 dht.begin();
+
+16 // Block until Wi-Fi connects (dot-print progress indicator)
+
+17 WiFi.begin(ssid, password);
+
+18 while (WiFi.status() != WL\_CONNECTED) \{
+
+19 delay(500);
+
+20 Serial.print(".");
+
+21 \}
+
+22 Serial.println("\nConnected");
+
+23 Serial.println(WiFi.localIP());
+
+25 // Acquire initial token; log failure but do not halt
+
+26 if (!refreshToken()) \{
+
+27 Serial.println("Failed to get token at startup");
+
+28 \}
+
+30 // Register direct relay-control routes
+
+31 server.on("/light/on", handleLightOn);
+
+32 server.on("/light/off", handleLightOff);
+
+33 server.on("/fan/on", handleFanOn);
+
+34 server.on("/fan/off", handleFanOff);
+
+35 server.begin();
+
+37 Serial.println("ESP32 Server Started");
+
+38 \}
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.13: setup(): full initialisation sequence from pin conguration to server start
+
+(, lines 267310).
+
+Setting both relay pins HIGH immediately after pinMode() is the safe-state initialisation: it
+
+ensures that even if setup() takes several seconds (due to the Wi-Fi connection loop), the light
+
+and fan are o during that time and do not switch on transiently. The alternative  not writing
+
+HIGH until after Wi-Fi connects  would leave the relay pins in an indeterminate state during the
+
+connection phase, which on some relay modules could cause a brief activation glitch.
+
+The blocking while (WiFi.status() != WL\_CONNECTED) loop is acceptable in setup() because
+
+the ESP32 has no useful work to do until it has network connectivity  all of its functionality
+
+depends on being able to reach the backend. In loop(), by contrast, the Wi-Fi reconnection logic
+
+is non-blocking (see below) to avoid stalling the local HTTP server.
+
+Calling refreshToken() at the end of setup() pre-populates jwtToken so that the rst motion
+
+event after boot does not need to wait for a token exchange before it can POST sensor data. If
+
+the token exchange fails at startup (e.g., the backend is not yet running), a warning is printed but
+
+setup() completes normally  the next call to ensureTokenValid() in sendMotionRequest() will
+
+retry the exchange.
+
+\begin{listingbox}
+	\begin{verbatim}
+1 void loop() \{
+
+2 // --- Sensor reads (every iteration) ---
+
+3 long distance = readDistanceCM();
+
+4 int lightValue = readLight();
+
+5 float temp = dht.readTemperature();
+
+6 float humidity = dht.readHumidity();
+
+8 // DHT guard: abort iteration on sensor error
+
+9 if (isnan(temp) || isnan(humidity)) \{
+
+10 Serial.println("Sensor error");
+
+11 return;
+
+12 \}
+
+14 bool isNear = (distance > 0 \&\& distance <= DISTANCE\_THRESHOLD);
+
+16 // --- Wi-Fi watchdog (non-blocking) ---
+
+17 static unsigned long lastWifiTry = 0;
+
+18 if (WiFi.status() != WL\_CONNECTED) \{
+
+19 if (millis() - lastWifiTry > 5000) \{
+
+20 Serial.println("Reconnecting WiFi...");
+
+21 WiFi.disconnect();
+
+22 WiFi.begin(ssid, password);
+
+23 lastWifiTry = millis();
+
+24 \}
+
+25 return; // skip network operations until Wi-Fi is back
+
+26 \}
+
+28 // --- Service local HTTP requests ---
+
+29 server.handleClient();
+
+31 // --- Motion edge detection with cooldown ---
+
+32 if (isNear \&\& !wasNear \&\& millis() - lastToggleTime > COOLDOWN) \{
+
+33 Serial.println("Motion detected -> Sending to API");
+
+34 String response = sendMotionRequest(isNear, distance, lightValue, temp, humidity);
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.14: loop() Part A: sensor reads, NaN guard, Wi-Fi watchdog, server polling, motion edge
+
+detection (, lines 312357).
+
+loop() begins with sensor reads on every iteration, even if no motion event will be reported.
+
+This ensures the sensor values are always fresh when needed. The bool isNear expression combines
+
+two conditions: distance > 0 guards against the -1 sentinel returned by readDistanceCM() on
+
+timeout (which would incorrectly satisfy distance <= DISTANCE\_THRESHOLD), and distance <=
+
+DISTANCE\_THRESHOLD implements the actual 50 cm threshold. A value of -1 is not <= 50, but
+
+because distance is declared as long (signed), -1 would satisfy -1 <= 50  hence the explicit >
+
+\begin{listingbox}
+	\begin{verbatim}
+0 guard.
+
+\end{verbatim}
+\end{listingbox}
+The Wi-Fi watchdog uses a static local variable lastWifiTry, which is initialised once on the
+
+rst loop() call and retains its value across iterations. Checking millis() - lastWifiTry > 5000
+
+before calling WiFi.begin() again prevents the rmware from hammering the Wi-Fi stack with
+
+connection attempts every 100 ms (the delay at the bottom of loop()). Calling WiFi.disconnect()
+
+before WiFi.begin() clears any stale connection state, which can prevent the ESP32's internal Wi-
+
+Fi stack from getting stuck in an intermediate state after a drop. The return immediately after the
+
+watchdog block ensures that no network operations (sendMotionRequest, server.handleClient)
+
+are attempted while the device is oine.
+
+\begin{listingbox}
+	\begin{verbatim}
+1 // --- Local fallback if backend unreachable ---
+
+2 bool apiFailed = (response == "");
+
+3 if (apiFailed) \{
+
+4 Serial.println("Fallback to local logic");
+
+5 static bool lastState = false;
+
+6 bool newState = (lightValue < LIGHT\_THRESHOLD);
+
+7 if (newState != lastState) \{
+
+8 digitalWrite(RELAY\_PIN, newState ? LOW : HIGH);
+
+9 lastState = newState;
+
+10 \}
+
+11 return;
+
+12 \}
+
+14 // --- Parse backend JSON response ---
+
+15 DynamicJsonDocument doc(512);
+
+16 DeserializationError error = deserializeJson(doc, response);
+
+17 if (error) \{
+
+18 Serial.println("JSON Parse Failed");
+
+19 return;
+
+20 \}
+
+22 bool lightOn = doc["lightOn"];
+
+23 bool fanOn = doc["fanOn"];
+
+24 bool relay3On = doc["relay3On"];
+
+25 bool relay4On = doc["relay4On"];
+
+26 bool motionIgnored = doc["motionIgnored"];
+
+27 int occupancy = doc["occupancyCount"];
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.15: loop() Part B: local fallback logic and backend JSON response parsing
+
+(, lines 358396).
+
+The fallback branch is triggered when sendMotionRequest() returns an empty string, meaning
+
+the POST failed at transport level (no Wi-Fi, TCP timeout, or token refresh failure). In this case,
+
+the rmware applies a single local rule: if lightValue < LIGHT\_THRESHOLD, the room is currently
+
+well-lit, so the light stays o; if lightValue >= LIGHT\_THRESHOLD, the room is dark, so the light
+
+is turned on. A static lastState variable tracks the last locally-applied light state so the relay is
+
+only toggled when the LDR reading crosses the threshold, not on every loop iteration  the same
+
+dierential-update pattern used for the backend-driven relay logic.
+
+The fallback uses only the light relay (RELAY\_PIN), not the fan relay. This is a deliberate
+
+conservative choice: the local LDR reading can justify a lighting decision (dark room -> light
+
+on), but the rmware has no local logic for fan control without the backend's temperature rule
+
+evaluation. Leaving the fan in its last known state (which was initialised to HIGH/o in setup())
+
+is the safe-default behaviour for ventilation.
+
+\begin{listingbox}
+	\begin{verbatim}
+1 // --- Room-empty override: force all relays off ---
+
+2 if (occupancy == 0) \{
+
+3 Serial.println("Room Empty -> FORCE OFF");
+
+4 digitalWrite(RELAY\_PIN, HIGH); // light off
+
+5 digitalWrite(RELAY\_PIN2, HIGH); // fan off
+
+6 lastFanState = false;
+
+7 lastLightState = false;
+
+8 lastToggleTime = millis();
+
+9 return; // skip API-driven relay logic below
+
+10 \}
+
+12 // --- Relay actuation from API response ---
+
+13 if (lightOn != lastLightState) \{
+
+14 digitalWrite(RELAY\_PIN, lightOn ? LOW : HIGH);
+
+15 lastLightState = lightOn;
+
+16 Serial.println(lightOn ? "Light ON" : "Light OFF");
+
+17 \}
+
+19 if (fanOn != lastFanState) \{
+
+20 digitalWrite(RELAY\_PIN2, fanOn ? LOW : HIGH);
+
+21 lastFanState = fanOn;
+
+22 Serial.println(fanOn ? "Fan ON" : "Fan OFF");
+
+23 \}
+
+25 // Relay 3 and 4: parsed and logged -- not yet wired to GPIO
+
+26 if (relay3On) Serial.println("Relay3 ON");
+
+27 else Serial.println("Relay3 OFF");
+
+29 if (relay4On) Serial.println("Relay4 ON");
+
+30 else Serial.println("Relay4 OFF");
+
+32 // motionIgnored: backend chose not to act on this event
+
+33 if (motionIgnored) \{
+
+34 Serial.println("Motion Ignored by Server");
+
+35 lastToggleTime = millis();
+
+36 return;
+
+37 \}
+
+38 \} // end if (isNear \&\& !wasNear \&\& cooldown)
+
+40 wasNear = isNear;
+
+41 delay(100);
+
+42 \} // end loop()
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.16: loop() Part C: room-empty override, dierential relay actuation, motionIgnored
+
+handling, and loop bookkeeping (, lines 397445).
+
+The room-empty override is evaluated before the per-relay dierential logic. If occupancyCount
+
+is 0, the backend is asserting that the AI service has conrmed no people are present in the room.
+
+In this case, both relays are forced o unconditionally  even if lightOn or fanOn in the same
+
+response happen to be true (which should not occur from a correctly behaving backend, but the
+
+rmware does not assume correct backend behaviour). Both state trackers are reset to false and
+
+lastToggleTime is updated to enforce the cooldown before the next motion event can be processed.
+
+The return prevents the dierential relay logic below from being evaluated.
+
+The dierential relay actuation pattern  if (lightOn != lastLightState)  is the rmware's
+
+most important mechanism for relay longevity. Relay contacts have a nite switching lifetime, typi-
+
+cally rated for 100,000 operations for a 10A resistive load. If the rmware wrote to the relay pin on
+
+every motion event regardless of whether the state had changed, a busy laboratory could generate
+
+thousands of unnecessary relay operations per day. By comparing the commanded state to the last
+
+applied state and only toggling on a genuine change, the rmware reduces relay operations to the
+
+minimum required.
+
+The motionIgnored ag allows the backend to acknowledge a sensor POST without commanding
+
+any relay change  for example, because the motion event occurred outside a scheduled session and
+
+the administrator has congured the system to ignore after-hours motion. When motionIgnored
+
+is true, lastToggleTime is updated to suppress further motion events during the cooldown period,
+
+and the function returns without logging any relay state.
+
+Finally, wasNear is updated at the bottom of every loop() iteration (outside the motion-event
+
+block) to track the previous presence state for the next rising-edge detection. The delay(100)
+
+at the very end paces the loop at approximately 10 Hz, giving the DHT11 sensor sucient time
+
+between reads to avoid NaN responses while keeping the ultrasonic presence detection responsive
+
+enough for human entry events.
+
+Screenshot placeholder
+
+(source image: )
+
+
+% --- FIGURE PLACEHOLDER: Figure 5.1 ---
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{figures/figure-5-1.png}
+	\caption{Devices page showing Esp32-Lab-D7 Active at 192}
+	\label{fig:5-1}
+\end{figure}
+
+Figure 5.1: Devices page showing Esp32-Lab-D7 Active at 192.168.1.7  the same IP embedded in
+
+the rmware's serverUrl constant.
+
+
+\section{Python AI Processing Service Implementation}
+The Python AI processing service is the second tier of the GreenLab architecture. It is responsible
+
+for consuming a live video stream from a camera installed in each laboratory, running the YOLO
+
+v11 object detection model on that stream, applying ByteTrack identity tracking so that the same
+
+person is not counted multiple times across frames, and exposing the resulting occupancy count via
+
+a FastAPI HTTP endpoint that the.NET Core backend can poll.
+
+The service was implemented in two stages. The rst stage  a working prototype in
+
+established the core architecture: a single shared YOLO model, one background thread per cam-
+
+era, a threading.Event for readiness signalling, and a FastAPI endpoint. The second stage
+
+the production service in, supported by the abstraction  added
+
+multi-format camera input, ByteTrack tracking, a typed CameraState dataclass, and a background
+
+cleanup worker for idle cameras. This section presents all three les in their entirety, function by
+
+function.
+
+
+\subsection{Stage 1: Single-Camera Prototype (cout\_code.txt)}
+is 116 lines long and contains four functional components: import declarations, a
+
+shared YOLO model loader, a per-camera detection loop, a thread-start helper, and the FastAPI
+
+endpoint. Each is presented and explained in full below.
+
+Import Declarations and Application Bootstrap
+
+\begin{listingbox}
+	\begin{verbatim}
+1 import threading
+
+2 import time
+
+3 from ultralytics import YOLO
+
+4 import cv2
+
+5 from fastapi import FastAPI, HTTPException
+
+6 import uvicorn
+
+8 app = FastAPI()
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.17: Module-level imports and FastAPI application object (, lines 18).
+
+Six imports cover the full dependency surface of the prototype. threading provides Thread,
+
+Lock, and Event  the three primitives used to make the model and camera state safely share-
+
+able across concurrent requests. time provides time.sleep(), used in the reconnection backo.
+
+ultralytics provides the YOLO class, which encapsulates model loading, preprocessing, inference,
+
+and post-processing in a single object. cv2 (OpenCV) provides VideoCapture for camera access
+
+and resize for frame downscaling. fastapi and HTTPException provide the REST endpoint in-
+
+frastructure. uvicorn is the ASGI server that hosts the FastAPI application when the script is run
+
+directly.
+
+Shared YOLO Model  Lazy Singleton with Double-Checked Locking
+
+\begin{listingbox}
+	\begin{verbatim}
+1 \# Shared model -- loaded ONCE
+
+2 \_model = None
+
+3 \_model\_lock = threading.Lock()
+
+5 def get\_model():
+
+6 global \_model
+
+7 if \_model is None: \# First check (no lock -- fast path)
+
+8 with \_model\_lock: \# Acquire lock only when needed
+
+9 if \_model is None: \# Second check (inside lock -- safe)
+
+10 \_model = YOLO("yolo11n.pt")
+
+11 \_model.to("cpu")
+
+12 return \_model
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.18: get\_model(): double-checked locking singleton for YOLO model (, lines
+
+1120).
+
+The double-checked locking pattern is used here for a specic reason: loading a YOLO model
+
+from disk takes 25 seconds and allocates several hundred megabytes of memory. If two camera
+
+threads start simultaneously (e.g., two requests arrive at the /current-count endpoint before either
+
+thread has loaded the model), the naive solution of locking and checking only once inside the lock
+
+would still be correct  both threads would acquire the lock sequentially, one loads the model,
+
+the other nds \_model already set. The double-checked pattern adds the outer if \_model is None
+
+check before acquiring the lock, so that all subsequent calls after the rst return immediately without
+
+locking  a signicant performance gain for a lock-heavy concurrent server.
+
+In Python, the GIL (Global Interpreter Lock) provides an additional safety guarantee: the
+
+assignment \_model = YOLO(...) is atomic from the GIL's perspective, so the outer check cannot
+
+observe a partially-initialised object. The double-checked pattern is therefore both correct and
+
+ecient in CPython.
+
+\_model.to("cpu") explicitly places the model on the CPU rather than a GPU. This is appro-
+
+priate for a deployment on a laptop or server without a CUDA-capable GPU. If the deployment
+
+hardware has a GPU, changing "cpu" to "cuda" would accelerate inference by an order of magni-
+
+tude, but yolo11n (the nano variant) is already fast enough on CPU for the sampling cadence this
+
+service uses.
+
+Camera State Registry
+
+\begin{listingbox}
+	\begin{verbatim}
+1 camera\_states = \{\}
+
+2 camera\_lock = threading.Lock()
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.19: Global camera state dictionary and its protecting lock (, lines 2223).
+
+camera\_states is a plain Python dictionary keyed by integer device index. Each value is itself
+
+a dictionary with keys "count", "ready" (a threading.Event), and "thread" (the running Thread
+
+object). camera\_lock is a threading.Lock that must be held whenever camera\_states is read
+
+or written from any thread, to prevent concurrent dictionary modications from corrupting its
+
+internal state  Python dictionaries are not thread-safe for concurrent reads and writes even though
+
+individual read operations are GIL-protected.
+
+Per-Camera Detection Loop  camera\_loop()
+
+\begin{listingbox}
+	\begin{verbatim}
+1 def camera\_loop(device\_index: int, ready\_event: threading.Event):
+
+2 model = get\_model() \# shared reference -- no lock needed here
+
+4 while True: \# outer reconnection loop
+
+5 \# Primary open attempt: no backend hint
+
+6 cap = cv2.VideoCapture(device\_index)
+
+7 if not cap.isOpened():
+
+8 cap.release()
+
+9 \# Fallback: DirectShow backend (Windows virtual cameras)
+
+10 cap = cv2.VideoCapture(device\_index, cv2.CAP\_DSHOW)
+
+12 \# Tune buffer to reduce latency for virtual cameras
+
+13 cap.set(cv2.CAP\_PROP\_BUFFERSIZE, 2)
+
+14 cap.set(cv2.CAP\_PROP\_FRAME\_WIDTH, 640)
+
+15 cap.set(cv2.CAP\_PROP\_FRAME\_HEIGHT, 480)
+
+17 if not cap.isOpened():
+
+18 print(f"[ERROR] Cannot open camera index \{device\_index\}, retrying in 3s..."
+
+\end{verbatim}
+\end{listingbox}
+)
+
+\begin{listingbox}
+	\begin{verbatim}
+19 time.sleep(3)
+
+20 continue \# retry outer loop
+
+22 print(f"[INFO] Connected to camera index: \{device\_index\}")
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.20: camera\_loop() Part A: reconnection loop, two-attempt open strategy, and buer
+
+conguration (, lines 2650).
+
+camera\_loop() calls get\_model() at the top, which returns the already-loaded shared model
+
+on all subsequent calls after the rst. The returned model object is used in the inner loop for every
+
+inference call without any additional locking, which is safe because YOLO model inference is a
+
+read-only operation on the model's weights  the model object is never modied during inference.
+
+The two-attempt camera open strategy addresses a specic quirk of virtual camera software
+
+on Windows: DroidCam (which turns an Android phone into a USB webcam) and its alternatives
+
+sometimes only enumerate correctly with the DirectShow backend (cv2.CAP\_DSHOW) rather than
+
+OpenCV's default backend. The primary attempt without a backend hint works on Linux and ma-
+
+cOS; the CAP\_DSHOW fallback is the Windows safety net. Calling cap.release() between attempts
+
+is essential to free the le descriptor before attempting a new open.
+
+Setting CAP\_PROP\_BUFFERSIZE to 2 reduces the number of frames OpenCV buers internally
+
+from the default (typically 510 for USB cameras) to 2. A smaller buer means cap.read() returns
+
+a more recent frame  important for occupancy detection where we want the current count, not the
+
+count from three seconds ago. At 640x480 and 30 fps, two buered frames represent approximately
+
+\begin{listingbox}
+	\begin{verbatim}
+67 ms of latency, which is acceptable.
+
+1 while True: \# inner frame-reading loop
+
+2 ret, frame = cap.read()
+
+3 if not ret:
+
+4 print(f"[WARN] Lost connection on cam \{device\_index\}, reconnecting...")
+
+5 break \# break inner reconnect outer ->
+
+7 \# Downsample to 320x320 for faster inference
+
+8 small\_frame = cv2.resize(frame, (320, 320))
+
+9 results = model(small\_frame, verbose=False, imgsz=320)
+
+11 \# Count class-0 (person) detections above confidence threshold
+
+12 person\_count = sum(
+
+13 1
+
+14 for r in results
+
+15 if r.boxes is not None
+
+16 for box in r.boxes
+
+17 if int(box.cls[0]) == 0 and float(box.conf[0]) > 0.5
+
+18 )
+
+20 with camera\_lock:
+
+21 camera\_states[device\_index]["count"] = person\_count
+
+23 \# Signal ready after first successful detection pass
+
+24 if not ready\_event.is\_set():
+
+25 ready\_event.set()
+
+27 cap.release()
+
+28 time.sleep(1) \# brief pause before reconnect
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.21: camera\_loop() Part B: frame reading, YOLO inference, person counting, and state
+
+update (, lines 5176).
+
+The inner frame loop reads frames continuously and runs inference on every frame. cv2.resize(frame,
+
+(320, 320)) downsamples the 640x480 frame (or whatever the camera delivers) to 320x320 pixels
+
+before inference. This is a deliberate accuracy/speed trade-o: yolo11n was trained on 640x640
+
+images and performs best at its native resolution, but at 320x320 it still reliably detects persons at
+
+distances of 15 metres (typical for a laboratory doorway sensor) while running approximately four
+
+times faster than at 640x640 on CPU.
+
+The person counting generator expression is a nested comprehension that iterates over all
+
+Results objects returned by model() (one per image, so eectively one object here), then over all
+
+detected bounding boxes in that result, and yields 1 for each box where the class index (box.cls[0])
+
+is 0 (the COCO class index for person) and the condence score (box.conf[0]) exceeds 0.5. The
+
+sum() of those 1s is the frame-level person count.
+
+The ready\_event.set() call signals the FastAPI endpoint that at least one frame has been
+
+successfully processed. The endpoint blocks on ready\_event.wait() until this signal is received,
+
+preventing it from returning a stale zero count on the very rst request to a freshly started camera.
+
+The is\_set() check before calling set() avoids a redundant syscall on every frame after the rst.
+
+Thread-Start Helper  \_start\_camera()
+
+\begin{listingbox}
+	\begin{verbatim}
+1 def \_start\_camera(cam\_id: int):
+
+2 """Start camera thread only if not already running.
+
+3 Must be called with camera\_lock held."""
+
+4 if cam\_id not in camera\_states:
+
+5 ready\_event = threading.Event()
+
+6 camera\_states[cam\_id] = \{"count": 0,
+
+7 "ready": ready\_event,
+
+8 "thread": None\}
+
+9 t = threading.Thread(
+
+10 target=camera\_loop,
+
+11 args=(cam\_id, ready\_event),
+
+12 daemon=True
+
+13 )
+
+14 t.start()
+
+15 camera\_states[cam\_id]["thread"] = t
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.22: \_start\_camera(): guarded thread creation, must be called with camera\_lock held
+
+(, lines 7993).
+
+\_start\_camera() is a private helper that must be called with camera\_lock already held  its
+
+docstring makes this contract explicit. The cam\_id not in camera\_states guard prevents starting
+
+a second thread for a camera that is already running, which is the primary race condition this helper
+
+needs to prevent: if two HTTP requests for the same cam\_id arrive simultaneously, both will pass
+
+the outer get\_count() check, but only the rst to acquire camera\_lock and call \_start\_camera()
+
+will nd cam\_id not in camera\_states; the second will nd it already present and do nothing.
+
+Setting daemon=True on the thread means Python will not wait for the camera loop to nish
+
+before the main process exits. This is the correct choice for a background service thread: if the
+
+FastAPI server shuts down (SIGTERM, Ctrl+C), the camera threads should not block the shutdown
+
+process.
+
+FastAPI Endpoint  /current-count
+
+\begin{listingbox}
+	\begin{verbatim}
+1 @app.get("/current-count")
+
+2 def get\_count(cam\_id: int = 0):
+
+3 """
+
+4 Pass the camera index.
+
+5 Usually 0 is your built-in webcam, 1 is DroidCam/DropCam USB.
+
+6 """
+
+7 with camera\_lock:
+
+8 if cam\_id not in camera\_states:
+
+9 \_start\_camera(cam\_id) \# Safe: lock is already held
+
+10 ready\_event = camera\_states[cam\_id]["ready"]
+
+12 \# Wait OUTSIDE the lock -- do not hold it for up to 10 seconds
+
+13 if not ready\_event.wait(timeout=10):
+
+14 raise HTTPException(
+
+15 status\_code=503,
+
+16 detail=f"Camera \{cam\_id\} not responding."
+
+17 f" Check your DropCam/DroidCam connection.",
+
+18 )
+
+20 with camera\_lock:
+
+21 state = camera\_states.get(cam\_id, \{"count": 0\})
+
+23 return \{"people\_count": state["count"], "camera\_index": cam\_id\}
+
+26 if \_\_name\_\_ == "\_\_main\_\_":
+
+27 uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.23: /current-count endpoint: lazy thread start, ready-event blocking (10 s timeout), and
+
+count retrieval (, lines 95116).
+
+The endpoint acquires camera\_lock, checks whether the requested cam\_id has a running thread,
+
+and if not calls \_start\_camera() (which expects the lock to be held). It then extracts the
+
+ready\_event reference from the state dictionary and immediately releases the lock. The release is
+
+critical: ready\_event.wait(timeout=10) may block for up to 10 seconds, and holding camera\_lock
+
+for 10 seconds would prevent any other HTTP request from being processed during that time  a
+
+deadlock-adjacent scenario that would make the service eectively single-threaded under load.
+
+ready\_event.wait() returns True if the event was set within the timeout, False if the timeout
+
+expired without the event being set. A False return means the camera thread started but did not
+
+produce a single successful frame within 10 seconds  either the camera is not connected, DroidCam
+
+is not running on the phone, or the camera index is wrong. The 503 Service Unavailable response
+
+with a human-readable detail message allows the backend to present this as a camera fault rather
+
+than an application error.
+
+The second camera\_lock acquisition for the nal count read is a separate critical section from
+
+the rst. Between the end of the rst critical section and the start of the second, the camera thread
+
+may have updated camera\_states[cam\_id]["count"] any number of times  this is acceptable,
+
+as the endpoint simply returns whatever count is current at the moment it reads it.
+
+
+\subsection{Camera Source Abstraction Module (camera\_sources.py)}
+is 189 lines long. It is a pure-utility module with no FastAPI dependency and
+
+no global state  it consists entirely of functions that translate camera source strings into values
+
+cv2.VideoCapture can open. It was extracted from to make the source-resolution
+
+logic independently testable and reusable. The module denes one regex constant, one frozenset
+
+constant, three public functions, and two private helper functions.
+
+Module-Level Constants
+
+\begin{listingbox}
+	\begin{verbatim}
+1 import logging
+
+2 import os
+
+3 import re
+
+4 from typing import Union
+
+6 import cv2
+
+8 logger = logging.getLogger("people\_counter.camera\_sources")
+
+10 \# Supported video file extensions
+
+11 \_VIDEO\_EXTENSIONS: frozenset[str] = frozenset(\{
+
+12 ".mp4", ".avi", ".mov", ".mkv", ".flv", ".ts"
+
+13 \})
+
+15 \# Pattern that matches a bare IPv4 address (no scheme, no path)
+
+16 \_BARE\_IP\_RE = re.compile(
+
+17 r"^(\d{1,3}\.){3}\d{1,3}$"
+
+18 )
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.24: : imports, logger, supported le extensions frozenset, and bare-IP
+
+regex (, lines 117).
+
+\_VIDEO\_EXTENSIONS is a frozenset (immutable set) of lowercase le extensions. Using frozenset
+
+rather than a list makes membership testing O(1) rather than O(n), which matters when resolve\_source()
+
+is called on every incoming API request. The extensions cover the most common container formats
+
+that OpenCV can decode:.mp4 (H.264/H.265 in MP4),.avi (various codecs in AVI),.mov (Quick-
+
+Time),.mkv (Matroska),.flv (Flash Video), and.ts (MPEG Transport Stream).
+
+\_BARE\_IP\_RE is a compiled regular expression that matches exactly a dotted-quad IPv4 address
+
+with no scheme, port, or path. The pattern requires: start of string, three groups of 13 digits
+
+followed by a literal dot, one nal group of 13 digits, end of string. It does not validate that each
+
+octet is in the range 0255  999.999.999.999 would match  but for a camera IP address entered
+
+by an administrator this is an acceptable trade-o. A stricter regex would be longer and harder to
+
+read without providing meaningful additional protection, since an invalid IP would simply fail to
+
+connect.
+
+resolve\_source()  The Core Dispatch Function
+
+\begin{listingbox}
+	\begin{verbatim}
+1 def resolve\_source(source: str, default\_port: int = 4747) -> Union[str, int]:
+
+2 """
+
+3 Translate a caller-supplied source string into the value that
+
+4 cv2.VideoCapture expects: an integer for USB devices, a string
+
+5 for everything else.
+
+7 Parameters
+
+8 ----------
+
+9 source : Raw source string from the API caller.
+
+10 default\_port : Port appended when source is a bare IP address.
+
+12 Returns
+
+13 -------
+
+14 int for USB / device-index sources. str for network streams and file paths.
+
+16 Raises
+
+17 ------
+
+18 ValueError if the source format is not recognised.
+
+19 """
+
+20 source = source.strip()
+
+21 if not source:
+
+22 raise ValueError("Camera source must not be empty")
+
+24 if source.lower().startswith("usb:"):
+
+25 return \_parse\_usb(source)
+
+27 if source.startswith(("http://", "https://", "rtsp://")):
+
+28 logger.debug("Network stream source: \%s", source)
+
+29 return source
+
+31 ext = os.path.splitext(source)[1].lower()
+
+32 if ext in \_VIDEO\_EXTENSIONS:
+
+33 return \_parse\_video\_file(source)
+
+35 if \_BARE\_IP\_RE.match(source):
+
+36 url = f"http://\{source\}:\{default\_port\}/video"
+
+37 logger.debug("Bare IP expanded to: \%s", url)
+
+38 return url
+
+40 raise ValueError(
+
+41 f"Unrecognised camera source: '\{source\}'. "
+
+42 "Expected usb:<index>, http/https/rtsp URL, "
+
+43 "a video file (.mp4/.avi/.mov), or a bare IPv4 address."
+
+44 )
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.25: resolve\_source(): ve-branch dispatch with full docstring (, lines
+
+2070).
+
+resolve\_source() applies its ve recognition patterns in a strict priority order that prevents
+
+ambiguity: the usb: prex check comes rst, before any other pattern, so that a hypothetically un-
+
+usual string like "usb:192.168.1.1" is handled as a USB source request rather than being misiden-
+
+tied as an IP address. Network scheme checks come second; these are the most specic and most
+
+common runtime inputs. The video le extension check comes third; it only res if the source does
+
+not have a network scheme but does have a recognised extension. The bare-IP regex comes fourth;
+
+it is the backward-compatibility catch-all for DroidCam-style inputs. The ValueError at the end
+
+is the catch-all for inputs that match none of the above.
+
+The source.strip() at the top removes leading and trailing whitespace, guarding against inputs
+
+like "192.168.1.3 " pasted from a text eld with accidental spaces. The empty-string check after
+
+strip() catches inputs that were whitespace-only  without it, a whitespace-only string would
+
+pass the strip() and then fall through all ve pattern checks to the ValueError, but the error
+
+message would say Unrecognised camera source:   rather than the more informative Camera
+
+source must not be empty.
+
+create\_capture()  Opening the VideoCapture
+
+\begin{listingbox}
+	\begin{verbatim}
+1 def create\_capture(source: str, default\_port: int = 4747) -> cv2.VideoCapture:
+
+2 """
+
+3 Parse source and return an opened cv2.VideoCapture.
+
+4 Callers should check cap.isOpened() themselves.
+
+5 """
+
+6 resolved = resolve\_source(source, default\_port)
+
+8 if isinstance(resolved, int):
+
+9 logger.info("Opening USB device index \%d", resolved)
+
+10 cap = cv2.VideoCapture(resolved)
+
+11 else:
+
+12 logger.info("Opening stream: \%s", resolved)
+
+13 cap = cv2.VideoCapture(resolved)
+
+\end{verbatim}
+\end{listingbox}
+Table 5.3: Example inputs to resolve\_source() and their resolved output.
+
+Input example Branch taken Output
+
+usb:0 USB prex int: 0
+
+usb:2 USB prex int: 2
+
+http://192.168.1.3:4747/video
+
+Network str: unchanged
+
+scheme
+
+rtsp://admin:pass@10.0.0.5/live
+
+Network str: unchanged
+
+scheme
+
+/recordings/lab\_d7.mp4 File extension str: unchanged
+
+(.mp4)
+
+192.168.1.3 Bare IP regex str:
+
+http://192.168.1.3:4747/video
+
+192.168.1.3 port=8080 None (ValueEr- ValueError: Unrecognised
+
+ror) source
+
+ftp://camera/stream None (ValueEr- ValueError: Unrecognised
+
+ror) source
+
+\begin{listingbox}
+	\begin{verbatim}
+15 if not cap.isOpened():
+
+16 logger.warning(
+
+17 "VideoCapture did not open immediately for source: \%s", source
+
+18 )
+
+20 return cap
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.26: create\_capture(): resolves source and returns VideoCapture without asserting success
+
+(, lines 72100).
+
+create\_capture() intentionally does not raise an exception when the VideoCapture fails to
+
+open. The reason is that dierent callers have dierent retry and logging strategies: the production
+
+camera loop in logs a warning and sleeps 3 seconds before retrying; a test harness
+
+might want to assert immediately. By returning the unopened VideoCapture object and leaving
+
+the isOpened() check to the caller, create\_capture() is maximally composable. The warning log
+
+inside create\_capture() provides visibility without forcing a particular error-handling strategy.
+
+The isinstance(resolved, int) branch exists because cv2.VideoCapture(0) and cv2.VideoCapture("http:
+
+call the same constructor with dierent types. Although Python would handle both correctly with-
+
+out the branch (since VideoCapture accepts both int and str), the explicit branch allows the logger
+
+to emit a more informative message  Opening USB device index 0 versus Opening stream:
+
+http://...  which is valuable for diagnosing connectivity problems in a deployed system.
+
+source\_label()  Stable Registry Key Generation
+
+\begin{listingbox}
+	\begin{verbatim}
+1 def source\_label(source: str, default\_port: int = 4747) -> str:
+
+2 """
+
+3 Return a human-readable, stable label for source suitable for use
+
+4 as a registry key. For network sources this is the fully-expanded
+
+5 URL; for USB and file sources it is the canonical string.
+
+6 """
+
+7 try:
+
+8 resolved = resolve\_source(source, default\_port)
+
+9 return str(resolved) \# int -> "0", str -> unchanged
+
+10 except ValueError:
+
+11 return source \# fall back to raw string if unresolvable
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.27: source\_label(): stable key generation for the camera registry (,
+
+lines 102115).
+
+source\_label() is used by as the key for its \_cameras registry dictionary. Using
+
+the fully-resolved URL as the key ensures that 192.168.1.3 and http://192.168.1.3:4747/video
+
+two dierent input strings that refer to the same physical camera  resolve to the same key,
+
+preventing accidental double-registration of the same camera under two dierent input formats.
+
+str(resolved) converts int device indices like 0 to the string "0", so all registry keys are strings
+
+regardless of input type. The except ValueError fallback returns the raw source string, which
+
+would then be stored as-is in the registry  a pragmatic choice that allows the registry to absorb
+
+inputs that will ultimately fail at the VideoCapture level without crashing the key-generation step.
+
+Private Helpers  \_parse\_usb() and \_parse\_video\_le()
+
+\begin{listingbox}
+	\begin{verbatim}
+1 def \_parse\_usb(source: str) -> int:
+
+2 """Parse 'usb:<index>' and return the integer device index."""
+
+3 \_, \_, index\_str = source.partition(":")
+
+4 index\_str = index\_str.strip()
+
+6 if not index\_str.lstrip("-").isdigit():
+
+7 raise ValueError(
+
+8 f"Invalid USB source '\{source\}': index must be a non-negative integer "
+
+9 f"(e.g. usb:0, usb:1)."
+
+10 )
+
+12 index = int(index\_str)
+
+13 if index < 0:
+
+14 raise ValueError(
+
+15 f"Invalid USB source '\{source\}': device index must be >= 0, got \{index\}."
+
+16 )
+
+18 logger.debug("USB device index: \%d", index)
+
+19 return index
+
+22 def \_parse\_video\_file(source: str) -> str:
+
+23 """
+
+24 Validate that source is a readable file path and return it unchanged.
+
+25 Only warns (does not raise) when the file does not exist.
+
+26 """
+
+27 if not os.path.isfile(source):
+
+28 logger.warning(
+
+29 "Video file not found at '\%s'. "
+
+30 "Make sure the path is accessible from the server's working directory.",
+
+31 source,
+
+32 )
+
+33 else:
+
+34 logger.debug("Video file source: \%s", source)
+
+36 return source
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.28: \_parse\_usb() and \_parse\_video\_le(): type-specic validation helpers
+
+(, lines 117189).
+
+\_parse\_usb() uses str.partition(":") rather than str.split(":") to correctly handle hy-
+
+pothetical inputs like "usb:0:extra"  partition always returns exactly three parts (before the
+
+rst delimiter, the delimiter, and everything after), so index\_str would be "0:extra" in that case,
+
+which would then fail the isdigit() check and raise a ValueError with a clear message. The
+
+lstrip("-") before isdigit() allows the isdigit() check to see past a leading minus sign  so
+
+"usb:-1" would pass isdigit() on "-1".lstrip("-") = "1", but then fail the index < 0 check
+
+with a more specic error message than a generic isdigit() failure.
+
+\_parse\_video\_file() does not raise on a missing le by design: not raising, and just logging a
+
+warning, reects the fact that the working directory at validation time may dier from the working
+
+directory at inference time. A Docker container, for example, might mount a recordings volume at
+
+/data/recordings at runtime, which does not exist on the host lesystem where validation runs.
+
+Treating a missing le as a warning rather than an error allows the service to accept a le path
+
+conguration even before the volume is mounted.
+
+
+\subsection{Stage 2: Production Multi-Camera Tracking API (droidip.py)}
+is 322 lines long and is the service that the Chapter 3 architecture diagrams describe
+
+as the AI Processing tier. It builds on every pattern established in the prototype but replaces
+
+integer device-index inputs with source-string resolution, replaces raw per-frame box counting with
+
+ByteTrack-based identity tracking, replaces the loose dictionary state with a typed CameraState
+
+dataclass, and adds a background cleanup worker that removes idle cameras from the registry.
+
+Module Docstring and Conguration Constants
+
+\begin{listingbox}
+	\begin{verbatim}
+1 """
+
+2 People Counter API
+
+3 ==================
+
+4 FastAPI service that streams YOLO-tracked person counts from IP cameras.
+
+6 Supported stream formats:
+
+7 - DroidCam: /current-count?ip=192.168.1.3
+
+8 - HTTP: /current-count?ip=http://192.168.1.3:4747/video
+
+9 - RTSP: /current-count?ip=rtsp://admin:pass@camera/live
+
+10 - IP+port: /current-count?ip=192.168.1.3\&port=8080
+
+11 """
+
+13 MODEL\_PATH: str = "yolo11n.pt"
+
+14 MODEL\_DEVICE: str = "cpu"
+
+15 CONFIDENCE\_THRESHOLD: float = 0.5
+
+16 FRAME\_SKIP: int = 3
+
+17 READY\_TIMEOUT: float = 15.0
+
+18 CAMERA\_TIMEOUT: float = 300.0
+
+19 CLEANUP\_INTERVAL: float = 60.0
+
+20 DEFAULT\_PORT: int = 4747
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.29: Module docstring and all conguration constants (, lines 128).
+
+The module docstring lists all four supported input formats for the ip query parameter, making
+
+the service's capabilities self-documenting without requiring a separate README. Each constant
+
+is annotated with its type for static analysis tool compatibility. The values reect the operational
+
+CONFIDENCE\_THRESHOLD = 0.5 satises FR-OD-01's minimum detection condence;
+
+requirements:
+
+FRAME\_SKIP = 3 balances inference frequency against CPU load; READY\_TIMEOUT = 15.0 gives a
+
+freshly-started camera 15 seconds to deliver its rst frame before returning a 503 (extended from the
+
+prototype's 10 seconds to account for RTSP cameras that are slower to negotiate stream parameters);
+
+CAMERA\_TIMEOUT = 300.0 allows a camera that has not been polled for ve minutes to be garbage-
+
+collected; CLEANUP\_INTERVAL= 60.0 runs the cleanup worker every minute; DEFAULT\_PORT = 4747
+
+is the DroidCam default port.
+
+Structured Logging Conguration
+
+\begin{listingbox}
+	\begin{verbatim}
+1 import logging
+
+3 logging.basicConfig(
+
+4 level=logging.INFO,
+
+5 format="\%(asctime)s [\%(levelname)s] \%(name)s: \%(message)s",
+
+6 datefmt="\%Y-\%m-\%d \%H:\%M:\%S",
+
+7 )
+
+8 logger = logging.getLogger("people\_counter")
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.30: Structured logging setup with timestamp, level, and logger-name format (,
+
+lines 3040).
+
+The logging conguration adds a timestamp, log level, and logger name to every message. This is
+
+a signicant improvement over the prototype's print() statements: print() output is unstructured
+
+and interleaved with other output in a multi-threaded environment; logging is thread-safe (Python's
+
+logging module uses an internal lock) and each message includes enough context to diagnose multi-
+
+camera scenarios where several threads are producing output simultaneously. The format string
+
+produces output like  2026-06-04 09:15:32 [INFO] people\_counter: Connected to stream:
+
+http://192.168.1.3:4747/video, which is immediately grep-able by stream URL or log level in
+
+a deployed environment.
+
+uses a child logger named "people\_counter.camera\_sources", which is
+
+a child of the "people\_counter" logger congured here. Python's logging hierarchy means that
+
+messages from the child logger propagate to the parent by default, so a single basicConfig() call
+
+covers all modules in the service.
+
+YOLO Model Singleton  Production Version
+
+\begin{listingbox}
+	\begin{verbatim}
+1 \_model: Optional[YOLO] = None
+
+2 \_model\_lock = threading.Lock()
+
+4 def get\_model() -> YOLO:
+
+5 """Return the shared YOLO model, loading it on first call."""
+
+6 global \_model
+
+7 if \_model is None:
+
+8 with \_model\_lock:
+
+9 if \_model is None:
+
+10 logger.info("Loading YOLO model: \%s on \%s", MODEL\_PATH, MODEL\_DEVICE)
+
+11 \_model = YOLO(MODEL\_PATH)
+
+12 \_model.to(MODEL\_DEVICE)
+
+13 logger.info("Model loaded successfully")
+
+14 return \_model
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.31: Production get\_model(): same double-checked locking pattern as the prototype, with
+
+structured logging (, lines 4862).
+
+The production get\_model() is structurally identical to the prototype version but replaces
+
+print() with logger.info() and uses the MODEL\_PATH and MODEL\_DEVICE constants rather than
+
+hard-coded strings. The Optional[YOLO] type annotation on \_model enables static type checkers
+
+to verify that all code paths that use \_model account for the possibility that it is None before the
+
+rst call to get\_model().
+
+CameraState Dataclass and Registry
+
+\begin{listingbox}
+	\begin{verbatim}
+1 from dataclasses import dataclass, field
+
+3 @dataclass
+
+4 class CameraState:
+
+5 count: int = 0
+
+6 connected: bool = False
+
+7 last\_access: float = field(default\_factory=time.monotonic)
+
+8 ready\_event: threading.Event = field(default\_factory=threading.Event)
+
+10 \# registry: stream\_url -> CameraState
+
+11 \_cameras: dict[str, CameraState] = \{\}
+
+12 \_cameras\_lock = threading.Lock()
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.32: CameraState dataclass with eld() defaults and the camera registry (, lines
+
+6478).
+
+Replacing the prototype's loose dictionary (\{"count": 0, "ready": event, "thread": t\})
+
+with a typed dataclass provides three benets. First, eld names are validated at class de-
+
+nition time rather than at runtime  a typo like state["connt"] would be caught by a type
+
+checker or raise a KeyError immediately, whereas setattr(state, "connt", value) in the pro-
+
+duction \_update\_state() helper would silently create a new attribute. Second, the @dataclass
+
+decorator auto-generates \_\_init\_\_, \_\_repr\_\_, and \_\_eq\_\_ methods, which are useful for testing
+
+and debugging. Third, the field() function with default\_factory=time.monotonic means that
+
+last\_access is set to the current monotonic clock value at the moment the CameraState is instan-
+
+tiated  if a simple default value like 0.0 were used instead, all newly-created cameras would have
+
+the same last\_access, potentially causing the cleanup worker to remove them immediately after
+
+creation if cleanup runs before the rst request.
+
+time.monotonic() is used rather than time.time() because monotonic() is guaranteed never
+
+to go backwards  system clock adjustments (NTP sync, daylight saving time transitions) cannot
+
+cause last\_access to jump forward and falsely make a recently-accessed camera appear stale.
+
+Thread-Safe State Update Helper  \_update\_state()
+
+\begin{listingbox}
+	\begin{verbatim}
+1 def \_update\_state(url: str, **kwargs) -> None:
+
+2 """Thread-safe helper to patch fields on an existing CameraState."""
+
+3 with \_cameras\_lock:
+
+4 state = \_cameras.get(url)
+
+5 if state is None:
+
+6 return \# camera was removed by cleanup -- silently ignore
+
+7 for key, value in kwargs.items():
+
+8 setattr(state, key, value)
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.33: \_update\_state(): keyword-argument-based eld patcher with cleanup-race guard
+
+(, lines 8090).
+
+\_update\_state() is a convenience function that takes keyword arguments and applies them to
+
+the CameraState for a given URL, all within a single lock acquisition. Without this helper, every
+
+state update in the camera loop would require three lines: acquire lock, set eld, release lock. The
+
+**kwargs variadic signature allows updating multiple elds in a single call: \_update\_state(url,
+
+connected=False) or \_update\_state(url, connected=True, count=0). The state is None guard
+
+handles the race condition where the cleanup worker removes the camera from the registry between
+
+the camera loop's registration check and the update call  rather than raising a KeyError or
+
+AttributeError, it silently returns, allowing the camera loop to detect the deregistration on its
+
+next iteration.
+
+Production Camera Worker Loop  \_camera\_loop()
+
+\begin{listingbox}
+	\begin{verbatim}
+1 def \_camera\_loop(stream\_url: str) -> None:
+
+2 """
+
+3 Long-running thread: opens the stream, runs YOLO ByteTrack inference,
+
+4 and updates the shared CameraState. Reconnects on failure.
+
+5 """
+
+6 model = get\_model()
+
+8 while True: \# outer reconnection loop
+
+9 \# Check deregistration before each reconnect attempt
+
+10 with \_cameras\_lock:
+
+11 if stream\_url not in \_cameras:
+
+12 logger.info("Camera deregistered, worker exiting: \%s", stream\_url)
+
+13 return
+
+15 cap = create\_capture(stream\_url)
+
+16 if not cap.isOpened():
+
+17 logger.warning("Cannot open stream, retrying in 3 s: \%s", stream\_url)
+
+18 \_update\_state(stream\_url, connected=False)
+
+19 time.sleep(3)
+
+20 continue
+
+22 logger.info("Connected to stream: \%s", stream\_url)
+
+23 \_update\_state(stream\_url, connected=True)
+
+24 frame\_idx = 0
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.34: \_camera\_loop() Part A: outer reconnection loop with deregistration check (,
+
+lines 93120).
+
+The outer reconnection loop begins with a deregistration check: if the cleanup worker has
+
+removed stream\_url from \_cameras between the camera thread starting and it attempting to open
+
+the stream, the thread exits cleanly without attempting a connection. This is important for the
+
+correctness of the cleanup mechanism  without this check, a deregistered camera's thread would
+
+continue running indenitely, consuming CPU and camera resources even though no endpoint is
+
+polling its count.
+
+create\_capture() from abstracts the actual VideoCapture construction.
+
+The camera loop does not need to know whether stream\_url is a USB index, an RTSP URL,
+
+or a DroidCam HTTP stream  create\_capture() handles all cases. The connected=False
+
+state update before the 3-second sleep allows the /current-count endpoint to report connected:
+
+false in its response, giving the caller a machine-readable indicator that the camera is temporarily
+
+unavailable.
+
+\begin{listingbox}
+	\begin{verbatim}
+1 while True: \# inner frame-reading loop
+
+2 \# Check deregistration before each frame read
+
+3 with \_cameras\_lock:
+
+4 if stream\_url not in \_cameras:
+
+5 logger.info("Camera deregistered mid-loop, exiting: \%s", stream\_url
+
+\end{verbatim}
+\end{listingbox}
+)
+
+\begin{listingbox}
+	\begin{verbatim}
+6 cap.release()
+
+7 return
+
+9 ret, frame = cap.read()
+
+10 if not ret:
+
+11 logger.warning("Stream lost, reconnecting: \%s", stream\_url)
+
+12 \_update\_state(stream\_url, connected=False)
+
+13 break \# break inner -> reconnect outer
+
+15 frame\_idx += 1
+
+16 if frame\_idx \% FRAME\_SKIP != 0:
+
+17 continue \# discard this frame without inference
+
+19 try:
+
+20 people\_count = \_run\_inference(model, frame)
+
+21 except Exception:
+
+22 logger.exception("Inference error on stream: \%s", stream\_url)
+
+23 continue
+
+25 with \_cameras\_lock:
+
+26 state = \_cameras.get(stream\_url)
+
+27 if state is None:
+
+28 cap.release()
+
+29 return
+
+30 state.count = people\_count
+
+31 state.ready\_event.set()
+
+33 cap.release()
+
+34 time.sleep(1)
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.35: \_camera\_loop() Part B: inner frame loop with FRAME\_SKIP, exception guard, and
+
+deregistration-aware state update (, lines 121160).
+
+The inner frame loop has a second deregistration check, inside the loop itself before each frame
+
+read. This ensures that a camera deregistered while the loop is running causes the thread to exit
+
+promptly  without this check, the thread might read and process hundreds of frames between
+
+cleanup events before the outer loop's check runs. cap.release() is called before returning to free
+
+the VideoCapture's le descriptor and any OS resources associated with the video stream.
+
+FRAME\_SKIP = 3 means inference runs on frames 3, 6, 9, 12,...  every third frame. At a
+
+typical USB camera or DroidCam frame rate of 30 fps, this produces 10 inference runs per second.
+
+At a slower 15 fps (some RTSP cameras), this produces 5 inference runs per second. Both are
+
+well above the eective 0.2 runs per second that a ve-second sampling interval would imply. The
+
+frame\_idx counter is a local variable initialised to 0 when the inner loop starts (after a successful
+
+open); it resets to 0 if the connection drops and the outer loop reconnects, which is correct because
+
+the skipped-frame count should restart from a fresh connection.
+
+The try/except around \_run\_inference() prevents a single frame's inference error (for exam-
+
+ple, a malformed frame from a corrupted RTSP packet) from crashing the entire camera thread.
+
+logger.exception() logs the full stack trace at ERROR level, which is critical for post-hoc diag-
+
+nosis of intermittent failures. The continue after the exception leaves state.count unchanged, so
+
+the last successful count remains visible to the endpoint.
+
+ByteTrack Inference  \_run\_inference()
+
+\begin{listingbox}
+	\begin{verbatim}
+1 def \_run\_inference(model: YOLO, frame) -> int:
+
+2 """
+
+3 Run ByteTrack inference on a single frame and return the number
+
+4 of unique active tracked persons.
+
+5 """
+
+6 results = model.track(
+
+7 frame,
+
+8 persist=True, \# maintain track state across calls
+
+9 tracker="bytetrack.yaml",
+
+10 imgsz=320,
+
+11 conf=CONFIDENCE\_THRESHOLD,
+
+12 classes=[0], \# detect only class 0 = person
+
+13 verbose=False,
+
+14 )
+
+16 tracked\_ids: set[int] = set()
+
+17 for r in results:
+
+18 if r.boxes is None:
+
+19 continue
+
+20 for box in r.boxes:
+
+21 cls = int(box.cls[0])
+
+22 conf = float(box.conf[0])
+
+23 track\_id = box.id
+
+24 if cls == 0 and conf >= CONFIDENCE\_THRESHOLD and track\_id is not None:
+
+25 tracked\_ids.add(int(track\_id[0]))
+
+27 return len(tracked\_ids)
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.36: \_run\_inference(): ByteTrack-based person tracking returning unique active track
+
+count (, lines 163195).
+
+The key change from the prototype's model() call to the production model.track() call is
+
+the addition of three arguments: persist=True, tracker="bytetrack.yaml", and classes=[0].
+
+persist=True tells YOLO to maintain the ByteTrack state between consecutive calls on the same
+
+camera stream  without it, track IDs would be re-assigned from zero on every call, making
+
+cross-frame identity impossible. tracker="bytetrack.yaml" selects the ByteTrack algorithm from
+
+YOLO's bundled tracker congurations. classes=[0] restricts detection to person only at the
+
+model level, before any post-processing, which reduces the number of boxes the tracker needs to
+
+manage and speeds up inference.
+
+ByteTrack (Zhang et al., 2022) is a multi-object tracker that associates detection boxes across
+
+frames using a combination of IoU (Intersection over Union) matching and Kalman lter position
+
+prediction. It maintains a set of active tracks (conrmed persons) and a set of lost tracks
+
+(persons that have left the frame or been momentarily occluded). A track is kept in the active
+
+set if it was successfully matched to a detection in the current frame; it moves to the lost set if
+
+unmatched for one frame and is deleted if still unmatched after a congured number of frames.
+
+persist=True ensures the lost-track buer persists between calls, so a person who bends down and
+
+briey disappears from the YOLO detection is not immediately removed from the active set.
+
+The tracked\_ids set collects the integer track ID of every person detection in the frame that
+
+passes both the condence threshold and the track\_id is not None check. The track\_id is not
+
+None check is necessary because model.track() may return boxes without track IDs in edge cases
+
+(e.g., the rst frame before ByteTrack has initialised its state). len(tracked\_ids) is the count
+
+of unique person identities currently visible in the frame  the number the backend will use as
+
+occupancyCount.
+
+Camera Lifecycle Management  \_ensure\_camera\_started() and \_cleanup\_worker()
+
+\begin{listingbox}
+	\begin{verbatim}
+1 def \_ensure\_camera\_started(stream\_url: str) -> CameraState:
+
+2 """
+
+3 Return the CameraState for stream\_url, creating and starting a
+
+4 worker thread if this is the first time we see this URL.
+
+5 """
+
+6 with \_cameras\_lock:
+
+7 if stream\_url not in \_cameras:
+
+8 logger.info("Registering new camera: \%s", stream\_url)
+
+9 state = CameraState()
+
+10 \_cameras[stream\_url] = state
+
+12 worker = threading.Thread(
+
+13 target=\_camera\_loop,
+
+14 args=(stream\_url,),
+
+15 daemon=True,
+
+16 name=f"cam-\{stream\_url[-30:]\}",
+
+17 )
+
+18 worker.start()
+
+19 else:
+
+20 state = \_cameras[stream\_url]
+
+21 state.last\_access = time.monotonic()
+
+23 return state
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.37: \_ensure\_camera\_started(): thread creation on rst request, last\_access refresh on
+
+subsequent requests (, lines 198220).
+
+\_ensure\_camera\_started() is called by the /current-count endpoint on every request. The
+
+entire registration-and-thread-start sequence runs inside a single camera\_lock acquisition, which
+
+atomically checks whether the camera is already registered and either creates a new CameraState
+
+and starts a thread, or updates last\_access on the existing state. The name= argument on the
+
+Thread object sets the thread's name to the last 30 characters of the stream URL, which makes
+
+thread names visible in Python prolers and debuggers  far more informative than the default
+
+Thread-1, Thread-2 naming.
+
+state.last\_access = time.monotonic() on the existing-camera path is the heartbeat mech-
+
+anism for the cleanup worker. Every poll of a camera resets its expiry timer. A camera that is
+
+polled every few seconds will never become stale; a camera whose poll stops (e.g., the backend goes
+
+oine) will have its last\_access frozen at the time of the last poll and will eventually be cleaned
+
+up after CAMERA\_TIMEOUT seconds.
+
+\begin{listingbox}
+	\begin{verbatim}
+1 def \_cleanup\_worker() -> None:
+
+2 """Background thread: remove cameras idle for > CAMERA\_TIMEOUT seconds."""
+
+3 while True:
+
+4 time.sleep(CLEANUP\_INTERVAL)
+
+5 cutoff = time.monotonic() - CAMERA\_TIMEOUT
+
+7 with \_cameras\_lock:
+
+8 stale = [
+
+9 url for url, s in \_cameras.items()
+
+10 if s.last\_access < cutoff
+
+11 ]
+
+12 for url in stale:
+
+13 logger.info(
+
+14 "Removing inactive camera (idle > \%.0f s): \%s",
+
+15 CAMERA\_TIMEOUT, url
+
+16 )
+
+17 del \_cameras[url]
+
+19 \# Start the cleanup worker when the module loads
+
+20 \_cleanup\_thread = threading.Thread(
+
+21 target=\_cleanup\_worker,
+
+22 daemon=True,
+
+23 name="cleanup-worker",
+
+24 )
+
+25 \_cleanup\_thread.start()
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.38: \_cleanup\_worker(): idle-camera garbage collection and module-level thread start
+
+(, lines 223248).
+
+\_cleanup\_worker() runs on a daemon thread started at module import time. It sleeps for
+
+CLEANUP\_INTERVAL (60) seconds, then calculates a cuto timestamp as the current monotonic time
+
+minus CAMERA\_TIMEOUT (300 seconds). Any camera whose last\_access is older than this cuto is
+
+considered stale. The stale list is built with a list comprehension inside the lock (safe  iterating
+
+over a dictionary while holding its lock), and then the stale URLs are deleted inside the same lock
+
+acquisition. Deleting from the dictionary inside the lock is the operation that the camera loop's
+
+deregistration checks look for: after del
+
+\_cameras[url], the next time the camera thread checks
+
+stream\_url not in \_cameras, it will return True and the thread will exit.
+
+Building the stale list separately from deleting prevents a dictionary changed size during itera-
+
+tion RuntimeError, which would occur if del \_cameras[url] were called inside the for url, s
+
+in \_cameras.items() iteration without a separate list.
+
+FastAPI Endpoints  /current-count, /health, and /
+
+\begin{listingbox}
+	\begin{verbatim}
+1 app = FastAPI(title="People Counter API", version="2.0.0")
+
+3 @app.get("/current-count")
+
+4 def get\_count(ip: str, port: int = DEFAULT\_PORT):
+
+5 """
+
+6 Return the current tracked-person count for a camera.
+
+8 ip : Camera IP or full URL (http/https/rtsp).
+
+9 port : Port for bare-IP sources (default: 4747).
+
+10 """
+
+11 if not ip:
+
+12 raise HTTPException(status\_code=400, detail="ip parameter is required")
+
+14 stream\_url = build\_stream\_url(ip, port)
+
+15 state = \_ensure\_camera\_started(stream\_url)
+
+17 if not state.ready\_event.wait(timeout=READY\_TIMEOUT):
+
+18 raise HTTPException(
+
+19 status\_code=503,
+
+20 detail=f"Camera stream not ready within \{READY\_TIMEOUT:.0f\} s: \{stream\_url\}
+
+\end{verbatim}
+\end{listingbox}
+",
+
+\begin{listingbox}
+	\begin{verbatim}
+21 )
+
+23 with \_cameras\_lock:
+
+24 current = \_cameras.get(stream\_url)
+
+25 if current is None:
+
+26 raise HTTPException(
+
+27 status\_code=503,
+
+28 detail="Camera was removed during startup"
+
+29 )
+
+30 count, connected = current.count, current.connected
+
+32 return \{
+
+33 "camera": stream\_url,
+
+34 "people\_count": count,
+
+35 "connected": connected,
+
+36 \}
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.39: /current-count endpoint: full production implementation with post-cleanup safety
+
+check (, lines 251290).
+
+The production endpoint diers from the prototype in three signicant ways. First, it accepts an
+
+ip string parameter (and optional port integer) rather than a cam\_id integer, enabling it to serve any
+
+camera format supported by. Second, the ready timeout is 15 seconds rather
+
+than 10, to accommodate RTSP cameras that take longer to negotiate stream parameters. Third, it
+
+adds a post-cleanup safety check after ready\_event.wait(): even after the event res, the cleanup
+
+worker could theoretically delete the camera from the registry between the wait() returning and
+
+the second lock acquisition. The \_cameras.get(stream\_url) call inside the second lock acquisition
+
+handles this race  ifcurrent is None, a 503 is returned rather than an AttributeError from
+
+accessing current.count on a NoneType object.
+
+\begin{listingbox}
+	\begin{verbatim}
+1 @app.get("/health")
+
+2 def health():
+
+3 """Return service health and basic stats."""
+
+4 with \_cameras\_lock:
+
+5 active = len(\_cameras)
+
+6 return \{
+
+7 "status": "ok",
+
+8 "active\_cameras": active,
+
+9 "model\_loaded": \_model is not None,
+
+10 \}
+
+12 @app.get("/")
+
+13 def root():
+
+14 return \{"status": "running", "message": "People Counter API v2"\}
+
+16 if \_\_name\_\_ == "\_\_main\_\_":
+
+17 uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.40: /health and / endpoints, plus entry-point uvicorn launch (, lines 292322).
+
+/health is a standard operational endpoint that the.NET Core backend can poll to conrm
+
+the AI service is running. It reports three pieces of information: status ok (always, as long
+
+as the process is running); active\_cameras, the current count of registered camera streams; and
+
+model\_loaded, a boolean indicating whether get\_model() has been called at least once. The
+
+backend can use model\_loaded=false as an early-startup indicator and delay its own camera polls
+
+until the model is loaded. The / root endpoint is a minimal liveness check  its only purpose is
+
+to return a 200 OK with a recognisable body, conrming the FastAPI application is running and
+
+accepting connections.
+
+uvicorn.run(app, host="0.0.0.0", port=8000) binds the ASGI server to all network inter-
+
+faces on port 8000. host="0.0.0.0" is necessary for the.NET Core backend to reach the ser-
+
+vice from a dierent process on the same machine or a dierent machine on the local network;
+
+host="127.0.0.1" would restrict access to the same machine only. In a production deployment,
+
+a reverse proxy (nginx, Caddy) should sit in front of uvicorn to provide TLS termination and rate
+
+limiting.
+
+
+\section{Administration and Conguration Interface}
+The Angular dashboard's administrative screens are where the hardware and AI services described
+
+above are provisioned and where accounts are managed. This section presents all three conguration
+
+screens with annotated screenshots and traces each UI element back to the relevant functional
+
+requirement and the code already discussed.
+
+
+\subsection{Add Lab  Laboratory Provisioning Form}
+
+% --- FIGURE PLACEHOLDER: Figure 5.2 ---
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{ch05/figures/add-lab-form.png}
+	\caption{Add Lab: provisioning form for a new smart laboratory}
+	\label{fig:5-2}
+\end{figure}
+
+Figure 5.2: Add Lab: provisioning form for a new smart laboratory.
+
+Table 5.4: Add Lab form elds and their backend/rmware connections.
+
+Field Type Default Purpose and code connection
+
+Lab name Text, re- (none) Human-readable identier shown on all
+
+quired dashboard views. Maps to the LabName col-
+
+umn in the Labs table.
+
+Device key Text, op- (none) Credential used to pair the ESP32. The
+
+(optional) tional rmware sends this in the token-exchange
+
+POST to /api/devices/token alongside
+
+labId and deviceId.
+
+Light thresh- Integer, 2000 Server-side copy of LIGHT\_THRESHOLD.
+
+old required Matches the rmware constant (Sec-
+
+tion 5.2.1). Not yet fetched by the rmware
+
+at boot (NFR-MAIN-01 gap).
+
+Fan-on tem- Integer, 28 Server-side copy of the fan-on threshold.
+
+perature ( degreesC) required Matches the rmware's implicit comparison
+
+(temp >= 28 -> fanOn). Same NFR-MAIN-
+
+\begin{listingbox}
+	\begin{verbatim}
+01 gap.
+
+\end{verbatim}
+\end{listingbox}
+CV lab code Text, op- (none) Associates the lab with a computer-vision
+
+(optional) tional tracking context. Used by the AI service as
+
+a label for camera registry keys.
+
+Camera Text, op- (none) Passed to 's
+
+RTSP URL tional resolve\_source(). Accepts usb:N,
+
+(optional) http/https/rtsp URL, or bare IPv4 (all ve
+
+formats from Section 5.3.2.2).
+
+This single form is the operational proof of NFR-SCAL-02's requirement that adding a laboratory
+
+requires no schema or architecture change: every eld maps to an existing database column or
+
+optional conguration value, and creating a lab here does not require touching the AI service, the
+
+rmware, or the database schema. It requires only lling in this form and pairing one physical
+
+ESP32 with the resulting device key. The Create lab button triggers a POST to the /api/labs
+
+endpoint with the form values serialised as JSON; the Cancel button discards the form and navigates
+
+back to the Labs list.
+
+
+\subsection{Devices  Hardware Registry}
+% --- FIGURE PLACEHOLDER: Figure 5.3 ---
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{ch05/figures/devices-page.png}
+	\caption{Devices: read-side registry showing Esp32-Lab-D7 Active at 192}
+	\label{fig:5-3}
+\end{figure}
+
+Figure 5.3: Devices: read-side registry showing Esp32-Lab-D7 Active at 192.168.1.7.
+
+The Devices screen (Figure 5.3) is the read side of the provisioning step. Once a lab has been
+
+created and a device key issued, the corresponding ESP32 appears here with ve data columns: LAB
+
+(Lab D7), DEVICE (Esp32-Lab-D7), TYPE (ESP32 Controller), IP (192.168.1.7), and STATUS
+
+(Active). The Active status is maintained by the rmware's token lifecycle described in Section 5.2.4
+
+a device that fails to authenticate or stops sending events will have its status ipped to Inactive
+
+by the backend after a congurable idle timeout.
+
+The IP address 192.168.1.7 matches the serverUrl, lightApi, and TokenGen constants em-
+
+bedded in the rmware source (Listing 5.3). This screen is therefore the backend's own evidence
+
+that the rmware is successfully reaching the correct host  if the IP were wrong, the rmware's
+
+token exchange would fail, the device would never authenticate, and the Status column would show
+
+Inactive rather than Active.
+
+
+\subsection{Users  Account List}
+
+% --- FIGURE PLACEHOLDER: Figure 5.4 ---
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{ch05/figures/ Users: account list with all four registered accounts across three roles.png}
+	\caption{Users: account list with all four registered accounts across three roles}
+	\label{fig:5-4}
+\end{figure}
+
+Figure 5.4: Users: account list with all four registered accounts across three roles.
+
+
+\subsection{Add User  Account Creation Form}
+Screenshot placeholder
+
+(source image: )
+
+
+% --- FIGURE PLACEHOLDER: Figure 5.5 ---
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{ch05/figures/add-user-form.png}
+	\caption{Add user: account creation form with role assignment and active-status toggle}
+	\label{fig:5-5}
+\end{figure}
+
+Figure 5.5: Add user: account creation form with role assignment and active-status toggle.
+
+
+The Add user form (Figure 5.5) collects four elds: Full name, Email, Role (a dropdown with
+
+options Teacher, Teaching Assistant, and Admin), and Password. The Active account checkbox is
+
+checked by default, which activates the account immediately upon creation. Unchecking it creates
+
+a provisioned-but-inactive account  useful for pre-creating accounts for sta who have not yet
+
+started.
+
+The password eld implements FR-AC-04's requirement that passwords are never stored or
+
+transmitted in plaintext: the eld accepts a value that is sent to the backend and immediately hashed
+
+server-side using a cryptographic hash function (bcrypt in the current.NET Core implementation)
+
+before storage. The eld is never pre-lled when the Edit button is used on an existing account
+
+editing an account shows all elds except the password, which must be explicitly re-entered to
+
+be changed. This prevents password exposure via browser autoll or network sning of a form
+
+pre-populated with a stored value.
+
+The Save button posts to /api/users with the form values as JSON. The Cancel button discards
+
+the form. After a successful save, the user list is refreshed to show the new account, and the form
+
+collapses back to a hidden state  the same UX pattern used for the Add Lab form.
+
+
+\section{Monitoring Dashboard Implementation}
+This section covers the three screens that an instructor or administrator interacts with day-to-day:
+
+the login screen, the system-wide overview dashboard, and the per-laboratory monitoring view.
+
+
+\subsection{Login Screen}
+%
+% --- FIGURE PLACEHOLDER: Figure 5.6 ---
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{ch05/figures/Login: the credential entry point implementing UC-01 and FR-AC-01.png}
+	\caption{Login: the credential entry point implementing UC-01 and FR-AC-01}
+	\label{fig:5-6}
+\end{figure}
+
+Figure 5.6: Login: the credential entry point implementing UC-01 and FR-AC-01.
+
+The login screen (Figure 5.6) implements UC-01 and FR-AC-01 directly. It is a split-panel layout:
+
+the left panel displays the GreenLab brand identity (Powering a sustainable future), a marketing
+
+tagline (Manage your smart energy grid with precision and elegance), and two summary metric
+
+cards (98\% Eciency and Opti Mode); the right panel contains the authentication form. This layout
+
+follows a widely-used pattern for SaaS login pages that reinforces brand values while presenting the
+
+credential entry form.
+
+The credential form collects Email Address and Password, both shown with icon-adorned input
+
+elds. The Password eld has a visibility toggle (the eye icon on the right) that switches the
+
+input type between password (asterisks) and text (plaintext), helping users who mistype their
+
+password without a show-password option. Forgot Password? is a link to a password-reset ow
+
+(not shown separately in this chapter). The Login -> button submits the credentials to the backend
+
+authentication endpoint. Alternatively, users can continue with Google or Apple, which initiate
+
+OAuth2 ows that ultimately produce the same authenticated, role-bearing session token. The
+
+language toggle in the top-right corner (English / Arabic) is an internationalisation aordance that
+
+allows Arabic-speaking sta to use the system in their preferred language.
+
+On successful authentication, the Angular router navigates to the Dashboard (Section 5.5.2).
+
+On failure (wrong password, inactive account, network error), an error message is shown inline
+
+below the Login button without revealing whether the email or password was specically wrong
+
+a standard security practice to prevent user enumeration.
+
+Screenshot placeholder
+
+(source image: )
+
+
+% --- FIGURE PLACEHOLDER: Figure 5.7 ---
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{figures/figure-5-7.png}
+	\caption{Dashboard: weekly occupancy trend, active alerts panel, and recent activity feed}
+	\label{fig:5-7}
+\end{figure}
+
+Figure 5.7: Dashboard: weekly occupancy trend, active alerts panel, and recent activity feed.
+
+
+\subsection{System Dashboard}
+
+% --- FIGURE PLACEHOLDER: Figure 5.7 ---
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{figures/figure-5-7.png}
+	\caption{) is the primary daily-use screen for lab managers}
+	\label{fig:5-7}
+\end{figure}
+
+The administrator's landing dashboard (Figure 5.7) is the primary daily-use screen for lab managers.
+
+It implements FR-MD-03 (system-wide status at a glance) and FR-FH-03 (faults visible without
+
+navigation). The layout is divided into three zones.
+
+The upper zone occupies most of the screen width and shows a weekly occupancy trend chart.
+
+The x-axis spans the seven days of the current week (Mon through Sun), and the y-axis represents
+
+the aggregate occupancy index  a composite derived from per-lab occupancy counts weighted
+
+by session status. The curve peaks on Thursday and Friday, consistent with a typical university
+
+schedule where more labs are in use mid-to-late week. Hollow circles on the curve indicate specic
+
+measurement points, and the lled circle on Thursday marks the current day's peak. The right side
+
+of the upper zone shows a bar chart comparing the relative occupancy index (024 range) across
+
+three lab categories: Network Lab, Software Lab, and Hardware Lab.
+
+The lower-left zone is the Active alerts panel, currently showing two alerts: Occupancy outside
+
+session  Software Lab B: Last crowd count: 15. Check schedule or overrides. (3 hours ago)
+
+and Occupancy outside session  Hardware Lab C: Last crowd count: 8. (4 hours ago). Each
+
+alert has a dismiss button (x) in the top-right corner. These alerts are the implementation of the
+
+Occupancy outside session fault condition identied in Section 5.4.4  a condition where the AI
+
+service reports non-zero occupancy in a lab that the session schedule shows as unbooked. This alert
+
+type does not appear in the Chapter 3 FR list by name and is recommended for formal inclusion
+
+as FR-FH-04 in a future revision.
+
+The lower-right zone is the Recent activity feed, showing timestamped per-lab events: Network
+
+Lab A: occupancy 24 · In session (3 hr ago), Software Lab B: occupancy 15 · Out of session (3 hr
+
+ago), Hardware Lab C: occupancy 8 · Out of session (4 hr ago). A green dot indicates In session;
+
+a grey dot indicates Out of session. The Tip card at the bottom suggests a specic administrative
+
+action: Open Network Lab A to see devices and thresholds from the API when signed in as admin.
+
+This tip is context-aware  it is triggered by the presence of a lab with the highest occupancy and
+
+provides a direct action link, not generic advice.
+
+Screenshot placeholder
+
+(source image: LAPS\_Page.jpeg)
+
+
+% --- FIGURE PLACEHOLDER: Figure 5.8 ---
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{figures/figure-5-8.png}
+	\caption{All Labs: Lab D7 shown Idle with 4/30 kWh energy usage and three device-state pills}
+	\label{fig:5-8}
+\end{figure}
+
+Figure 5.8: All Labs: Lab D7 shown Idle with 4/30 kWh energy usage and three device-state pills.
+
+
+\subsection{All Labs  Per-Laboratory View}
+
+% --- FIGURE PLACEHOLDER: Figure 5.8 ---
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{figures/figure-5-8.png}
+	\caption{) is the per-laboratory monitoring view implementing FR-MD-01}
+	\label{fig:5-8}
+\end{figure}
+
+The All Labs screen (Figure 5.8) is the per-laboratory monitoring view implementing FR-MD-01.
+
+It shows one status card per registered laboratory. The Lab D7 card displays: a status pill (Idle,
+
+shown in amber) in the top-right corner; an energy usage bar labelled ENERGY USAGE with
+
+a green progress bar at approximately 13\% ll, captioned 4 / 30 kWh; three device-state pills in
+
+the lower-left corner, all reading IDLE in amber; a last-updated timestamp (36 d ago) in the
+
+lower-right corner; and an Add Labs + button in the top-right corner of the page for quick access
+
+to the Add Lab form.
+
+The three device-state pills correspond to the three relay channels visible in the dashboard's
+
+data model  light, fan, and a third channel. As noted in Section 5.2.4, only two relay channels
+
+(light and fan) are physically wired in the current rmware build, but the dashboard already renders
+
+three slots. The third slot reading IDLE is consistent with relay3On never being set to true in the
+
+backend's response, since the rmware logs it but does not drive a GPIO pin for it.
+
+Below the lab card, an AI Recommendation card reads: Review session schedules and occupancy
+
+in the admin API to tune savings. This recommendation is generated by the backend's analytics
+
+engine, which correlates session schedules with occupancy data to identify conguration changes that
+
+would reduce unnecessary energy consumption. It is an emergent feature surfaced from occupancy
+
+data rather than from a separately specied requirement, and is noted here as a candidate for formal
+
+specication in a future project iteration.
+
+
+\section{Implementation Traceability Matrix}
+The table below maps every functional and non-functional requirement identier from Chapter 3 to
+
+the specic section, listing, gure, or gap note in this chapter where it is evidenced.
+
+Table 5.5: Implementation traceability matrix.
+
+Req. ID Requirement Summary Evidence in Ch. 5 Status
+
+
+% --- FIGURE PLACEHOLDER: Figure 5.6 ---
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{figures/figure-5-6.png}
+	\caption{; 5}
+	\label{fig:5-6}
+\end{figure}
+
+FR-AC-01 Device/user authentica- 5.5.1 Fig. 5.6; 5.2.4 List- Implemented
+
+tion on login ings 5.85.10
+
+Req. ID Requirement Summary Evidence in Ch. 5 Status
+
+FR-AC-02 All non-login endpoints re- 5.2.4 (device); 5.5.1 Implemented
+
+quire valid JWT (users); 5.4.3
+
+FR-AC-03 Role-checked JWT on ev- 5.4.35.4.4 three-role Implemented
+
+ery endpoint model
+
+FR-AC-04 Passwords hashed server- 5.4.4 Add user form anal- Implemented
+
+side; never redisplayed ysis
+
+FR-EE-02 Debounce / minimum- 5.2.6 Listing 5.14 (edge- Implemented
+
+interval between motion trigger + COOLDOWN)
+
+reports
+
+FR-FH-01 Timeout-based fault de- 5.3.3.9 Listing 5.39 Implemented
+
+tection at AI boundary READY\_TIMEOUT 503
+
+FR-FH-02 Hold last relay state dur- 5.2.6 Listing 5.15 fallback Partial
+
+ing connectivity fault (re-evaluates, not freezes)
+
+
+% --- FIGURE PLACEHOLDER: Figure 5.7 ---
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{figures/figure-5-7.png}
+	\caption{Active   Implemented}
+	\label{fig:5-7}
+\end{figure}
+
+FR-FH-03 Faults visible on dash- 5.5.2 Fig. 5.7 Active Implemented
+
+board without navigation alerts panel
+
+
+% --- FIGURE PLACEHOLDER: Figure 5.8 ---
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{figures/figure-5-8.png}
+	\caption{device-state        Implemented}
+	\label{fig:5-8}
+\end{figure}
+
+FR-MD-01 Live sensor-state and 5.5.3 Fig. 5.8 device-state Implemented
+
+relay-state view per lab pills
+
+
+% --- FIGURE PLACEHOLDER: Figure 5.7 ---
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{figures/figure-5-7.png}
+	\caption{full dash-          Implemented}
+	\label{fig:5-7}
+\end{figure}
+
+FR-MD-03 System-wide status at a 5.5.2 Fig. 5.7 full dash- Implemented
+
+glance board layout
+
+FR-OD-01 Person detection >=0.5 con- 5.3.3.7 Listing 5.36; Implemented
+
+dence, <=5 s cadence FRAME\_SKIP=3
+
+FR-OD-02 Empty/Low/Moderate/High Dashboard occupancy la- Implemented
+
+occupancy classication bels Figs. 5.75.8
+
+FR-SI-04 Device re-authenticates af- 5.2.5 Listing 5.12 retry Implemented
+
+ter 401 block
+
+NFR-MAIN- Firmware thresholds Hardcoded constants Not yet im-
+
+\begin{listingbox}
+	\begin{verbatim}
+01 fetched from API at 5.2.1  not fetched plemented
+
+\end{verbatim}
+\end{listingbox}
+runtime
+
+NFR-PERF- AI service sampling within 5.3.3.6 Implemented
+
+\begin{listingbox}
+	\begin{verbatim}
+03 5-second cadence FRAME\_SKIP=3 at
+
+30 fps -> 10 inferences/s
+
+
+\end{verbatim}
+\end{listingbox}
+% --- FIGURE PLACEHOLDER: Figure 5.2 ---
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.6\textwidth]{figures/figure-5-2.png}
+	\caption{Add Lab             Implemented}
+	\label{fig:5-2}
+\end{figure}
+
+NFR-SCAL- Adding a lab requires 5.4.1 Fig. 5.2 Add Lab Implemented
+
+\begin{listingbox}
+	\begin{verbatim}
+02 no schema/architecture form
+
+\end{verbatim}
+\end{listingbox}
+change
+
+
+\section{Worked End-to-End Example: One Motion Event Across All}
+Four Tiers
+
+This section traces a single real-world scenario  a student entering Lab D7 at 09:15 on a Thursday
+
+morning while a session is scheduled  through all four system tiers. The JSON payloads shown
+
+are representative of those exchanged by the running system on the development network.
+
+
+\subsection{Tier 1  ESP32 Sensor Reads (loop() iteration N)}
+The main loop iteration begins. readDistanceCM() res the HC-SR04 and measures a round-trip
+
+of 2,235 microseconds, corresponding to a distance of 2235 x 0.034/2 = 38 cm. Since 38 > 0 and
+
+\begin{listingbox}
+	\begin{verbatim}
+38 <= 50 (DISTANCE\_THRESHOLD), isNear evaluates to true. The previous iteration had isNear =
+
+\end{verbatim}
+\end{listingbox}
+false (the doorway was unoccupied), so wasNear = false. The condition isNear \&\& !wasNear \&\&
+
+(millis() - lastToggleTime > 2000) is satised  this is a rising edge with sucient cooldown
+
+elapsed.
+
+readLight() returns 1850, indicating a moderately dim room. dht.readTemperature() re-
+
+turns 26.4 and dht.readHumidity() returns 61.0; neither is NaN so the isnan() guard passes.
+
+ensureTokenValid() checks the cached token and nds millis() = 1,200,000 ms (20 minutes
+
+since boot) is less than tokenExpireMillis = 3,600,000 ms (60 minutes since boot)  token is
+
+valid, no network call. WiFi.status() returns WL\_CONNECTED. sendMotionRequest() is called.
+
+
+\subsection{Tier 1 -> Tier 2: HTTP POST to the ASP.NET Core Backend}
+sendMotionRequest() constructs the following JSON body by manual string concatenation:
+
+\begin{listingbox}
+	\begin{verbatim}
+1 POST http://192.168.1.7:5076/api/devices/1/event HTTP/1.1
+
+2 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.[payload].[signature]
+
+3 Content-Type: application/json
+
+5 \{
+
+6 "motionDetected": true,
+
+7 "distanceCm": 38,
+
+8 "ldrValue": 1850,
+
+9 "temperatureCelsius": 26.4,
+
+10 "humidity": 61.0
+
+11 \}
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.41: Full HTTP POST sent by the ESP32 on a rising-edge motion event.
+
+The backend receives this request, validates the JWT signature and expiry, identies the calling
+
+device as Esp32-Lab-D7 associated with Lab D7, and begins evaluating the automation rules. The
+
+session schedule shows a session running from 08:00 to 12:00 today, so session-based rules are
+
+active. The backend polls the AI service for the current occupancy count (Tier 3, below) and
+
+receives people\_count= 1. The backend evaluates: ldrValue (1850) < lightThreshold (2000)
+
+-> room is dark -> lightOn = true; temperatureCelsius (26.4) < fanOnTemp (28) -> room is not
+
+hot -> fanOn = false. motionIgnored = false because the event falls within a scheduled session.
+
+occupancyCount = 1.
+
+
+\subsection{Tier 2 -> Tier 3: AI Service Poll (concurrent with backend evaluation)}
+The backend sends a GET request to the Python AI service:
+
+\begin{listingbox}
+	\begin{verbatim}
+1 GET http://127.0.0.1:8000/current-count?ip=192.168.1.3 HTTP/1.1
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.42: Backend polling the AI service for current occupancy.
+
+The AI service's camera loop thread for http://192.168.1.3:4747/video has been running
+
+continuously. On the most recent processed frame (frame index 72, the 24th inference run since the
+
+camera started), ByteTrack assigned track\_id = 7 to the entering student. The tracked\_ids set
+
+contains \{7\}, so \_run\_inference() returned 1. The CameraState for this camera has count = 1
+
+and connected = True. The AI service responds:
+
+\begin{listingbox}
+	\begin{verbatim}
+1 HTTP/1.1 200 OK
+
+2 Content-Type: application/json
+
+4 \{
+
+5 "camera": "http://192.168.1.3:4747/video",
+
+6 "people\_count": 1,
+
+7 "connected": true
+
+8 \}
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.43: AI service response conrming one tracked person in frame.
+
+
+\subsection{Tier 2 -> Tier 1: Backend Response}
+The backend constructs its response and returns it to the ESP32:
+
+\begin{listingbox}
+	\begin{verbatim}
+1 HTTP/1.1 200 OK
+
+2 Content-Type: application/json
+
+4 \{
+
+5 "lightOn": true,
+
+6 "fanOn": false,
+
+7 "relay3On": false,
+
+8 "relay4On": false,
+
+9 "motionIgnored": false,
+
+10 "occupancyCount": 1
+
+11 \}
+
+
+\end{verbatim}
+\end{listingbox}
+Listing 5.44: Backend JSON response driving ESP32 relay actuation.
+
+sendMotionRequest() receives HTTP 200 with this body. The code is not 401, so no retry is
+
+needed. getString() returns the JSON body, which is returned from sendMotionRequest() to the
+
+motion-event block in loop().
+
+
+\subsection{Tier 1  Relay Actuation}
+Back in loop(), response is the JSON body above. deserializeJson() succeeds. occupancy =
+
+1, so the room-empty override is skipped. lightOn = true, lastLightState = false -> lightOn
+
+!= lastLightState is true -> digitalWrite(RELAY\_PIN, LOW) closes the relay -> light turns
+
+ON. lastLightState = true. fanOn = false, lastFanState = false -> no relay write needed.
+
+relay3On = false, relay4On = false -> logged to serial only. motionIgnored = false -> no
+
+early return. lastToggleTime = millis(). wasNear = true (set at the bottom of loop()). The
+
+entire round-trip from the HC-SR04 ping to the light switching on takes under 600 ms on the local
+
+network.
+
+
+\subsection{Tier 4  Dashboard Update}
+The Angular dashboard's polling interval (congured at 5 seconds) res a GET to /api/labs/d7/status.
+
+The backend returns the updated lab state including occupancy = 1, lightOn = true, fanOn =
+
+false, sessionStatus = "In session". The Recent activity feed updates to show Lab D7: oc-
+
+cupancy 1 · In session with a green dot. No alert is raised because the occupancy occurred within
+
+a scheduled session.
+
+
+
+
+
+\section{Chapter Summary}
+This chapter presented the as-built GreenLab system in full implementation detail across its two
+
+directly-implemented tiers  the ESP32 hardware layer and the Python AI processing service
+
+and through annotated screenshots for the Angular administration and monitoring interface.
+
+Section 5.2 covered the ESP32 rmware in six subsections. Section 5.2.1 documented all library
+
+includes, pin assignments, and global constants, explaining the rationale behind each GPIO choice
+
+and the consistency gap between hardcoded thresholds and the Add Lab form defaults. Section 5.2.2
+
+presented the three sensor-reading functions with physics-level explanations of the HC-SR04 time-
+
+of-ight calculation, the ESP32 ADC non-linearity caveat, and the DHT11 NaN guard. Section 5.2.3
+
+documented the four local HTTP server handlers that enable direct relay control from the dashboard
+
+without a backend round-trip, and explained the active-low relay convention and the importance of
+
+updating the state trackers inside each handler. Section 5.2.4 presented the complete JWT token
+
+lifecycle  handleTokenResponse(), ensureTokenValid(), and refreshToken()  with explana-
+
+tions of the 50-minute assumed expiry, the millis() overow edge case, and the security note on
+
+plaintext credentials in the local network context. Section 5.2.5 presented sendMotionRequest()
+
+with line-by-line explanation of the pre-ight guards, manual JSON construction, 401 retry logic,
+
+and the http.end() necessity. Section 5.2.6 presented setup() and loop() in full, covering safe-
+
+state relay initialisation, non-blocking Wi-Fi watchdog, edge-triggered motion detection, local fall-
+
+back with dierential update, JSON response parsing, room-empty override, and dierential relay
+
+actuation.
+
+Section 5.3 covered the Python AI service in three les. Section 5.3.1 presented
+
+the single-camera prototype  covering the double-checked locking singleton model loader, the
+
+two-attempt VideoCapture open strategy, the person-counting generator expression, the ready-
+
+event signalling pattern, and the lock-release-before-wait pattern in the endpoint. Section 5.3.2
+
+presented in full  the ve-branch resolve\_source() dispatch, the frozenset
+
+for O(1) extension lookup, the IPv4 regex, create\_capture()'s intentional no-exception design,
+
+source\_label()'s idempotent key generation, and the two private parsing helpers with their spe-
+
+cic validation strategies. Section 5.3.3 presented  the production service  covering
+
+structured logging, the CameraState dataclass and monotonic last\_access, \_update\_state()'s
+
+cleanup-race guard, the dual deregistration checks in \_camera\_loop(), FRAME\_SKIP frame-count
+
+sampling, the exception guard around inference, ByteTrack's persist=True and classes=[0]
+
+arguments, \_ensure\_camera\_started()'s atomic registration, \_cleanup\_worker()'s separate-list-
+
+before-delete pattern, and the /current-count post-cleanup safety check.
+
+Sections 5.4 and 5.5 covered the Angular dashboard through annotated screenshots: the Add
+
+Lab form with a per-eld analysis table, the Devices registry and its connection to the rmware's
+
+IP constants, the Users list showing the three-role model, the Add user form and its FR-AC-04
+
+password handling, the Login screen with its OAuth2 alternatives, the system Dashboard with
+
+its three information zones and the Occupancy outside session emergent alert, and the All Labs
+
+per-laboratory view with its device-state pills and AI Recommendation card.
+
+Section 5.6 provided a complete requirement traceability matrix. Section 5.7 traced one complete
+
+motion event through all four tiers using representative JSON payloads. The seven implementation
+
+gaps identified during development --- hardcoded thresholds, two unwired relay channels, fallback
+
+behaviour deviation, unmodelled role, unspecified alert type, compiled-in device identity, and
+
+frame-count-based sampling --- are recorded in Chapter 6 for consolidated discussion.
+
+

@@ -1,0 +1,195 @@
+\chapter{Conclusions, Limitations, and Future}
+Conclusions, Limitations, and Future
+
+Work
+
+Chapter 6
+
+Conclusions,
+
+Limitations, and
+
+Future Work
+
+
+\section{Introduction to the Chapter}
+This chapter closes the GreenLab project report by evaluating the system against the
+
+eight objectives defined in Section 1.4, consolidating the limitations documented
+
+throughout Chapters 3 through 5 into a single account, and proposing a concrete
+
+direction for continued development. Chapter 5 traced individual functional and non-
+
+functional requirements to their implementation evidence (Section 5.6) and recorded
+
+seven specific implementation deviations as they were discovered (Section 6.4). This
+
+chapter operates at the level of the project as a whole: it evaluates whether GreenLab
+
+achieved what it set out to achieve, states its limitations plainly, and proposes the
+
+roadmap that would carry it from a demonstrated prototype to a validated deployment.
+
+
+\section{Achievement of Project Objectives}
+Table 6.1 evaluates each objective from Section 1.4 against the evidence accumulated
+
+across Chapters 3--5, principally the requirements traceability matrix in Section 5.6.
+
+\begin{itemize}
+	\item \textbf{Objective 1 --- Layered four-tier architecture with clear interface contracts} (Achieved). The hardware, AI, backend, and dashboard tiers communicate exclusively through the defined REST interfaces described in Section 4.1 and exercised in Chapter 5: the ESP32 firmware never bypasses the backend to reach the AI service or dashboard directly, and each tier's internal implementation (§5.2--5.5) can be replaced without altering another tier's contract.
+
+	\item \textbf{Objective 2 --- Functional and non-functional requirements in formal IEEE 830 style} (Achieved): Sections 3.5 and 3.6 specify 135 functional requirements across nine functional areas and six non-functional quality dimensions. The Section 5.6 traceability matrix confirms every sampled requirement traces to implementation evidence or an explicitly recorded gap.
+
+	\item \textbf{Objective 3 --- Multimodal occupancy detection combining embedded sensors and YOLO-based vision} (Achieved): The Section 5.7 worked trace demonstrates HC-SR04, DHT11, and LDR readings combining with the YOLO service's tracked person count within a single automation decision (FR-OD-01, FR-OD-02: Implemented).
+
+	\item \textbf{Objective 4 --- Lighting control via a decision matrix} (Achieved): The LDR-zone x occupancy-classification matrix (Table 4.6) is implemented as a data-driven rule lookup, satisfying the auditability and configurability goal stated in Objective 4.
+
+	\item \textbf{Objective 5 --- Ventilation control via a fan activation table} (Achieved): The temperature-zone x occupancy-classification table (Table 4.7) follows the same pattern as the lighting matrix and is exercised directly in the Section 5.7 worked example.
+
+	\item \textbf{Objective 6 --- Secure ASP.NET Core REST API with authentication, RBAC, and audit logging} (Achieved): FR-AC-01 through FR-AC-04 are marked Implemented in the Section 5.6 traceability matrix, supported by JWT-based authentication (§4.7.1), a three-role access model (§4.7.2), and an append-only audit log (§4.7.3), each demonstrated against concrete request/response evidence in Chapter 5.
+
+	\item \textbf{Objective 7 --- Angular dashboard for monitoring, override, scheduling, and administration} (Achieved): Sections 5.4--5.5 document eight distinct dashboard views spanning all four required capabilities, with FR-MD-01 and FR-MD-03 both marked Implemented. One presentational inconsistency --- a third device-state pill rendered for a currently-unwired relay channel --- is recorded as a limitation in Section 6.4 and does not affect the four core capabilities this objective requires.
+
+	\item \textbf{Objective 8 --- Complete, print-ready project report by this revision} (Achieved): The report's figures, tables, and formatting satisfy Objective 8. The report was previously incomplete against its own six-chapter structure (no Chapter 6) and carried an unresolved citation-numbering placeholder in Chapter 2; both are resolved as part of this revision.
+\end{itemize}
+
+Seven of the eight objectives were fully achieved by the delivered system with no
+
+qualification beyond the implementation-level deviations recorded in Section 6.4.
+
+Objective 8, concerning the report itself, is brought to completion by this chapter and the
+
+Chapter 2 correction above.
+
+
+\section{Summary of Project Contribution}
+GreenLab set out to close a specific gap identified in the literature review (Section 2.11):
+
+no reviewed source combined occupancy-aware automation with role-based governance,
+
+authenticated override, and audit accountability in a single system designed for the
+
+operational realities of a shared academic laboratory. The Table 2.1 comparison matrix
+
+positions GreenLab as the only reviewed system offering multimodal sensing, decision-
+
+matrix-driven automation, and a governed, auditable control layer simultaneously. The
+
+as-built system demonstrates that this combination is achievable within a four-tier
+
+architecture where each tier owns a narrow, well-defined responsibility, connected
+
+through authenticated REST interfaces rather than direct point-to-point coupling. The
+
+Section 5.7 worked example demonstrates the complete path from a physical entry event
+
+to an audited, authorised lighting decision, executing in under 600 milliseconds end to
+
+end, supporting the practical feasibility of the design.
+
+
+\section{Limitations}
+
+\subsection{Implementation Deviations}
+Seven deviations between the Chapter 3/4 specification and the as-built system were
+
+discovered during implementation. They are documented here as formal project limitations.
+
+\begin{itemize}
+	\item \textbf{Firmware thresholds hardcoded} (NFR-MAIN-01): LIGHT\_THRESHOLD (2000) and the fan-on temperature (28\textdegree{}C) are compile-time constants. Changing a threshold requires reflashing the device. No /api/devices/\{id\}/config endpoint exists yet. \textit{Recommended fix:} Add a config endpoint; call it at boot; cache in EEPROM for offline use.
+
+	\item \textbf{Two of four relay channels unwired} (Architecture \S4.2): relay3On and relay4On are parsed and logged but not connected to GPIO outputs. Only RELAY\_PIN and RELAY\_PIN2 are physically wired. Hardware not yet expanded beyond two channels. \textit{Recommended fix:} Add \#define RELAY\_PIN3/4; add actuation logic --- no backend change needed.
+
+	\item \textbf{Local fallback re-evaluates rather than freezes} (FR-FH-02): Fallback logic re-evaluates the LDR reading rather than holding the last backend-commanded state as FR-FH-02 specifies. Designed for simplicity over strict spec compliance. \textit{Recommended fix:} Store last backend-commanded light state; restore it on fallback rather than re-evaluating.
+
+	\item \textbf{Teaching Assistant role unmodelled} (FR-AC-02, FR-AC-03): The role was added during implementation but is absent from the Chapter 3 use case model. Discovered during implementation as a real organisational need. \textit{Recommended fix:} Add Teaching Assistant as a named actor in the use case diagram and stakeholder analysis.
+
+	\item \textbf{Occupancy outside session alert unspecified} (Fault handling): The dashboard raises this alert when occupancy is detected outside scheduled hours. No FR ID exists for it. Emergent feature identified during dashboard implementation. \textit{Recommended fix:} Write back as FR-FH-04 in a revised Chapter 3.
+
+	\item \textbf{Device identity compiled into firmware} (NFR-MAIN-01): labId and deviceId are integer literals in the firmware. Deploying to a second lab requires recompiling. No provisioning API was designed for device self-registration. \textit{Recommended fix:} Read labId/deviceId from EEPROM, provisioned via QR code or BLE commissioning.
+
+	\item \textbf{FRAME\_SKIP is count-based, not time-based} (NFR-PERF-03): At variable camera frame rates the effective inference cadence varies. At 15 fps, FRAME\_SKIP=3 gives 5 inferences/s; at 5 fps it gives only 1.7/s. \textit{Recommended fix:} Replace FRAME\_SKIP with a minimum-elapsed-time gate based on time.monotonic().
+\end{itemize}
+
+
+\subsection{Project-Level Limitations}
+Beyond the seven implementation-level deviations above, the project carries limitations
+
+that apply to its overall scope and maturity rather than to any single component:
+
+* No field deployment or empirical validation. As stated in the project scope
+
+(Section 1.6), GreenLab has not been installed in a live laboratory environment,
+
+and no energy savings, detection accuracy, or latency figures are reported as
+
+measured GreenLab results beyond the single traced example in Section 5.7.
+
+* No multi-user or extended-duration testing. The system has been exercised
+
+through individual workflow traces and integration checkpoints (Section 1.5), but
+
+not through sustained multi-day operation or concurrent multi-instructor usage.
+
+* Single-prototype hardware scale. All implementation evidence in Chapter 5
+
+reflects one ESP32 unit and one camera source; behaviour under multiple
+
+concurrent laboratory deployments against a shared backend has not been
+
+exercised.
+
+
+\section{Future Work}
+The following four-phase roadmap is proposed as the natural continuation of the project.
+
+Phase 1 --- Configuration and provisioning (near-term). Replace compile-time
+
+firmware thresholds and compiled-in device identity with a runtime configuration and
+
+provisioning workflow: a /api/devices/\{id\}/config endpoint fetched at boot, and a QR-code
+
+or BLE commissioning step for labId/deviceId assignment. This resolves NFR-MAIN-01
+
+without requiring firmware rebuilds for calibration or deployment changes.
+
+Phase 2 --- Requirements and behavioural closure (near-term). Formally add the
+
+Teaching Assistant role to the Chapter 3 use case model and stakeholder analysis, specify
+
+the "occupancy outside session" alert as FR-FH-04, replace the frame-count-based
+
+FRAME\_SKIP sampling gate with a time-based one (resolving NFR-PERF-03), and correct
+
+the network-fallback logic to hold rather than re-evaluate the last commanded relay state
+
+(resolving FR-FH-02). These four items close every specification-level gap recorded in
+
+Section 5.8 without requiring new architecture.
+
+Phase 3 --- Hardware completion (mid-term). Wire the two currently-unused relay
+
+channels to additional laboratory circuits, bringing the physical hardware in line with
+
+the four-channel contract already modelled in the backend response schema, and
+
+expand the hardware node to a small pilot batch (5--10 units) to validate the provisioning
+
+workflow from Phase 1 under realistic multi-device conditions.
+
+Phase 4 --- Field pilot and empirical evaluation (long-term). Deploy GreenLab in a
+
+defined set of pilot laboratories and collect the measurements explicitly excluded from
+
+this report's scope: detection accuracy under real lighting and occupancy conditions,
+
+measured energy consumption before and after deployment, and instructor-reported
+
+usability feedback. This phase converts the project's design-time claims into empirically
+
+supported results and is the single highest-value step toward a production-ready system.
+
+
+\end{document}

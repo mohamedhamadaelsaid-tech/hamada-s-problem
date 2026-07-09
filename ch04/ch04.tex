@@ -5,13 +5,13 @@ This chapter translates the functional and non-functional requirements establish
 
 Chapter 3 into a complete, concrete design for GreenLab. The design is organised across
 
-eight sections that follow the system's four-tier structure: hardware layer (Section 4.2),
+nine sections that follow the system's four-tier structure: hardware layer (Section 4.2),
 
 Python AI service (Section 4.3), ASP.NET Core backend including the database, REST API,
 
-automation engine, and security design (Sections 4.4--4.7), and Angular dashboard
+automation engine, and security design (Sections 4.4--4.8), and Angular dashboard
 
-frontend (Section 4.8). Each section specifies the component topology, interface contracts,
+frontend (Section 4.9). Each section specifies the component topology, interface contracts,
 
 data flows, and decision logic with sufficient precision to guide a direct implementation.
 
@@ -103,8 +103,8 @@ summarised above.
 % --- FIGURE PLACEHOLDER: Figure 4.1 ---
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-4-1.png}
-  \caption{GreenLab context-level data flow diagram (DFD Level 0) --- the system as a}
+  \includegraphics[width=0.6\textwidth]{ch04/figures/Data flow level 0.png}
+  \caption{GreenLab context-level data flow diagram (DFD Level 0) --- the system as a single process bounded by four external actors and three data stores.}
   \label{fig:4-1}
 \end{figure}
 
@@ -138,8 +138,8 @@ Management DB, and the Audit Log Archive.
 % --- FIGURE PLACEHOLDER: Figure 4.2 ---
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-4-2.png}
-  \caption{GreenLab Level-1 data flow diagram --- decomposition of the}
+  \includegraphics[width=0.6\textwidth]{ch04/figures/data-flow-level-1.png}
+  \caption{GreenLab Level-1 data flow diagram --- decomposition of the GreenLab System process into five functional processes and three data stores.}
   \label{fig:4-2}
 \end{figure}
 
@@ -210,26 +210,6 @@ Relay Channel 1 (Light) & GPIO 26 & Digital output & Controls laboratory lightin
 Relay Channel 2 (Fan) & GPIO 27 & Digital output & Controls laboratory ventilation fan circuit 1. & LOW = ON (active-low relay); HIGH = OFF; default HIGH (safe-off) at startup \\
 \hline
 \end{longtable}
-
-The following figure shows the complete wiring diagram for the hardware layer
-
-prototype.
-
-
-% --- FIGURE PLACEHOLDER: Figure 4.3 ---
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-4-3.png}
-  \caption{ESP32 hardware layer wiring diagram --- HC-SR04 ultrasonic sensor (top),}
-  \label{fig:4-3}
-\end{figure}
-
-Figure 4.3: ESP32 hardware layer wiring diagram --- HC-SR04 ultrasonic sensor (top),
-
-DHT11 temperature/humidity sensor (left), LDR light sensor module (right), and two relay
-
-modules (bottom left and right) connected to the central ESP32 microcontroller.
-
 
 \subsection{Firmware Architecture}
 The firmware is structured around three concurrent concerns: JWT lifecycle
@@ -446,9 +426,7 @@ The response JSON is:
 
 The backend maps the people\_count integer to an occupancy classification (Empty = 0,
 
-Low = 1--5, Moderate = 6--15, High > 15) and passes this classification into the lighting
-
-decision matrix and fan activation table described in Section 4.5.
+Low = 1--5, Moderate = 6--15, High > 15) and passes this classification into thelighting decision matrix and fan activation table described in Section 4.6.
 
 
 \section{Database Design}
@@ -474,10 +452,10 @@ database.
 
 
 % --- FIGURE PLACEHOLDER: Figure 4.4 ---
-\begin{figure}[htbp]
+\begin{figure}[H]
   \centering
-  \includegraphics[width=0.6\textwidth]{figures/figure-4-4.png}
-  \caption{GreenLab database entity-relationship diagram --- 11 application tables}
+  \includegraphics[width=0.6\textwidth]{ch04/figures/database-diagram.png}
+  \caption{GreenLab database entity-relationship diagram --- 11 application tables spanning laboratory management, operational control, and audit/identity domains.}
   \label{fig:4-4}
 \end{figure}
 
@@ -526,6 +504,78 @@ ScheduleImage\newline Imports & Metadata for schedule images uploaded for AI-ass
 AuditLogs & Immutable record of every state-changing action in the system & Id (PK), Action, Details, Entity, UserId (FK), CreatedAt & INSERT-only by design; no UPDATE or DELETE permissions granted to the application user; CreatedAt is server-assigned \\
 \hline
 \end{longtable}
+
+
+\section{Class Diagram}
+To complement the process-oriented perspective provided by the data flow diagrams,
+
+Figure 4.3 presents the GreenLab system class diagram. The diagram models the
+
+principal domain classes that underpin the ASP.NET Core backend, their attributes,
+
+methods, and the structural relationships between them.
+
+At the centre of the diagram is the Lab class, which aggregates the core laboratory
+
+configuration --- Name, LightThreshold, TempFanOnThresholdCelsius, CameraRtspUrl,
+
+and live occupancy state (LastOccupancyCount, LastOccupancyAt). Each Lab is
+
+associated with one or more LabDevice instances representing the ESP32 controllers
+
+registered in that laboratory, and each LabDevice may in turn own multiple LabSensor
+
+instances (ultrasonic, temperature, humidity, LDR). The LabControlOverride class
+
+captures the current manual override state per laboratory, including flags for forcing
+
+individual relays ON and disabling the motion sensor.
+
+The User class models both human actors --- instructors (Role = Staff) and administrators
+
+(Role = Admin) --- and carries methods for issuing manual commands, reviewing transfer
+
+requests, and managing schedule imports. The StaffLabAssignment class records which
+
+instructor is currently assigned to which laboratory during which time window,
+
+supporting the schedule-driven occupancy model. The LabChangeRequest class captures
+
+the full lifecycle of a laboratory transfer, from submission through administrator review
+
+to approval or rejection.
+
+On the scheduling and audit side, the LabSectionSchedule class models recurring
+
+timetable sessions for each laboratory, while the ScheduleImageImport class records
+
+uploaded timetable images for the AI-assisted schedule extraction pipeline. The
+
+ManualControlCommand class logs every manual relay command with its lifecycle state
+
+(Pending, Executed, Failed).
+
+
+% --- FIGURE: Figure 4.3 ---
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{ch04/figures/class-diagram.pdf}
+  \caption{GreenLab system class diagram --- principal domain classes, their attributes, methods, and structural relationships across the laboratory management, operational control, and audit domains.}
+  \label{fig:4-3}
+\end{figure}
+
+Figure 4.3: GreenLab system class diagram --- principal domain classes, their attributes,
+
+methods, and structural relationships across the laboratory management, operational
+
+control, and audit domains.
+The class diagram captures the static structure that the REST API, database schema, and
+
+automation engine all realise at runtime, and serves as the architectural blueprint from
+
+which the Entity Framework Core entity classes described in the preceding section are
+
+derived.
 
 
 \section{Automation Engine Design}
@@ -876,7 +926,7 @@ and CreatedAt (server-assigned timestamp). This design satisfies NFR-SEC-02 (tam
 
 resistant audit trail) and supports the administrative audit-log review view described in
 
-Section 4.8.
+Section 4.9.
 
 
 \section{Angular Dashboard Design}
@@ -962,35 +1012,45 @@ override feedback.
 \section{Chapter Summary}
 This chapter presented the complete system design for GreenLab across all four tiers.
 
-Section 4.2 specified the hardware layer's component topology (five GPIO-connected
+Section 4.1 introduced the four-tier architecture and the two data flow diagrams that
 
-components on a single ESP32), pin assignments, firmware architecture including JWT
+trace information movement through the system (Figures 4.1 and 4.2). Section 4.2
 
-lifecycle management, event-triggered reporting, local WebServer override reception,
+specified the hardware layer's component topology (five GPIO-connected components on
 
-and network fallback logic. Section 4.3 specified the Python AI service's streaming
+a single ESP32), pin assignments, firmware architecture including JWT lifecycle
 
-inference pipeline (yolo11n.pt + ByteTrack, FRAME\_SKIP=3, conf=0.5, imgsz=320), camera
+management, event-triggered reporting, local WebServer override reception, and network
 
-source abstraction, and the backend integration contract. Section 4.4 described all eleven
+fallback logic. Section 4.3 specified the Python AI service's streaming inference pipeline
 
-database tables with their key columns and design intent. Section 4.5 defined the
+(yolo11n.pt + ByteTrack, FRAME\_SKIP=3, conf=0.5, imgsz=320), camera source
 
-automation engine through two explicit control matrices --- the lighting decision matrix
+abstraction, and the backend integration contract. Section 4.4 described all eleven
 
-and the fan activation table --- both anchored to per-lab calibration values stored in the
+database tables with their key columns and design intent. Section 4.5 presented the
 
-database. Section 4.6 catalogued all 31 REST API endpoints across five groups with their
+system class diagram (Figure 4.3) showing the principal domain entities and their
 
-HTTP methods, paths, authorised roles, and descriptions, and specified the full sensor-
+structural relationships, from which the database entity classes and service layer classes
 
-event request/response contract. Section 4.7 described the dual JWT authentication
+are derived. Section 4.6 defined the automation engine through two explicit control
 
-architecture, the three-role RBAC model, and the INSERT-only audit log design. Section
+matrices --- the lighting decision matrix and the fan activation table --- both anchored to
 
-4.8 inventoried the twelve Angular dashboard views with their routes, roles, API sources,
+per-lab calibration values stored in the database. Section 4.7 catalogued all 31 REST API
 
-and user actions, and described the polling-based real-time update strategy.
+endpoints across five groups with their HTTP methods, paths, authorised roles, and
+
+descriptions, and specified the full sensor-event request/response contract. Section 4.8
+
+described the dual JWT authentication architecture, the three-role RBAC model, and the
+
+INSERT-only audit log design. Section 4.9 inventoried the twelve Angular dashboard
+
+views with their routes, roles, API sources, and user actions, and described the polling-
+
+based real-time update strategy.
 
 Chapter 5 takes these design specifications and describes their direct implementation:
 

@@ -1,0 +1,37 @@
+INFO:  latexindent version 3.24.7, 2025-08-15, a script to indent .tex files
+       latexindent lives here: /usr/share/texmf-dist/scripts/latexindent/
+       Thu Jul  9 10:19:23 2026
+       Filename: /home/mohamed/cis/graduation/docs/HamadaBook/Book/ch05/ch05.tex
+INFO:  Processing switches:
+       -s|--silent: Silent mode active (you have used either -s or --silent)
+       -w|--overwrite: Overwrite mode active, will make a back up before overwriting
+INFO:  Directory for backup files and log file indent.log:
+       /home/mohamed/cis/graduation/docs/HamadaBook/Book/ch05
+INFO:  YAML settings read: defaultSettings.yaml
+       Reading defaultSettings.yaml from /usr/share/texmf-dist/scripts/latexindent/defaultSettings.yaml
+INFO:  YAML reading settings
+       Home directory is /home/mohamed
+       latexindent.pl didn't find indentconfig.yaml or .indentconfig.yaml
+       see all possible locations: https://latexindentpl.readthedocs.io/en/latest/sec-appendices.html#indentconfig-options)
+INFO:  Backup procedure (-w flag active):
+       /home/mohamed/cis/graduation/docs/HamadaBook/Book/ch05/ch05.bak0 already exists, incrementing by 1 (see maxNumberOfBackUps)
+       /home/mohamed/cis/graduation/docs/HamadaBook/Book/ch05/ch05.bak1 already exists, incrementing by 1 (see maxNumberOfBackUps)
+       /home/mohamed/cis/graduation/docs/HamadaBook/Book/ch05/ch05.bak2 already exists, incrementing by 1 (see maxNumberOfBackUps)
+       /home/mohamed/cis/graduation/docs/HamadaBook/Book/ch05/ch05.bak3 already exists, incrementing by 1 (see maxNumberOfBackUps)
+       /home/mohamed/cis/graduation/docs/HamadaBook/Book/ch05/ch05.bak4 already exists, incrementing by 1 (see maxNumberOfBackUps)
+       /home/mohamed/cis/graduation/docs/HamadaBook/Book/ch05/ch05.bak5 already exists, incrementing by 1 (see maxNumberOfBackUps)
+       /home/mohamed/cis/graduation/docs/HamadaBook/Book/ch05/ch05.bak6 already exists, incrementing by 1 (see maxNumberOfBackUps)
+       /home/mohamed/cis/graduation/docs/HamadaBook/Book/ch05/ch05.bak7 already exists, incrementing by 1 (see maxNumberOfBackUps)
+       /home/mohamed/cis/graduation/docs/HamadaBook/Book/ch05/ch05.bak8 already exists, incrementing by 1 (see maxNumberOfBackUps)
+       /home/mohamed/cis/graduation/docs/HamadaBook/Book/ch05/ch05.bak9 already exists, incrementing by 1 (see maxNumberOfBackUps)
+       Backing up /home/mohamed/cis/graduation/docs/HamadaBook/Book/ch05/ch05.tex to /home/mohamed/cis/graduation/docs/HamadaBook/Book/ch05/ch05.bak10...
+       /home/mohamed/cis/graduation/docs/HamadaBook/Book/ch05/ch05.tex will be overwritten after indentation
+INFO:  Phase 1: searching for objects
+INFO:  Phase 2: finding surrounding indentation
+INFO:  Phase 3: indenting objects
+INFO:  Phase 4: final indentation check
+INFO:  Output routine:
+       Overwriting file /home/mohamed/cis/graduation/docs/HamadaBook/Book/ch05/ch05.tex
+       --------------
+INFO:  Please direct all communication/issues to:
+        https://github.com/cmhughes/latexindent.pl

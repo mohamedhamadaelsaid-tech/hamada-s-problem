@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025/VoidLinux) (preloaded format=pdflatex 2026.6.17)  9 JUL 2026 09:32
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025/VoidLinux) (preloaded format=pdflatex 2026.6.17)  9 JUL 2026 10:31
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -897,44 +897,7 @@ Package glossaries Info: Writing glossary file main.glo on input line 78.
 Package glossaries Info: Writing glossary file main.acn on input line 78.
 Package csquotes Info: Checking for multilingual support...
 Package csquotes Info: ... none found.
- (./main.aux
-
-LaTeX Warning: Label `fig:5-2' multiply defined.
-
-
-LaTeX Warning: Label `fig:5-3' multiply defined.
-
-
-LaTeX Warning: Label `fig:5-4' multiply defined.
-
-
-LaTeX Warning: Label `fig:5-5' multiply defined.
-
-
-LaTeX Warning: Label `fig:5-6' multiply defined.
-
-
-LaTeX Warning: Label `fig:5-7' multiply defined.
-
-
-LaTeX Warning: Label `fig:5-8' multiply defined.
-
-
-LaTeX Warning: Label `fig:5-6' multiply defined.
-
-
-LaTeX Warning: Label `fig:5-7' multiply defined.
-
-
-LaTeX Warning: Label `fig:5-8' multiply defined.
-
-
-LaTeX Warning: Label `fig:5-7' multiply defined.
-
-
-LaTeX Warning: Label `fig:5-2' multiply defined.
-
-)
+ (./main.aux)
 \openout1 = `main.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 84.
@@ -1025,11 +988,39 @@ Package hyperref Info: Link coloring OFF on input line 84.
 
 \c@lstlisting=\count413
  (./frontmatter/coverpage.tex
-LaTeX Font Info:    Trying to load font information for U+msa on input line 27.
- (/usr/share/texmf-dist/tex/latex/amsfonts/umsa.fd
+<frontmatter/figures/logo-faculty.png, id=569, 150.5625pt x 150.5625pt>
+File: frontmatter/figures/logo-faculty.png Graphic file (type png)
+<use frontmatter/figures/logo-faculty.png>
+Package pdftex.def Info: frontmatter/figures/logo-faculty.png  used on input line 4.
+(pdftex.def)             Requested size: 56.9055pt x 56.90648pt.
+<frontmatter/figures/logo-university.png, id=571, 90.3375pt x 90.3375pt>
+File: frontmatter/figures/logo-university.png Graphic file (type png)
+<use frontmatter/figures/logo-university.png>
+Package pdftex.def Info: frontmatter/figures/logo-university.png  used on input line 6.
+(pdftex.def)             Requested size: 56.9055pt x 56.90602pt.
+
+./frontmatter/coverpage.tex:11: Undefined control sequence.
+l.11 	{\normalisize
+                    \bfseries Faculty of Computers and Information Sciences \\
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+./frontmatter/coverpage.tex:14: Misplaced \noalign.
+\hline ->\noalign 
+                  {\ifnum 0=`}\fi \let \hskip \vskip \let \vrule \hrule \let...
+l.14 	\hline
+            
+I expect to see \noalign only after the \cr of
+an alignment. Proceed, and I'll ignore this case.
+
+LaTeX Font Info:    Trying to load font information for U+msa on input line 35.
+(/usr/share/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 27.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 35.
  (/usr/share/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ) [1
@@ -1038,7 +1029,7 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 
 
 
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}{/usr/share/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc}]) (./frontmatter/abstract.tex [2
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}{/usr/share/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc} <./frontmatter/figures/logo-faculty.png> <./frontmatter/figures/logo-university.png>]) (./frontmatter/abstract.tex [2
 
 ]) [3] [4
 
@@ -1166,19 +1157,19 @@ Underfull \hbox (badness 1558) in paragraph at lines 397--397
 ]
 Chapter 2.
 [9] [10] [11]
-<ch02/figures/chaudhari-2024-figure.pdf, id=813, 321.36061pt x 310.761pt>
+<ch02/figures/chaudhari-2024-figure.pdf, id=803, 321.36061pt x 310.761pt>
 File: ch02/figures/chaudhari-2024-figure.pdf Graphic file (type pdf)
 <use ch02/figures/chaudhari-2024-figure.pdf>
 Package pdftex.def Info: ch02/figures/chaudhari-2024-figure.pdf  used on input line 294.
 (pdftex.def)             Requested size: 283.39244pt x 274.0585pt.
  [12] [13 <./ch02/figures/chaudhari-2024-figure.pdf>]
-<ch02/figures/zhang-2026-figure.pdf, id=828, 337.26pt x 348.34142pt>
+<ch02/figures/zhang-2026-figure.pdf, id=817, 337.26pt x 348.34142pt>
 File: ch02/figures/zhang-2026-figure.pdf Graphic file (type pdf)
 <use ch02/figures/zhang-2026-figure.pdf>
 Package pdftex.def Info: ch02/figures/zhang-2026-figure.pdf  used on input line 433.
 (pdftex.def)             Requested size: 283.39244pt x 292.71109pt.
  [14] [15 <./ch02/figures/zhang-2026-figure.pdf>] [16] [17] [18] [19] [20]
-<ch02/figures/ingole-2024-figure.pdf, id=871, 373.395pt x 193.68361pt>
+<ch02/figures/ingole-2024-figure.pdf, id=861, 373.395pt x 193.68361pt>
 File: ch02/figures/ingole-2024-figure.pdf Graphic file (type pdf)
 <use ch02/figures/ingole-2024-figure.pdf>
 Package pdftex.def Info: ch02/figures/ingole-2024-figure.pdf  used on input line 914.
@@ -1272,7 +1263,7 @@ Underfull \hbox (badness 1112) in paragraph at lines 106--106
 []|\T1/cmr/m/n/10.95 the An-gu- 
  []
 
-<ch03/figures/greenlab-four-tier-architecture.png, id=911, 1411.52344pt x 794.97pt>
+<ch03/figures/greenlab-four-tier-architecture.png, id=901, 1411.52344pt x 794.97pt>
 File: ch03/figures/greenlab-four-tier-architecture.png Graphic file (type png)
 <use ch03/figures/greenlab-four-tier-architecture.png>
 Package pdftex.def Info: ch03/figures/greenlab-four-tier-architecture.png  used on input line 113.
@@ -1328,7 +1319,7 @@ Underfull \hbox (badness 4673) in paragraph at lines 184--184
  []
 
 [29]
-<ch03/figures/business-model-canvas.jpeg, id=924, 1606.0pt x 903.375pt>
+<ch03/figures/business-model-canvas.jpeg, id=914, 1606.0pt x 903.375pt>
 File: ch03/figures/business-model-canvas.jpeg Graphic file (type jpg)
 <use ch03/figures/business-model-canvas.jpeg>
 Package pdftex.def Info: ch03/figures/business-model-canvas.jpeg  used on input line 282.
@@ -1404,7 +1395,7 @@ Overfull \hbox (1.76044pt too wide) in paragraph at lines 523--523
  []
 
 [33]
-<ch03/figures/use-case-diagram.png, id=944, 1409.265pt x 743.77875pt>
+<ch03/figures/use-case-diagram.png, id=933, 1409.265pt x 743.77875pt>
 File: ch03/figures/use-case-diagram.png Graphic file (type png)
 <use ch03/figures/use-case-diagram.png>
 Package pdftex.def Info: ch03/figures/use-case-diagram.png  used on input line 558.
@@ -2275,25 +2266,25 @@ Underfull \hbox (badness 2253) in paragraph at lines 1291--1292
  []
 
 [43]
-<ch03/figures/seq-occupancy-workflow.png, id=1006, 1317.42188pt x 1237.62375pt>
+<ch03/figures/seq-occupancy-workflow.png, id=996, 1317.42188pt x 1237.62375pt>
 File: ch03/figures/seq-occupancy-workflow.png Graphic file (type png)
 <use ch03/figures/seq-occupancy-workflow.png>
 Package pdftex.def Info: ch03/figures/seq-occupancy-workflow.png  used on input line 1344.
 (pdftex.def)             Requested size: 283.39244pt x 266.21611pt.
  [44 <./ch03/figures/seq-occupancy-workflow.png (PNG copy)>]
-<ch03/figures/seq-camera-streaming.png, id=1012, 1315.91624pt x 1084.80281pt>
+<ch03/figures/seq-camera-streaming.png, id=1002, 1315.91624pt x 1084.80281pt>
 File: ch03/figures/seq-camera-streaming.png Graphic file (type png)
 <use ch03/figures/seq-camera-streaming.png>
 Package pdftex.def Info: ch03/figures/seq-camera-streaming.png  used on input line 1435.
 (pdftex.def)             Requested size: 283.39244pt x 233.60876pt.
  [45] [46 <./ch03/figures/seq-camera-streaming.png (PNG copy)>]
-<ch03/figures/seq-manual-override.png, id=1022, 1315.91624pt x 995.21812pt>
+<ch03/figures/seq-manual-override.png, id=1012, 1315.91624pt x 995.21812pt>
 File: ch03/figures/seq-manual-override.png Graphic file (type png)
 <use ch03/figures/seq-manual-override.png>
 Package pdftex.def Info: ch03/figures/seq-manual-override.png  used on input line 1510.
 (pdftex.def)             Requested size: 283.39244pt x 214.317pt.
  [47 <./ch03/figures/seq-manual-override.png (PNG copy)>]
-<ch03/figures/seq-transfer-request.png, id=1029, 1317.42188pt x 975.645pt>
+<ch03/figures/seq-transfer-request.png, id=1019, 1317.42188pt x 975.645pt>
 File: ch03/figures/seq-transfer-request.png Graphic file (type png)
 <use ch03/figures/seq-transfer-request.png>
 Package pdftex.def Info: ch03/figures/seq-transfer-request.png  used on input line 1613.
@@ -2328,17 +2319,17 @@ Underfull \hbox (badness 1742) in paragraph at lines 62--63
  []
 
 [53] [54]
-<figures/figure-4-1.png, id=1062, 803.0pt x 602.25pt>
-File: figures/figure-4-1.png Graphic file (type png)
-<use figures/figure-4-1.png>
-Package pdftex.def Info: figures/figure-4-1.png  used on input line 106.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
-<figures/figure-4-2.png, id=1063, 803.0pt x 602.25pt>
-File: figures/figure-4-2.png Graphic file (type png)
-<use figures/figure-4-2.png>
-Package pdftex.def Info: figures/figure-4-2.png  used on input line 141.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
- [55 <./figures/figure-4-1.png>]
+<ch04/figures/Data flow level 0.png, id=1052, 2847.6789pt x 1232.4444pt>
+File: ch04/figures/Data flow level 0.png Graphic file (type png)
+<use ch04/figures/Data flow level 0.png>
+Package pdftex.def Info: ch04/figures/Data flow level 0.png  used on input line 106.
+(pdftex.def)             Requested size: 283.39244pt x 122.63107pt.
+<ch04/figures/data-flow-level-1.png, id=1053, 2860.2057pt x 1526.5833pt>
+File: ch04/figures/data-flow-level-1.png Graphic file (type png)
+<use ch04/figures/data-flow-level-1.png>
+Package pdftex.def Info: ch04/figures/data-flow-level-1.png  used on input line 141.
+(pdftex.def)             Requested size: 283.39244pt x 151.24635pt.
+ [55 <./ch04/figures/Data flow level 0.png> <./ch04/figures/data-flow-level-1.png>]
 Underfull \hbox (badness 4995) in paragraph at lines 190--190
 []|\T1/cmr/bx/n/10.95 Function| 
  []
@@ -2353,577 +2344,311 @@ Overfull \hbox (1.7761pt too wide) in paragraph at lines 206--206
 []|\T1/cmr/m/n/10.95 Analogue 
  []
 
-./ch04/ch04.tex:212: ignored error: Infinite glue shrinkage found in box being split [56 <./figures/figure-4-2.png>]
-<figures/figure-4-3.png, id=1076, 803.0pt x 602.25pt>
-File: figures/figure-4-3.png Graphic file (type png)
-<use figures/figure-4-3.png>
-Package pdftex.def Info: figures/figure-4-3.png  used on input line 222.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
- [57 <./figures/figure-4-3.png>] [58]
-Underfull \hbox (badness 2134) in paragraph at lines 367--367
+./ch04/ch04.tex:212: ignored error: Infinite glue shrinkage found in box being split [56] [57]
+Underfull \hbox (badness 2134) in paragraph at lines 347--347
 []|\T1/cmr/bx/n/10.95 Value| 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 367--368
+Underfull \hbox (badness 10000) in paragraph at lines 347--348
 []|\T1/cmr/bx/n/10.95 Rationale| 
  []
 
 
-Underfull \hbox (badness 2134) in paragraph at lines 372--372
+Underfull \hbox (badness 2134) in paragraph at lines 352--352
 []|\T1/cmr/bx/n/10.95 Value| 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 372--373
+Underfull \hbox (badness 10000) in paragraph at lines 352--353
 []|\T1/cmr/bx/n/10.95 Rationale| 
  []
 
 
-Underfull \hbox (badness 2237) in paragraph at lines 379--379
+Underfull \hbox (badness 2237) in paragraph at lines 359--359
 []|\T1/cmr/m/n/10.95 Model| 
  []
 
 
-Underfull \hbox (badness 1642) in paragraph at lines 381--381
+Underfull \hbox (badness 1642) in paragraph at lines 361--361
 []|\T1/cmr/m/n/10.95 Tracker| 
  []
 
 
-Underfull \hbox (badness 1237) in paragraph at lines 381--382
+Underfull \hbox (badness 1237) in paragraph at lines 361--362
 \T1/cmr/m/n/10.95 frames, pre-vent-ing the ID- 
  []
 
 
-Underfull \hbox (badness 2573) in paragraph at lines 383--383
+Underfull \hbox (badness 2573) in paragraph at lines 363--363
 []|\T1/cmr/m/n/10.95 imgsz| 
  []
 
 
-Underfull \hbox (badness 4036) in paragraph at lines 383--383
+Underfull \hbox (badness 4036) in paragraph at lines 363--363
 []|\T1/cmr/m/n/10.95 320| 
  []
 
 
-Underfull \hbox (badness 1783) in paragraph at lines 383--384
+Underfull \hbox (badness 1783) in paragraph at lines 363--364
 \T1/cmr/m/n/10.95 with ac-cept-able ac-cu-racy 
  []
 
 
-Underfull \hbox (badness 4441) in paragraph at lines 385--385
+Underfull \hbox (badness 4441) in paragraph at lines 365--365
 []|\T1/cmr/m/n/10.95 0.5| 
  []
 
 
-Underfull \hbox (badness 1490) in paragraph at lines 385--386
+Underfull \hbox (badness 1490) in paragraph at lines 365--366
 []|\T1/cmr/m/n/10.95 Minimum de-tec-tion con-fi- 
  []
 
 
-Underfull \hbox (badness 1215) in paragraph at lines 385--386
+Underfull \hbox (badness 1215) in paragraph at lines 365--366
 \T1/cmr/m/n/10.95 dence; fil-ters spu-ri-ous low- 
  []
 
 
-Underfull \hbox (badness 2088) in paragraph at lines 387--387
+Underfull \hbox (badness 2088) in paragraph at lines 367--367
 []|\T1/cmr/m/n/10.95 classes| 
  []
 
 
-Underfull \hbox (badness 4872) in paragraph at lines 387--387
+Underfull \hbox (badness 4872) in paragraph at lines 367--367
 []|\T1/cmr/m/n/10.95 [0]| 
  []
 
 
-Underfull \hbox (badness 1226) in paragraph at lines 387--388
+Underfull \hbox (badness 1226) in paragraph at lines 367--368
 []|\T1/cmr/m/n/10.95 Person class only --- elim-i- 
  []
 
 
-Underfull \hbox (badness 6063) in paragraph at lines 389--389
+Underfull \hbox (badness 6063) in paragraph at lines 369--369
 []|\T1/cmr/m/n/10.95 3| 
  []
 
 
-Underfull \hbox (badness 2065) in paragraph at lines 391--391
+Underfull \hbox (badness 2065) in paragraph at lines 371--371
 []|\T1/cmr/m/n/10.95 persist| 
  []
 
 
-Underfull \hbox (badness 3557) in paragraph at lines 391--391
+Underfull \hbox (badness 3557) in paragraph at lines 371--371
 []|\T1/cmr/m/n/10.95 true| 
  []
 
 
-Underfull \hbox (badness 1264) in paragraph at lines 391--392
+Underfull \hbox (badness 1264) in paragraph at lines 371--372
 \T1/cmr/m/n/10.95 sta-ble, non-inflated counts| 
  []
 
-./ch04/ch04.tex:393: ignored error: Infinite glue shrinkage found in box being split [59] [60]
-<figures/figure-4-4.png, id=1096, 803.0pt x 602.25pt>
-File: figures/figure-4-4.png Graphic file (type png)
-<use figures/figure-4-4.png>
-Package pdftex.def Info: figures/figure-4-4.png  used on input line 479.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
-
-Underfull \hbox (badness 3029) in paragraph at lines 494--494
+[58] [59]
+<ch04/figures/database-diagram.png, id=1080, 452.4403pt x 381.67593pt>
+File: ch04/figures/database-diagram.png Graphic file (type png)
+<use ch04/figures/database-diagram.png>
+Package pdftex.def Info: ch04/figures/database-diagram.png  used on input line 457.
+(pdftex.def)             Requested size: 283.39244pt x 239.0652pt.
+ [60]
+Underfull \hbox (badness 3029) in paragraph at lines 472--472
 []|\T1/cmr/bx/n/10.95 Key Columns| 
  []
 
 
-Underfull \hbox (badness 1742) in paragraph at lines 494--495
+Underfull \hbox (badness 1742) in paragraph at lines 472--473
 []|\T1/cmr/bx/n/10.95 Notable 
  []
 
 
-Underfull \hbox (badness 3029) in paragraph at lines 499--499
+Underfull \hbox (badness 3029) in paragraph at lines 477--477
 []|\T1/cmr/bx/n/10.95 Key Columns| 
  []
 
 
-Underfull \hbox (badness 1742) in paragraph at lines 499--500
+Underfull \hbox (badness 1742) in paragraph at lines 477--478
 []|\T1/cmr/bx/n/10.95 Notable 
  []
 
 
-Underfull \hbox (badness 1107) in paragraph at lines 506--506
+Underfull \hbox (badness 1107) in paragraph at lines 484--484
 []|\T1/cmr/m/n/10.95 Labs| 
  []
 
 
-Underfull \hbox (badness 2088) in paragraph at lines 508--508
+Underfull \hbox (badness 2088) in paragraph at lines 486--486
 \T1/cmr/m/n/10.95 Name, Pass-word- 
  []
 
 
-Overfull \hbox (4.59909pt too wide) in paragraph at lines 514--515
+Overfull \hbox (4.59909pt too wide) in paragraph at lines 492--493
 []|\T1/cmr/m/n/10.95 ValidFrom/ValidUntil 
  []
 
 
-Underfull \hbox (badness 1960) in paragraph at lines 514--515
+Underfull \hbox (badness 1960) in paragraph at lines 492--493
 \T1/cmr/m/n/10.95 bounded 
  []
 
 
-Overfull \hbox (0.54297pt too wide) in paragraph at lines 518--518
+Overfull \hbox (0.54297pt too wide) in paragraph at lines 496--496
 []|\T1/cmr/m/n/10.95 ManualControl 
  []
 
 
-Underfull \hbox (badness 1286) in paragraph at lines 520--520
+Underfull \hbox (badness 1286) in paragraph at lines 498--498
 \T1/cmr/m/n/10.95 Day-OfWeek, Start- 
  []
 
 
-Underfull \hbox (badness 1320) in paragraph at lines 524--524
+Underfull \hbox (badness 1320) in paragraph at lines 502--502
 \T1/cmr/m/n/10.95 Up-load-e-dAt, Notes| 
  []
 
 
-Overfull \hbox (4.88147pt too wide) in paragraph at lines 524--524
+Overfull \hbox (4.88147pt too wide) in paragraph at lines 502--502
 \T1/cmr/m/n/10.95 /api/admin/schedules 
  []
 
-./ch04/ch04.tex:528: ignored error: Infinite glue shrinkage found in box being split [61 <./figures/figure-4-4.png>]
-./ch04/ch04.tex:528: ignored error: Infinite glue shrinkage found in box being split [62]
-Overfull \hbox (7.08923pt too wide) in paragraph at lines 546--546
+./ch04/ch04.tex:506: ignored error: Infinite glue shrinkage found in box being split [61 <./ch04/figures/database-diagram.png (PNG copy)>] [62]
+<ch04/figures/class-diagram.pdf, id=1096, 1272.67462pt x 1836.8625pt>
+File: ch04/figures/class-diagram.pdf Graphic file (type pdf)
+<use ch04/figures/class-diagram.pdf>
+Package pdftex.def Info: ch04/figures/class-diagram.pdf  used on input line 562.
+(pdftex.def)             Requested size: 401.47144pt x 579.42758pt.
+ [63] [64 <./ch04/figures/class-diagram.pdf>]
+Overfull \hbox (7.08923pt too wide) in paragraph at lines 596--596
 []|\T1/cmr/bx/n/10.95 people_count 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 546--547
+Underfull \hbox (badness 10000) in paragraph at lines 596--597
 []|\T1/cmr/bx/n/10.95 Relay Be-haviour| 
  []
 
 
-Overfull \hbox (7.08923pt too wide) in paragraph at lines 551--551
+Overfull \hbox (7.08923pt too wide) in paragraph at lines 601--601
 []|\T1/cmr/bx/n/10.95 people_count 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 551--552
+Underfull \hbox (badness 10000) in paragraph at lines 601--602
 []|\T1/cmr/bx/n/10.95 Relay Be-haviour| 
  []
 
 
-Underfull \hbox (badness 1968) in paragraph at lines 558--558
+Underfull \hbox (badness 1968) in paragraph at lines 608--608
 []|\T1/cmr/m/n/10.95 Empty| 
  []
 
 
-Underfull \hbox (badness 2401) in paragraph at lines 558--558
+Underfull \hbox (badness 2401) in paragraph at lines 608--608
 []|\T1/cmr/m/n/10.95 0| 
  []
 
 
-Underfull \hbox (badness 3492) in paragraph at lines 560--560
+Underfull \hbox (badness 3492) in paragraph at lines 610--610
 []|\T1/cmr/m/n/10.95 Low| 
  []
 
 
-Underfull \hbox (badness 1354) in paragraph at lines 560--560
+Underfull \hbox (badness 1354) in paragraph at lines 610--610
 []|\T1/cmr/m/n/10.95 1--5| 
  []
 
 
-Underfull \hbox (badness 1577) in paragraph at lines 562--563
+Underfull \hbox (badness 1577) in paragraph at lines 612--613
 []|\T1/cmr/m/n/10.95 As Low --- same ma-trix eval- 
  []
 
 
-Underfull \hbox (badness 1603) in paragraph at lines 562--563
+Underfull \hbox (badness 1603) in paragraph at lines 612--613
 \T1/cmr/m/n/10.95 u-a-tion; fan may ac-ti-vate at a 
  []
 
 
-Underfull \hbox (badness 1968) in paragraph at lines 562--563
+Underfull \hbox (badness 1968) in paragraph at lines 612--613
 \T1/cmr/m/n/10.95 lower tem-per-a-ture thresh-old| 
  []
 
 
-Underfull \hbox (badness 3088) in paragraph at lines 564--564
+Underfull \hbox (badness 3088) in paragraph at lines 614--614
 []|\T1/cmr/m/n/10.95 High| 
  []
 
-[63]
-Underfull \hbox (badness 3343) in paragraph at lines 624--624
+[65]
+Underfull \hbox (badness 3343) in paragraph at lines 674--674
 \T1/cmr/bx/n/10.95 Zone| 
  []
 
 
-Overfull \hbox (1.70546pt too wide) in paragraph at lines 624--624
+Overfull \hbox (1.70546pt too wide) in paragraph at lines 674--674
 []|\T1/cmr/bx/n/10.95 Moderate| 
  []
 
 
-Underfull \hbox (badness 3343) in paragraph at lines 629--629
+Underfull \hbox (badness 3343) in paragraph at lines 679--679
 \T1/cmr/bx/n/10.95 Zone| 
  []
 
 
-Overfull \hbox (1.70546pt too wide) in paragraph at lines 629--629
+Overfull \hbox (1.70546pt too wide) in paragraph at lines 679--679
 []|\T1/cmr/bx/n/10.95 Moderate| 
  []
 
-[64]
-Overfull \hbox (16.73502pt too wide) in paragraph at lines 675--675
+
+Overfull \hbox (16.73502pt too wide) in paragraph at lines 725--725
 []|\T1/cmr/bx/n/10 Method| 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 675--675
+Underfull \hbox (badness 10000) in paragraph at lines 725--725
 []|\T1/cmr/bx/n/10 Path| 
  []
 
 
-Overfull \hbox (4.59216pt too wide) in paragraph at lines 675--675
+Overfull \hbox (4.59216pt too wide) in paragraph at lines 725--725
 []|\T1/cmr/bx/n/10 Authorised 
  []
 
 
-Underfull \hbox (badness 4316) in paragraph at lines 675--676
+Underfull \hbox (badness 4316) in paragraph at lines 725--726
 []|\T1/cmr/bx/n/10 Description| 
  []
 
 
-Overfull \hbox (16.73502pt too wide) in paragraph at lines 680--680
+Overfull \hbox (16.73502pt too wide) in paragraph at lines 730--730
 []|\T1/cmr/bx/n/10 Method| 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 680--680
+Underfull \hbox (badness 10000) in paragraph at lines 730--730
 []|\T1/cmr/bx/n/10 Path| 
  []
 
 
-Overfull \hbox (4.59216pt too wide) in paragraph at lines 680--680
+Overfull \hbox (4.59216pt too wide) in paragraph at lines 730--730
 []|\T1/cmr/bx/n/10 Authorised 
  []
 
 
-Underfull \hbox (badness 4316) in paragraph at lines 680--681
+Underfull \hbox (badness 4316) in paragraph at lines 730--731
 []|\T1/cmr/bx/n/10 Description| 
  []
 
 
-Overfull \hbox (4.59215pt too wide) in paragraph at lines 687--687
+Overfull \hbox (4.59215pt too wide) in paragraph at lines 737--737
 []|\T1/cmr/m/n/10 POST| 
  []
 
 
-Underfull \hbox (badness 5490) in paragraph at lines 687--687
+Underfull \hbox (badness 5490) in paragraph at lines 737--737
 []|\T1/cmr/m/n/10 /api/Auth/login| 
  []
 
 
-Underfull \hbox (badness 1014) in paragraph at lines 687--688
+Underfull \hbox (badness 1014) in paragraph at lines 737--738
 \T1/cmr/m/n/10 word; re-turns JWT 
- []
-
-
-Overfull \hbox (4.59215pt too wide) in paragraph at lines 689--689
-[]|\T1/cmr/m/n/10 POST| 
- []
-
-
-Overfull \hbox (4.59215pt too wide) in paragraph at lines 691--691
-[]|\T1/cmr/m/n/10 POST| 
- []
-
-
-Underfull \hbox (badness 3407) in paragraph at lines 691--691
-[]|\T1/cmr/m/n/10 /api/devices/token| 
- []
-
-
-Overfull \hbox (4.59215pt too wide) in paragraph at lines 693--693
-[]|\T1/cmr/m/n/10 POST| 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 693--693
-[]|\T1/cmr/m/n/10 /api/devices| 
- []
-
-
-Underfull \hbox (badness 1077) in paragraph at lines 693--694
-[]|\T1/cmr/m/n/10 Register a new IoT 
- []
-
-
-Underfull \hbox (badness 4108) in paragraph at lines 695--695
-[]|\T1/cmr/m/n/10 /api/devices/light| 
- []
-
-
-Overfull \hbox (4.59215pt too wide) in paragraph at lines 697--697
-[]|\T1/cmr/m/n/10 POST| 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 697--697
-\T1/cmr/m/n/10 image| 
- []
-
-
-Underfull \hbox (badness 1052) in paragraph at lines 697--698
-[]|\T1/cmr/m/n/10 Upload a timetable 
- []
-
-
-Underfull \hbox (badness 1067) in paragraph at lines 697--698
-\T1/cmr/m/n/10 sched-ule ex-trac-tion| 
- []
-
-
-Overfull \hbox (4.59215pt too wide) in paragraph at lines 699--699
-[]|\T1/cmr/m/n/10 POST| 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 699--699
-\T1/cmr/m/n/10 data| 
- []
-
-
-Underfull \hbox (badness 1946) in paragraph at lines 699--700
-[]|\T1/cmr/m/n/10 Manually sub-mit 
- []
-
-
-Underfull \hbox (badness 2538) in paragraph at lines 699--700
-\T1/cmr/m/n/10 for a lab-o-ra-tory| 
- []
-
-
-Underfull \hbox (badness 3746) in paragraph at lines 701--702
-[]|\T1/cmr/m/n/10 List all sched- 
- []
-
-
-Underfull \hbox (badness 1348) in paragraph at lines 701--702
-\T1/cmr/m/n/10 ule im-port records| 
- []
-
-
-Overfull \hbox (4.59215pt too wide) in paragraph at lines 703--703
-[]|\T1/cmr/m/n/10 POST| 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 703--703
-\T1/cmr/m/n/10 image| 
- []
-
-
-Overfull \hbox (4.59215pt too wide) in paragraph at lines 705--705
-[]|\T1/cmr/m/n/10 POST| 
- []
-
-
-Underfull \hbox (badness 3323) in paragraph at lines 705--705
-\T1/cmr/m/n/10 import/{importId}| 
- []
-
-
-Overfull \hbox (4.59215pt too wide) in paragraph at lines 707--707
-[]|\T1/cmr/m/n/10 POST| 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 707--707
-\T1/cmr/m/n/10 analysis| 
- []
-
-
-Overfull \hbox (4.59215pt too wide) in paragraph at lines 711--711
-[]|\T1/cmr/m/n/10 POST| 
- []
-
-
-Overfull \hbox (4.59215pt too wide) in paragraph at lines 713--713
-[]|\T1/cmr/m/n/10 POST| 
- []
-
-
-Underfull \hbox (badness 7486) in paragraph at lines 715--715
-[]|\T1/cmr/m/n/10 /api/staff/lab- 
- []
-
-
-Underfull \hbox (badness 1902) in paragraph at lines 715--715
-\T1/cmr/m/n/10 change-requests/mine| 
- []
-
-
-Underfull \hbox (badness 5302) in paragraph at lines 717--717
-[]|\T1/cmr/m/n/10 /api/admin/labs| 
- []
-
-
-Underfull \hbox (badness 4378) in paragraph at lines 717--718
-[]|\T1/cmr/m/n/10 List all reg-is- 
- []
-
-
-Underfull \hbox (badness 1655) in paragraph at lines 717--718
-\T1/cmr/m/n/10 tered lab-o-ra-to-ries| 
- []
-
-
-Overfull \hbox (4.59215pt too wide) in paragraph at lines 719--719
-[]|\T1/cmr/m/n/10 POST| 
- []
-
-
-Underfull \hbox (badness 5302) in paragraph at lines 719--719
-[]|\T1/cmr/m/n/10 /api/admin/labs| 
- []
-
-
-Underfull \hbox (badness 1584) in paragraph at lines 719--720
-[]|\T1/cmr/m/n/10 Create a new lab- 
- []
-
-
-Underfull \hbox (badness 3503) in paragraph at lines 719--720
-\T1/cmr/m/n/10 o-ra-tory record| 
- []
-
-
-Underfull \hbox (badness 1735) in paragraph at lines 721--721
-[]|\T1/cmr/m/n/10 /api/admin/labs/{id}| 
- []
-
-
-Underfull \hbox (badness 2150) in paragraph at lines 721--722
-[]|\T1/cmr/m/n/10 Retrieve a sin-gle 
- []
-
-
-Underfull \hbox (badness 1960) in paragraph at lines 721--722
-\T1/cmr/m/n/10 lab-o-ra-tory by ID| 
- []
-
-
-Underfull \hbox (badness 1735) in paragraph at lines 723--723
-[]|\T1/cmr/m/n/10 /api/admin/labs/{id}| 
- []
-
-
-Underfull \hbox (badness 1286) in paragraph at lines 723--724
-[]|\T1/cmr/m/n/10 Update lab-o-ra-tory 
- []
-
-
-Overfull \hbox (18.75536pt too wide) in paragraph at lines 725--725
-[]|\T1/cmr/m/n/10 DELETE| 
- []
-
-
-Underfull \hbox (badness 1735) in paragraph at lines 725--725
-[]|\T1/cmr/m/n/10 /api/admin/labs/{id}| 
- []
-
-
-Underfull \hbox (badness 1721) in paragraph at lines 725--726
-\T1/cmr/m/n/10 delete per pol-icy)| 
- []
-
-
-Overfull \hbox (4.59215pt too wide) in paragraph at lines 727--727
-[]|\T1/cmr/m/n/10 POST| 
- []
-
-
-Overfull \hbox (4.59215pt too wide) in paragraph at lines 731--731
-[]|\T1/cmr/m/n/10 POST| 
- []
-
-
-Underfull \hbox (badness 1275) in paragraph at lines 731--732
-[]|\T1/cmr/m/n/10 Register a new de- 
- []
-
-
-Overfull \hbox (49.33092pt too wide) in paragraph at lines 733--733
-[]|\T1/cmr/m/n/10 /api/admin/labs/{labId}/devices/{deviceId}| 
- []
-
-
-Underfull \hbox (badness 3058) in paragraph at lines 733--734
-[]|\T1/cmr/m/n/10 Retrieve a spe- 
- []
-
-
-Underfull \hbox (badness 1552) in paragraph at lines 733--734
-\T1/cmr/m/n/10 cific de-vice record| 
- []
-
-
-Overfull \hbox (49.33092pt too wide) in paragraph at lines 735--735
-[]|\T1/cmr/m/n/10 /api/admin/labs/{labId}/devices/{deviceId}| 
- []
-
-
-Overfull \hbox (18.75536pt too wide) in paragraph at lines 737--737
-[]|\T1/cmr/m/n/10 DELETE| 
- []
-
-
-Overfull \hbox (49.33092pt too wide) in paragraph at lines 737--737
-[]|\T1/cmr/m/n/10 /api/admin/labs/{labId}/devices/{deviceId}| 
- []
-
-
-Underfull \hbox (badness 2096) in paragraph at lines 737--738
-[]|\T1/cmr/m/n/10 Remove a de-vice 
- []
-
-
-Underfull \hbox (badness 1603) in paragraph at lines 737--738
-\T1/cmr/m/n/10 from a lab-o-ra-tory| 
  []
 
 
@@ -2932,13 +2657,13 @@ Overfull \hbox (4.59215pt too wide) in paragraph at lines 739--739
  []
 
 
-Overfull \hbox (78.21275pt too wide) in paragraph at lines 739--739
-[]|\T1/cmr/m/n/10 /api/admin/labs/{labId}/devices/{deviceId}/token| 
+Overfull \hbox (4.59215pt too wide) in paragraph at lines 741--741
+[]|\T1/cmr/m/n/10 POST| 
  []
 
 
-Overfull \hbox (4.59215pt too wide) in paragraph at lines 741--741
-[]|\T1/cmr/m/n/10 POST| 
+Underfull \hbox (badness 3407) in paragraph at lines 741--741
+[]|\T1/cmr/m/n/10 /api/devices/token| 
  []
 
 
@@ -2947,18 +2672,18 @@ Overfull \hbox (4.59215pt too wide) in paragraph at lines 743--743
  []
 
 
-Underfull \hbox (badness 1902) in paragraph at lines 743--744
-[]|\T1/cmr/m/n/10 Force lights OFF 
+Underfull \hbox (badness 10000) in paragraph at lines 743--743
+[]|\T1/cmr/m/n/10 /api/devices| 
  []
 
 
-Overfull \hbox (4.59215pt too wide) in paragraph at lines 745--745
-[]|\T1/cmr/m/n/10 POST| 
+Underfull \hbox (badness 1077) in paragraph at lines 743--744
+[]|\T1/cmr/m/n/10 Register a new IoT 
  []
 
 
-Underfull \hbox (badness 3068) in paragraph at lines 745--746
-\T1/cmr/m/n/10 all lab-o-ra-to-ries| 
+Underfull \hbox (badness 4108) in paragraph at lines 745--745
+[]|\T1/cmr/m/n/10 /api/devices/light| 
  []
 
 
@@ -2967,648 +2692,641 @@ Overfull \hbox (4.59215pt too wide) in paragraph at lines 747--747
  []
 
 
-Underfull \hbox (badness 2626) in paragraph at lines 747--748
+Underfull \hbox (badness 10000) in paragraph at lines 747--747
+\T1/cmr/m/n/10 image| 
+ []
+
+
+Underfull \hbox (badness 1052) in paragraph at lines 747--748
+[]|\T1/cmr/m/n/10 Upload a timetable 
+ []
+
+
+Underfull \hbox (badness 1067) in paragraph at lines 747--748
+\T1/cmr/m/n/10 sched-ule ex-trac-tion| 
+ []
+
+
+Overfull \hbox (4.59215pt too wide) in paragraph at lines 749--749
+[]|\T1/cmr/m/n/10 POST| 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 749--749
+\T1/cmr/m/n/10 data| 
+ []
+
+
+Underfull \hbox (badness 1946) in paragraph at lines 749--750
+[]|\T1/cmr/m/n/10 Manually sub-mit 
+ []
+
+
+Underfull \hbox (badness 2538) in paragraph at lines 749--750
+\T1/cmr/m/n/10 for a lab-o-ra-tory| 
+ []
+
+
+Underfull \hbox (badness 3746) in paragraph at lines 751--752
+[]|\T1/cmr/m/n/10 List all sched- 
+ []
+
+
+Underfull \hbox (badness 1348) in paragraph at lines 751--752
+\T1/cmr/m/n/10 ule im-port records| 
+ []
+
+
+Overfull \hbox (4.59215pt too wide) in paragraph at lines 753--753
+[]|\T1/cmr/m/n/10 POST| 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 753--753
+\T1/cmr/m/n/10 image| 
+ []
+
+
+Overfull \hbox (4.59215pt too wide) in paragraph at lines 755--755
+[]|\T1/cmr/m/n/10 POST| 
+ []
+
+
+Underfull \hbox (badness 3323) in paragraph at lines 755--755
+\T1/cmr/m/n/10 import/{importId}| 
+ []
+
+
+Overfull \hbox (4.59215pt too wide) in paragraph at lines 757--757
+[]|\T1/cmr/m/n/10 POST| 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 757--757
+\T1/cmr/m/n/10 analysis| 
+ []
+
+
+Overfull \hbox (4.59215pt too wide) in paragraph at lines 761--761
+[]|\T1/cmr/m/n/10 POST| 
+ []
+
+
+Overfull \hbox (4.59215pt too wide) in paragraph at lines 763--763
+[]|\T1/cmr/m/n/10 POST| 
+ []
+
+
+Underfull \hbox (badness 7486) in paragraph at lines 765--765
+[]|\T1/cmr/m/n/10 /api/staff/lab- 
+ []
+
+
+Underfull \hbox (badness 1902) in paragraph at lines 765--765
+\T1/cmr/m/n/10 change-requests/mine| 
+ []
+
+
+Underfull \hbox (badness 5302) in paragraph at lines 767--767
+[]|\T1/cmr/m/n/10 /api/admin/labs| 
+ []
+
+
+Underfull \hbox (badness 4378) in paragraph at lines 767--768
+[]|\T1/cmr/m/n/10 List all reg-is- 
+ []
+
+
+Underfull \hbox (badness 1655) in paragraph at lines 767--768
+\T1/cmr/m/n/10 tered lab-o-ra-to-ries| 
+ []
+
+
+Overfull \hbox (4.59215pt too wide) in paragraph at lines 769--769
+[]|\T1/cmr/m/n/10 POST| 
+ []
+
+
+Underfull \hbox (badness 5302) in paragraph at lines 769--769
+[]|\T1/cmr/m/n/10 /api/admin/labs| 
+ []
+
+
+Underfull \hbox (badness 1584) in paragraph at lines 769--770
+[]|\T1/cmr/m/n/10 Create a new lab- 
+ []
+
+
+Underfull \hbox (badness 3503) in paragraph at lines 769--770
+\T1/cmr/m/n/10 o-ra-tory record| 
+ []
+
+
+Underfull \hbox (badness 1735) in paragraph at lines 771--771
+[]|\T1/cmr/m/n/10 /api/admin/labs/{id}| 
+ []
+
+
+Underfull \hbox (badness 2150) in paragraph at lines 771--772
+[]|\T1/cmr/m/n/10 Retrieve a sin-gle 
+ []
+
+
+Underfull \hbox (badness 1960) in paragraph at lines 771--772
+\T1/cmr/m/n/10 lab-o-ra-tory by ID| 
+ []
+
+
+Underfull \hbox (badness 1735) in paragraph at lines 773--773
+[]|\T1/cmr/m/n/10 /api/admin/labs/{id}| 
+ []
+
+
+Underfull \hbox (badness 1286) in paragraph at lines 773--774
+[]|\T1/cmr/m/n/10 Update lab-o-ra-tory 
+ []
+
+
+Overfull \hbox (18.75536pt too wide) in paragraph at lines 775--775
+[]|\T1/cmr/m/n/10 DELETE| 
+ []
+
+
+Underfull \hbox (badness 1735) in paragraph at lines 775--775
+[]|\T1/cmr/m/n/10 /api/admin/labs/{id}| 
+ []
+
+
+Underfull \hbox (badness 1721) in paragraph at lines 775--776
+\T1/cmr/m/n/10 delete per pol-icy)| 
+ []
+
+
+Overfull \hbox (4.59215pt too wide) in paragraph at lines 777--777
+[]|\T1/cmr/m/n/10 POST| 
+ []
+
+
+Overfull \hbox (4.59215pt too wide) in paragraph at lines 781--781
+[]|\T1/cmr/m/n/10 POST| 
+ []
+
+
+Underfull \hbox (badness 1275) in paragraph at lines 781--782
+[]|\T1/cmr/m/n/10 Register a new de- 
+ []
+
+
+Overfull \hbox (49.33092pt too wide) in paragraph at lines 783--783
+[]|\T1/cmr/m/n/10 /api/admin/labs/{labId}/devices/{deviceId}| 
+ []
+
+
+Underfull \hbox (badness 3058) in paragraph at lines 783--784
+[]|\T1/cmr/m/n/10 Retrieve a spe- 
+ []
+
+
+Underfull \hbox (badness 1552) in paragraph at lines 783--784
+\T1/cmr/m/n/10 cific de-vice record| 
+ []
+
+
+Overfull \hbox (49.33092pt too wide) in paragraph at lines 785--785
+[]|\T1/cmr/m/n/10 /api/admin/labs/{labId}/devices/{deviceId}| 
+ []
+
+
+Overfull \hbox (18.75536pt too wide) in paragraph at lines 787--787
+[]|\T1/cmr/m/n/10 DELETE| 
+ []
+
+
+Overfull \hbox (49.33092pt too wide) in paragraph at lines 787--787
+[]|\T1/cmr/m/n/10 /api/admin/labs/{labId}/devices/{deviceId}| 
+ []
+
+
+Underfull \hbox (badness 2096) in paragraph at lines 787--788
+[]|\T1/cmr/m/n/10 Remove a de-vice 
+ []
+
+
+Underfull \hbox (badness 1603) in paragraph at lines 787--788
+\T1/cmr/m/n/10 from a lab-o-ra-tory| 
+ []
+
+
+Overfull \hbox (4.59215pt too wide) in paragraph at lines 789--789
+[]|\T1/cmr/m/n/10 POST| 
+ []
+
+
+Overfull \hbox (78.21275pt too wide) in paragraph at lines 789--789
+[]|\T1/cmr/m/n/10 /api/admin/labs/{labId}/devices/{deviceId}/token| 
+ []
+
+
+Overfull \hbox (4.59215pt too wide) in paragraph at lines 791--791
+[]|\T1/cmr/m/n/10 POST| 
+ []
+
+
+Overfull \hbox (4.59215pt too wide) in paragraph at lines 793--793
+[]|\T1/cmr/m/n/10 POST| 
+ []
+
+
+Underfull \hbox (badness 1902) in paragraph at lines 793--794
+[]|\T1/cmr/m/n/10 Force lights OFF 
+ []
+
+
+Overfull \hbox (4.59215pt too wide) in paragraph at lines 795--795
+[]|\T1/cmr/m/n/10 POST| 
+ []
+
+
+Underfull \hbox (badness 3068) in paragraph at lines 795--796
+\T1/cmr/m/n/10 all lab-o-ra-to-ries| 
+ []
+
+
+Overfull \hbox (4.59215pt too wide) in paragraph at lines 797--797
+[]|\T1/cmr/m/n/10 POST| 
+ []
+
+
+Underfull \hbox (badness 2626) in paragraph at lines 797--798
 []|\T1/cmr/m/n/10 Force fans OFF 
  []
 
-./ch04/ch04.tex:749: ignored error: Infinite glue shrinkage found in box being split [65] [66] [67]
-Underfull \hbox (badness 1635) in paragraph at lines 839--839
+[66]
+./ch04/ch04.tex:799: ignored error: Infinite glue shrinkage found in box being split [67] [68]
+Underfull \hbox (badness 1635) in paragraph at lines 889--889
 \T1/cmr/bx/n/10.95 point Groups| 
  []
 
 
-Underfull \hbox (badness 1635) in paragraph at lines 844--844
+Underfull \hbox (badness 1635) in paragraph at lines 894--894
 \T1/cmr/bx/n/10.95 point Groups| 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 855--855
+Underfull \hbox (badness 10000) in paragraph at lines 905--905
 []|\T1/cmr/m/n/10.95 POST 
  []
 
 
-Overfull \hbox (2.37984pt too wide) in paragraph at lines 855--855
+Overfull \hbox (2.37984pt too wide) in paragraph at lines 905--905
 \T1/cmr/m/n/10.95 /api/devices/{labId}/event 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 855--855
+Underfull \hbox (badness 10000) in paragraph at lines 905--905
 \T1/cmr/m/n/10.95 only| 
  []
 
-
-Overfull \hbox (1.94263pt too wide) in paragraph at lines 917--917
+./ch04/ch04.tex:907: ignored error: Infinite glue shrinkage found in box being split [69]
+Overfull \hbox (1.94263pt too wide) in paragraph at lines 967--967
 []|\T1/cmr/m/n/10.95 Public| 
  []
 
 
-Underfull \hbox (badness 1655) in paragraph at lines 917--917
+Underfull \hbox (badness 1655) in paragraph at lines 967--967
 []|\T1/cmr/m/n/10.95 POST 
  []
 
 
-Underfull \hbox (badness 2253) in paragraph at lines 919--919
+Underfull \hbox (badness 2253) in paragraph at lines 969--969
 []|\T1/cmr/m/n/10.95 GET 
  []
 
 
-Overfull \hbox (22.984pt too wide) in paragraph at lines 919--919
+Overfull \hbox (22.984pt too wide) in paragraph at lines 969--969
 \T1/cmr/m/n/10.95 /api/staff/me/current- 
  []
 
 
-Underfull \hbox (badness 2846) in paragraph at lines 919--919
+Underfull \hbox (badness 2846) in paragraph at lines 969--969
 \T1/cmr/m/n/10.95 labs| 
  []
 
 
-Overfull \hbox (53.9226pt too wide) in paragraph at lines 921--921
+Overfull \hbox (53.9226pt too wide) in paragraph at lines 971--971
 []|\T1/cmr/m/n/10.95 /staff/labs/:id/override| 
  []
 
 
-Underfull \hbox (badness 1655) in paragraph at lines 921--921
+Underfull \hbox (badness 1655) in paragraph at lines 971--971
 []|\T1/cmr/m/n/10.95 POST 
  []
 
 
-Overfull \hbox (68.71611pt too wide) in paragraph at lines 921--921
+Overfull \hbox (68.71611pt too wide) in paragraph at lines 971--971
 \T1/cmr/m/n/10.95 /api/staff/labs/{labId}/override| 
  []
 
 
-Overfull \hbox (10.30309pt too wide) in paragraph at lines 923--923
+Overfull \hbox (10.30309pt too wide) in paragraph at lines 973--973
 []|\T1/cmr/m/n/10.95 /staff/change- 
  []
 
 
-Overfull \hbox (5.82257pt too wide) in paragraph at lines 923--923
+Overfull \hbox (5.82257pt too wide) in paragraph at lines 973--973
 \T1/cmr/m/n/10.95 requests/new| 
  []
 
 
-Underfull \hbox (badness 1655) in paragraph at lines 923--923
+Underfull \hbox (badness 1655) in paragraph at lines 973--973
 []|\T1/cmr/m/n/10.95 POST 
  []
 
 
-Overfull \hbox (10.30309pt too wide) in paragraph at lines 925--925
+Overfull \hbox (10.30309pt too wide) in paragraph at lines 975--975
 []|\T1/cmr/m/n/10.95 /staff/change- 
  []
 
 
-Underfull \hbox (badness 2253) in paragraph at lines 925--925
+Underfull \hbox (badness 2253) in paragraph at lines 975--975
 []|\T1/cmr/m/n/10.95 GET 
  []
 
 
-Underfull \hbox (badness 1163) in paragraph at lines 925--925
+Underfull \hbox (badness 1163) in paragraph at lines 975--975
 \T1/cmr/m/n/10.95 change- 
  []
 
 
-Underfull \hbox (badness 1253) in paragraph at lines 925--926
+Underfull \hbox (badness 1253) in paragraph at lines 975--976
 []|\T1/cmr/m/n/10.95 View sta-tus (Pend- 
  []
 
 
-Overfull \hbox (2.43376pt too wide) in paragraph at lines 927--927
+Overfull \hbox (2.43376pt too wide) in paragraph at lines 977--977
 []|\T1/cmr/m/n/10.95 /admin/labs| 
  []
 
 
-Overfull \hbox (3.59962pt too wide) in paragraph at lines 927--927
+Overfull \hbox (3.59962pt too wide) in paragraph at lines 977--977
 []|\T1/cmr/m/n/10.95 Admin| 
  []
 
 
-Underfull \hbox (badness 2253) in paragraph at lines 927--927
+Underfull \hbox (badness 2253) in paragraph at lines 977--977
 []|\T1/cmr/m/n/10.95 GET 
  []
 
 
-Overfull \hbox (19.97827pt too wide) in paragraph at lines 929--929
+Overfull \hbox (19.97827pt too wide) in paragraph at lines 979--979
 []|\T1/cmr/m/n/10.95 /admin/labs/:id| 
  []
 
 
-Overfull \hbox (3.59962pt too wide) in paragraph at lines 929--929
+Overfull \hbox (3.59962pt too wide) in paragraph at lines 979--979
 []|\T1/cmr/m/n/10.95 Admin| 
  []
 
 
-Overfull \hbox (19.34966pt too wide) in paragraph at lines 929--929
+Overfull \hbox (19.34966pt too wide) in paragraph at lines 979--979
 \T1/cmr/m/n/10.95 /api/admin/labs/{id}| 
  []
 
 
-Overfull \hbox (59.05675pt too wide) in paragraph at lines 931--931
+Overfull \hbox (59.05675pt too wide) in paragraph at lines 981--981
 []|\T1/cmr/m/n/10.95 /admin/labs/:id/devices| 
  []
 
 
-Overfull \hbox (3.59962pt too wide) in paragraph at lines 931--931
+Overfull \hbox (3.59962pt too wide) in paragraph at lines 981--981
 []|\T1/cmr/m/n/10.95 Admin| 
  []
 
 
-Overfull \hbox (53.19524pt too wide) in paragraph at lines 931--931
+Overfull \hbox (53.19524pt too wide) in paragraph at lines 981--981
 []|\T1/cmr/m/n/10.95 GET/POST/PUT/DELETE 
  []
 
 
-Overfull \hbox (88.37247pt too wide) in paragraph at lines 931--931
+Overfull \hbox (88.37247pt too wide) in paragraph at lines 981--981
 \T1/cmr/m/n/10.95 /api/admin/labs/{labId}/devices/...| 
  []
 
 
-Overfull \hbox (33.04219pt too wide) in paragraph at lines 933--933
+Overfull \hbox (33.04219pt too wide) in paragraph at lines 983--983
 []|\T1/cmr/m/n/10.95 /admin/schedules/| 
  []
 
 
-Overfull \hbox (3.59962pt too wide) in paragraph at lines 933--933
+Overfull \hbox (3.59962pt too wide) in paragraph at lines 983--983
 []|\T1/cmr/m/n/10.95 Admin| 
  []
 
 
-Overfull \hbox (33.63007pt too wide) in paragraph at lines 933--933
+Overfull \hbox (33.63007pt too wide) in paragraph at lines 983--983
 \T1/cmr/m/n/10.95 /api/admin/schedules/...| 
  []
 
 
-Overfull \hbox (45.14276pt too wide) in paragraph at lines 935--935
+Overfull \hbox (45.14276pt too wide) in paragraph at lines 985--985
 []|\T1/cmr/m/n/10.95 /admin/labs/controls| 
  []
 
 
-Overfull \hbox (3.59962pt too wide) in paragraph at lines 935--935
+Overfull \hbox (3.59962pt too wide) in paragraph at lines 985--985
 []|\T1/cmr/m/n/10.95 Admin| 
  []
 
 
-Underfull \hbox (badness 1655) in paragraph at lines 935--935
+Underfull \hbox (badness 1655) in paragraph at lines 985--985
 []|\T1/cmr/m/n/10.95 POST 
  []
 
 
-Overfull \hbox (55.65137pt too wide) in paragraph at lines 935--935
+Overfull \hbox (55.65137pt too wide) in paragraph at lines 985--985
 \T1/cmr/m/n/10.95 /api/admin/labs/light/on|off, 
  []
 
 
-Overfull \hbox (8.4217pt too wide) in paragraph at lines 937--937
+Overfull \hbox (8.4217pt too wide) in paragraph at lines 987--987
 []|\T1/cmr/m/n/10.95 /admin/audit| 
  []
 
 
-Overfull \hbox (3.59962pt too wide) in paragraph at lines 937--937
+Overfull \hbox (3.59962pt too wide) in paragraph at lines 987--987
 []|\T1/cmr/m/n/10.95 Admin| 
  []
 
 
-Overfull \hbox (19.61179pt too wide) in paragraph at lines 939--939
+Overfull \hbox (19.61179pt too wide) in paragraph at lines 989--989
 []|\T1/cmr/m/n/10.95 /admin/change- 
  []
 
 
-Overfull \hbox (3.59962pt too wide) in paragraph at lines 939--939
+Overfull \hbox (3.59962pt too wide) in paragraph at lines 989--989
 []|\T1/cmr/m/n/10.95 Admin| 
  []
 
-[68]
-./ch04/ch04.tex:941: ignored error: Infinite glue shrinkage found in box being split [69] [70]) (./ch05/ch05.tex [71] [72
-
-]
+./ch04/ch04.tex:991: ignored error: Infinite glue shrinkage found in box being split [70] [71]) (./ch05/ch05.tex [72]
 Chapter 5.
-[73] [74]
-Overfull \hbox (50.46959pt too wide) in paragraph at lines 224--224
+[73
+
+] [74]
+Overfull \hbox (50.46959pt too wide) in paragraph at lines 222--222
 []\T1/cmtt/m/n/10.95 21 const unsigned long LIGHT\_INTERVAL = 5000; // ms (reserved for future periodic checks[] 
  []
 
 [75] [76]
-Overfull \hbox (44.81122pt too wide) in paragraph at lines 355--355
+Overfull \hbox (44.81122pt too wide) in paragraph at lines 353--353
 []\T1/cmtt/m/n/10.95 13 // timeout of 30000 us corresponds to \textasciitilde{}5 m -- beyond lab sensor range[] 
  []
 
-[77] [78] [79]
-Overfull \hbox (571.03972pt too wide) in paragraph at lines 518--518
-[]\T1/cmtt/m/n/10.95 5 "\{\textbackslash\{\}"status\textbackslash\{\}":\textbackslash\{\}"ok\textbackslash\{\}",\textbackslash\{\}"light\textbackslash\{\}":\textbackslash\{\}"off\textbackslash\{\}"\}");[] 
- []
-
-
-Overfull \hbox (571.03972pt too wide) in paragraph at lines 532--532
-[]\T1/cmtt/m/n/10.95 13 "\{\textbackslash\{\}"status\textbackslash\{\}":\textbackslash\{\}"ok\textbackslash\{\}",\textbackslash\{\}"light\textbackslash\{\}":\textbackslash\{\}"on\textbackslash\{\}"\}");[] 
- []
-
-
-Overfull \hbox (282.4628pt too wide) in paragraph at lines 544--544
-[]\T1/cmtt/m/n/10.95 20 server.send(200, "application/json", "\{\textbackslash\{\}"fan\textbackslash\{\}":\textbackslash\{\}"on\textbackslash\{\}"\}");[] 
- []
-
-
-Overfull \hbox (288.12117pt too wide) in paragraph at lines 556--556
-[]\T1/cmtt/m/n/10.95 27 server.send(200, "application/json", "\{\textbackslash\{\}"fan\textbackslash\{\}":\textbackslash\{\}"off\textbackslash\{\}"\}");[] 
- []
-
-[80]
-Overfull \hbox (10.14676pt too wide) in paragraph at lines 593--594
+[77] [78] [79] [80]
+Overfull \hbox (10.14676pt too wide) in paragraph at lines 591--592
 []\T1/cmr/m/n/10.95 These four routes are reg-is-tered in setup() and polled on ev-ery loop() it-er-a-tion via server.handleClient(). 
  []
 
 [81] [82] [83] [84]
-Overfull \hbox (90.07819pt too wide) in paragraph at lines 842--842
+Overfull \hbox (90.07819pt too wide) in paragraph at lines 840--840
 []\T1/cmtt/m/n/10.95 401 Unauthorized or 500 Internal Server Error  indicates the server responded; the response body 
  []
 
 
-Overfull \hbox (134.18202pt too wide) in paragraph at lines 852--853
+Overfull \hbox (134.18202pt too wide) in paragraph at lines 850--851
 []\T1/cmr/m/n/10.95 library-level er-rors (e.g., HTTPC_ERROR_CONNECTION_REFUSED = -1, HTTPC_ERROR_SEND_HEADER_FAILED 
  []
 
 
-Overfull \hbox (33.49448pt too wide) in paragraph at lines 872--872
+Overfull \hbox (33.49448pt too wide) in paragraph at lines 870--870
 []\T1/cmtt/m/n/10.95 1 String sendMotionRequest(bool motion, long distance, int ldr, float temp, float hum) 
  []
 
-[85]
-Overfull \hbox (163.63701pt too wide) in paragraph at lines 914--914
-[]\T1/cmtt/m/n/10.95 22 json += "\textbackslash\{\}"motionDetected\textbackslash\{\}":" + String(motion ? "true" : "false") + ",";[] 
- []
-
-
-Overfull \hbox (44.81122pt too wide) in paragraph at lines 916--916
-[]\T1/cmtt/m/n/10.95 23 json += "\textbackslash\{\}"distanceCm\textbackslash\{\}":" + String(distance) + ",";[] 
- []
-
-
-Overfull \hbox (5.20262pt too wide) in paragraph at lines 918--918
-[]\T1/cmtt/m/n/10.95 24 json += "\textbackslash\{\}"ldrValue\textbackslash\{\}":" + String(ldr) + ",";[] 
- []
-
-
-Overfull \hbox (84.41982pt too wide) in paragraph at lines 920--920
-[]\T1/cmtt/m/n/10.95 25 json += "\textbackslash\{\}"temperatureCelsius\textbackslash\{\}":" + String(temp, 1) + ",";[] 
- []
-
-[86] [87] [88] [89]
-Overfull \hbox (27.8361pt too wide) in paragraph at lines 1215--1215
+[85] [86] [87] [88] [89]
+Overfull \hbox (27.8361pt too wide) in paragraph at lines 1209--1209
 []\T1/cmtt/m/n/10.95 34 String response = sendMotionRequest(isNear, distance, lightValue, temp, humidity);[] 
  []
 
 [90] [91] [92] [93] [94]
-<figures/figure-5-1.png, id=1251, 803.0pt x 602.25pt>
-File: figures/figure-5-1.png Graphic file (type png)
-<use figures/figure-5-1.png>
-Package pdftex.def Info: figures/figure-5-1.png  used on input line 1478.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
- [95] [96 <./figures/figure-5-1.png>] [97]
-Overfull \hbox (5.20262pt too wide) in paragraph at lines 1684--1684
+<ch05/figures/devices-page.png, id=1334, 1204.5pt x 552.56438pt>
+File: ch05/figures/devices-page.png Graphic file (type png)
+<use ch05/figures/devices-page.png>
+Package pdftex.def Info: ch05/figures/devices-page.png  used on input line 1467.
+(pdftex.def)             Requested size: 283.39244pt x 130.00441pt.
+ [95 <./ch05/figures/devices-page.png (PNG copy)>] [96] [97]
+Overfull \hbox (5.20262pt too wide) in paragraph at lines 1673--1673
 []\T1/cmtt/m/n/10.95 18 print(f"[ERROR] Cannot open camera index \{device\_index\}, retrying in 3s..."[] 
  []
 
-[98] [99] [100] [101] [102]
-Overfull \hbox (135.34515pt too wide) in paragraph at lines 2008--2008
-[]\T1/cmtt/m/n/10.95 17 r"\textasciicircum{}(\textbackslash\{\}d\{1,3\}\textbackslash\{\}.)\{3\}\textbackslash\{\}d\{1,3\}\$"[] 
- []
-
-[103]
-Overfull \hbox (5.20262pt too wide) in paragraph at lines 2047--2047
+[98] [99] [100] [101] [102] [103]
+Overfull \hbox (5.20262pt too wide) in paragraph at lines 2036--2036
 []\T1/cmtt/m/n/10.95 1 def resolve\_source(source: str, default\_port: int = 4747) -> Union[str, int]: 
  []
 
 [104] [105]
-Overfull \hbox (10.861pt too wide) in paragraph at lines 2158--2158
+Overfull \hbox (10.861pt too wide) in paragraph at lines 2147--2147
 []\T1/cmtt/m/n/10.95 1 def create\_capture(source: str, default\_port: int = 4747) -> cv2.VideoCapture: 
  []
 
 [106]
-Overfull \hbox (5.27473pt too wide) in paragraph at lines 2251--2252
+Overfull \hbox (5.27473pt too wide) in paragraph at lines 2240--2241
 []\T1/cmr/m/n/10.95 The isin-stance(resolved, int) branch ex-ists be-cause cv2.VideoCapture(0) and cv2.VideoCapture("http: 
  []
 
 [107] [108] [109] [110] [111] [112] [113] [114] [115] [116] [117] [118] [119] [120]
-Overfull \hbox (22.17773pt too wide) in paragraph at lines 3165--3165
+Overfull \hbox (22.17773pt too wide) in paragraph at lines 3154--3154
 []\T1/cmtt/m/n/10.95 20 detail=f"Camera stream not ready within \{READY\_TIMEOUT:.0f\} s: \{stream\_url\}[] 
  []
 
 [121] [122] [123]
-<figures/figure-5-2.png, id=1375, 803.0pt x 602.25pt>
-File: figures/figure-5-2.png Graphic file (type png)
-<use figures/figure-5-2.png>
-Package pdftex.def Info: figures/figure-5-2.png  used on input line 3307.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
-File: figures/figure-5-2.png Graphic file (type png)
-<use figures/figure-5-2.png>
-Package pdftex.def Info: figures/figure-5-2.png  used on input line 3328.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
- [124 <./figures/figure-5-2.png>] [125]
-<figures/figure-5-3.png, id=1387, 803.0pt x 602.25pt>
-File: figures/figure-5-3.png Graphic file (type png)
-<use figures/figure-5-3.png>
-Package pdftex.def Info: figures/figure-5-3.png  used on input line 3411.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
-File: figures/figure-5-3.png Graphic file (type png)
-<use figures/figure-5-3.png>
-Package pdftex.def Info: figures/figure-5-3.png  used on input line 3422.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
- [126 <./figures/figure-5-3.png>]
-<figures/figure-5-4.png, id=1394, 803.0pt x 602.25pt>
-File: figures/figure-5-4.png Graphic file (type png)
-<use figures/figure-5-4.png>
-Package pdftex.def Info: figures/figure-5-4.png  used on input line 3455.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
-
-Overfull \hbox (49.09618pt too wide) in paragraph at lines 3464--3465
-[]\T1/cmr/m/n/10.95 tered: Ad-min User (ad-min@greenlab.local, Ad-min, Ac-tive), mo-hamed el-dodge (ma-hammed-nasser0@gmail.com, 
- []
-
-File: figures/figure-5-4.png Graphic file (type png)
-<use figures/figure-5-4.png>
-Package pdftex.def Info: figures/figure-5-4.png  used on input line 3490.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
-<figures/figure-5-5.png, id=1395, 803.0pt x 602.25pt>
-File: figures/figure-5-5.png Graphic file (type png)
-<use figures/figure-5-5.png>
-Package pdftex.def Info: figures/figure-5-5.png  used on input line 3507.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
-File: figures/figure-5-5.png Graphic file (type png)
-<use figures/figure-5-5.png>
-Package pdftex.def Info: figures/figure-5-5.png  used on input line 3518.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
-[127 <./figures/figure-5-4.png>] [128 <./figures/figure-5-5.png>]
-<figures/figure-5-6.png, id=1409, 803.0pt x 602.25pt>
-File: figures/figure-5-6.png Graphic file (type png)
-<use figures/figure-5-6.png>
-Package pdftex.def Info: figures/figure-5-6.png  used on input line 3569.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
-File: figures/figure-5-6.png Graphic file (type png)
-<use figures/figure-5-6.png>
-Package pdftex.def Info: figures/figure-5-6.png  used on input line 3580.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
- [129 <./figures/figure-5-6.png>]
-<figures/figure-5-7.png, id=1415, 803.0pt x 602.25pt>
-File: figures/figure-5-7.png Graphic file (type png)
-<use figures/figure-5-7.png>
-Package pdftex.def Info: figures/figure-5-7.png  used on input line 3631.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
-File: figures/figure-5-7.png Graphic file (type png)
-<use figures/figure-5-7.png>
-Package pdftex.def Info: figures/figure-5-7.png  used on input line 3644.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
- [130] [131 <./figures/figure-5-7.png>]
-<figures/figure-5-8.png, id=1428, 803.0pt x 602.25pt>
-File: figures/figure-5-8.png Graphic file (type png)
-<use figures/figure-5-8.png>
-Package pdftex.def Info: figures/figure-5-8.png  used on input line 3709.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
-File: figures/figure-5-8.png Graphic file (type png)
-<use figures/figure-5-8.png>
-Package pdftex.def Info: figures/figure-5-8.png  used on input line 3722.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
- [132 <./figures/figure-5-8.png>]
-File: figures/figure-5-6.png Graphic file (type png)
-<use figures/figure-5-6.png>
-Package pdftex.def Info: figures/figure-5-6.png  used on input line 3777.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
- [133]
-File: figures/figure-5-7.png Graphic file (type png)
-<use figures/figure-5-7.png>
-Package pdftex.def Info: figures/figure-5-7.png  used on input line 3818.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
-File: figures/figure-5-8.png Graphic file (type png)
-<use figures/figure-5-8.png>
-Package pdftex.def Info: figures/figure-5-8.png  used on input line 3831.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
-File: figures/figure-5-7.png Graphic file (type png)
-<use figures/figure-5-7.png>
-Package pdftex.def Info: figures/figure-5-7.png  used on input line 3844.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
- [134] [135]
-File: figures/figure-5-2.png Graphic file (type png)
-<use figures/figure-5-2.png>
-Package pdftex.def Info: figures/figure-5-2.png  used on input line 3889.
-(pdftex.def)             Requested size: 283.39244pt x 212.54587pt.
- [136]
-Overfull \hbox (73.10307pt too wide) in paragraph at lines 3922--3922
+<ch05/figures/add-lab-form.png, id=1458, 946.28531pt x 693.34032pt>
+File: ch05/figures/add-lab-form.png Graphic file (type png)
+<use ch05/figures/add-lab-form.png>
+Package pdftex.def Info: ch05/figures/add-lab-form.png  used on input line 3296.
+(pdftex.def)             Requested size: 283.39244pt x 207.6334pt.
+ [124 <./ch05/figures/add-lab-form.png (PNG copy)>]
+File: ch05/figures/devices-page.png Graphic file (type png)
+<use ch05/figures/devices-page.png>
+Package pdftex.def Info: ch05/figures/devices-page.png  used on input line 3374.
+(pdftex.def)             Requested size: 283.39244pt x 130.00441pt.
+<ch05/figures/ Users: account list with all four registered accounts across three roles.png, id=1464, 1204.5pt x 575.14874pt>
+File: ch05/figures/ Users: account list with all four registered accounts across three roles.png Graphic file (type png)
+<use ch05/figures/ Users: account list with all four registered accounts across three roles.png>
+Package pdftex.def Info: ch05/figures/ Users: account list with all four registered accounts across three roles.png  used on input line 3409.
+(pdftex.def)             Requested size: 283.39244pt x 135.31793pt.
+<ch05/figures/add-user-form.png, id=1465, 1204.5pt x 563.10374pt>
+File: ch05/figures/add-user-form.png Graphic file (type png)
+<use ch05/figures/add-user-form.png>
+Package pdftex.def Info: ch05/figures/add-user-form.png  used on input line 3421.
+(pdftex.def)             Requested size: 283.39244pt x 132.48405pt.
+ [125]
+<ch05/figures/Login: the credential entry point implementing UC-01 and FR-AC-01.png, id=1472, 1204.5pt x 567.62062pt>
+File: ch05/figures/Login: the credential entry point implementing UC-01 and FR-AC-01.png Graphic file (type png)
+<use ch05/figures/Login: the credential entry point implementing UC-01 and FR-AC-01.png>
+Package pdftex.def Info: ch05/figures/Login: the credential entry point implementing UC-01 and FR-AC-01.png  used on input line 3471.
+(pdftex.def)             Requested size: 283.39244pt x 133.54675pt.
+ [126 <./ch05/figures/ Users: account list with all four registered accounts across three roles.png (PNG copy)> <./ch05/figures/add-user-form.png (PNG copy)>]
+<ch05/figures/Dashboard: weekly occupancy trend, active alerts panel, and recent activity feed.png, id=1479, 1164.60094pt x 607.51968pt>
+File: ch05/figures/Dashboard: weekly occupancy trend, active alerts panel, and recent activity feed.png Graphic file (type png)
+<use ch05/figures/Dashboard: weekly occupancy trend, active alerts panel, and recent activity feed.png>
+Package pdftex.def Info: ch05/figures/Dashboard: weekly occupancy trend, active alerts panel, and recent activity feed.png  used on input line 3521.
+(pdftex.def)             Requested size: 283.39244pt x 147.82855pt.
+ [127 <./ch05/figures/Login: the credential entry point implementing UC-01 and FR-AC-01.png (PNG copy)> <./ch05/figures/Dashboard: weekly occupancy trend, active alerts panel, and recent activity feed.png (PNG copy)>]
+<ch05/figures/all-labs-view.png, id=1486, 1204.5pt x 572.89032pt>
+File: ch05/figures/all-labs-view.png Graphic file (type png)
+<use ch05/figures/all-labs-view.png>
+Package pdftex.def Info: ch05/figures/all-labs-view.png  used on input line 3584.
+(pdftex.def)             Requested size: 283.39244pt x 134.78659pt.
+ [128 <./ch05/figures/all-labs-view.png (PNG copy)>] [129]
+Overfull \hbox (73.10307pt too wide) in paragraph at lines 3746--3746
 []\T1/cmtt/m/n/10.95 38 <= 50 (DISTANCE\_THRESHOLD), isNear evaluates to true. The previous iteration had isNear = 
  []
 
-
-Overfull \hbox (10.861pt too wide) in paragraph at lines 3950--3950
+[130]
+Overfull \hbox (10.861pt too wide) in paragraph at lines 3774--3774
 []\T1/cmtt/m/n/10.95 2 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.[payload].[signature][] 
  []
 
-[137] [138] [139] [140] [141]) (./ch06/ch06.tex [142]
+[131] [132] [133]) (./ch06/ch06.tex [134]
 Chapter 6.
 
-Underfull \hbox (badness 10000) in paragraph at lines 44--45
-[]|\T1/cmr/bx/n/10.95 Evidence| 
+Overfull \hbox (9.12788pt too wide) in paragraph at lines 41--42
+[]\T1/cmr/bx/n/10.95 Objective 1 --- Lay-ered four-tier ar-chi-tec-ture with clear in-ter-face con-tracts \T1/cmr/m/n/10.95 (Achieved).
  []
 
+[135
 
-Overfull \hbox (21.54672pt too wide) in alignment at lines 40--46
- [] [] [] [] 
+]
+Overfull \hbox (13.27666pt too wide) in paragraph at lines 49--50
+[]\T1/cmr/bx/n/10.95 Objective 5 --- Ven-ti-la-tion con-trol via a fan ac-ti-va-tion ta-ble \T1/cmr/m/n/10.95 (Achieved): The temperature-
  []
 
-
-Underfull \hbox (badness 10000) in paragraph at lines 49--50
-[]|\T1/cmr/bx/n/10.95 Evidence| 
- []
-
-
-Overfull \hbox (21.54672pt too wide) in alignment at lines 46--51
- [] [] [] [] 
- []
-
-
-Overfull \hbox (21.54672pt too wide) in alignment at lines 51--53
- [] [] [] [] 
- []
-
-
-Overfull \hbox (21.54672pt too wide) in alignment at lines 53--55
- [] [] [] [] 
- []
-
-
-Underfull \hbox (badness 1052) in paragraph at lines 58--58
-\T1/cmr/m/n/10.95 in for-mal 
- []
-
-
-Underfull \hbox (badness 1354) in paragraph at lines 62--63
-[]|\T1/cmr/m/n/10.95 The LDR-zone x occupancy-classification ma- 
- []
-
-
-Underfull \hbox (badness 3439) in paragraph at lines 62--63
-\T1/cmr/m/n/10.95 trix (Ta-ble 4.6) is im-ple-mented as a data- 
- []
-
-
-Underfull \hbox (badness 1540) in paragraph at lines 62--63
-\T1/cmr/m/n/10.95 driven rule lookup, sat-is-fy-ing the au-ditabil-ity 
- []
-
-
-Underfull \hbox (badness 1275) in paragraph at lines 62--63
-\T1/cmr/m/n/10.95 and con-fig-ura-bil-ity goal stated in Ob-jec-tive 4.| 
- []
-
-
-Underfull \hbox (badness 3354) in paragraph at lines 64--65
-\T1/cmr/m/n/10.95 ta-ble (Ta-ble 4.7) fol-lows the same pat-tern 
- []
-
-
-Underfull \hbox (badness 3601) in paragraph at lines 64--65
-\T1/cmr/m/n/10.95 as the light-ing ma-trix and is ex-er-cised di- 
- []
-
-
-Underfull \hbox (badness 3826) in paragraph at lines 64--65
-\T1/cmr/m/n/10.95 rectly in the Sec-tion 5.7 worked ex-am-ple.| 
- []
-
-
-Underfull \hbox (badness 1137) in paragraph at lines 68--69
-[]|\T1/cmr/m/n/10.95 Sections 5.4--5.5 doc-u-ment eight dis-tinct dash- 
- []
-
-
-Underfull \hbox (badness 2073) in paragraph at lines 68--69
-\T1/cmr/m/n/10.95 four core ca-pa-bil-i-ties this ob-jec-tive re-quires.| 
- []
-
-
-Overfull \hbox (21.54672pt too wide) in alignment at lines 55--72
- [] [] [] [] 
- []
-
-./ch06/ch06.tex:72: ignored error: Infinite glue shrinkage found in box being split [143
-
-] [144]
-Underfull \hbox (badness 10000) in paragraph at lines 122--123
-[]|\T1/cmr/bx/n/10.95 Nature of de-vi-a-tion| 
- []
-
-
-Overfull \hbox (6.30173pt too wide) in alignment at lines 118--124
- [] [] [] 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 127--128
-[]|\T1/cmr/bx/n/10.95 Nature of de-vi-a-tion| 
- []
-
-
-Overfull \hbox (6.30173pt too wide) in alignment at lines 124--129
- [] [] [] 
- []
-
-
-Overfull \hbox (6.30173pt too wide) in alignment at lines 129--131
- [] [] [] 
- []
-
-
-Overfull \hbox (6.30173pt too wide) in alignment at lines 131--133
- [] [] [] 
- []
-
-
-Underfull \hbox (badness 1189) in paragraph at lines 134--135
-[]|\T1/cmr/m/n/10.95 Changing a light-ing or tem-per-a-ture thresh- 
- []
-
-
-Underfull \hbox (badness 2189) in paragraph at lines 134--135
-\T1/cmr/m/n/10.95 call-ing a run-time con-fig-u-ra-tion end-point.| 
- []
-
-
-Underfull \hbox (badness 2799) in paragraph at lines 138--139
-\T1/cmr/m/n/10.95 the LDR read-ing against a lo-cal thresh- 
- []
-
-
-Underfull \hbox (badness 2057) in paragraph at lines 138--139
-\T1/cmr/m/n/10.95 old rather than hold-ing the last backend- 
- []
-
-
-Underfull \hbox (badness 3396) in paragraph at lines 140--141
-[]|\T1/cmr/m/n/10.95 This role was in-tro-duced dur-ing im-ple- 
- []
-
-
-Underfull \hbox (badness 2253) in paragraph at lines 140--141
-\T1/cmr/m/n/10.95 men-ta-tion to re-flect a real or-gan-i-sa-tional 
- []
-
-
-Underfull \hbox (badness 2150) in paragraph at lines 140--141
-\T1/cmr/m/n/10.95 need but does not ap-pear in the Chap-ter 
- []
-
-
-Underfull \hbox (badness 2253) in paragraph at lines 140--141
-\T1/cmr/m/n/10.95 3 use case model or stake-holder anal-y-sis.| 
- []
-
-
-Underfull \hbox (badness 2181) in paragraph at lines 142--143
-[]|\T1/cmr/m/n/10.95 This alert type is im-ple-mented and func- 
- []
-
-
-Underfull \hbox (badness 1701) in paragraph at lines 142--143
-\T1/cmr/m/n/10.95 tions cor-rectly but was not an-tic-i-pated by 
- []
-
-
-Underfull \hbox (badness 1874) in paragraph at lines 142--143
-\T1/cmr/m/n/10.95 the Chap-ter 3 func-tional re-quire-ment set.| 
- []
-
-
-Overfull \hbox (6.30173pt too wide) in alignment at lines 133--148
- [] [] [] 
- []
-
-[145] [146]
+[136] [137]
 
 Package glossaries Warning: No \printglossary or \printglossaries found. 
 (Remove \makeglossaries if you don't want any glossaries.) 
 This document will not have a glossary.
 
-[147] (./main.aux)
+[138] (./main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
-
-
-LaTeX Warning: There were multiply-defined labels.
-
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 271FDAC0990001D2A7E4DDFB5D7CC68B;27630.
+(rerunfilecheck)             Checksum: 4ADFD25B43B0AB442C9FC0DB14B9224C;27000.
  ) ) 
 Here is how much of TeX's memory you used:
- 44610 strings out of 467524
- 925209 string characters out of 5425814
- 1419275 words of memory out of 5000000
- 72461 multiletter control sequences out of 15000+600000
- 647169 words of font info for 86 fonts, out of 8000000 for 9000
+ 44593 strings out of 467524
+ 927316 string characters out of 5425814
+ 1426544 words of memory out of 5000000
+ 72469 multiletter control sequences out of 15000+600000
+ 647858 words of font info for 87 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  98i,13n,108p,2493b,1038s stack positions out of 10000i,1000n,20000p,200000b,200000s
-</usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx1095.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx1440.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx2074.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx2488.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfcc1200.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm0900.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm1440.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfti1000.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sftt1095.pfb></usr/share/texmf-dist/fonts/type1/urw/zapfding/uzdr.pfb>
-Output written on main.pdf (155 pages, 6394911 bytes).
+</usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx1000.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx1095.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx1200.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx1440.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx2074.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfbx2488.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfcc1200.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm0900.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm1000.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfrm1440.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfti1000.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfti1095.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sftt1095.pfb></usr/share/texmf-dist/fonts/type1/urw/zapfding/uzdr.pfb>
+Output written on main.pdf (146 pages, 11616938 bytes).
 PDF statistics:
- 1675 PDF objects out of 1728 (max. 8388607)
- 1415 compressed objects within 15 object streams
- 377 named destinations out of 1000 (max. 500000)
- 1339 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 1704 PDF objects out of 1728 (max. 8388607)
+ 1389 compressed objects within 14 object streams
+ 351 named destinations out of 1000 (max. 500000)
+ 1320 words of extra memory for PDF output out of 10000 (max. 10000000)
 

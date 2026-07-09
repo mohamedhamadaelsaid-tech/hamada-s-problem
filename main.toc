@@ -65,32 +65,33 @@
 \contentsline {section}{\numberline {4.2}Hardware Layer Design}{56}{section.4.2}%
 \contentsline {subsection}{\numberline {4.2.1}Component Topology}{56}{subsection.4.2.1}%
 \contentsline {subsection}{\numberline {4.2.2}Firmware Architecture}{57}{subsection.4.2.2}%
-\contentsline {section}{\numberline {4.3}Python AI Service Design}{59}{section.4.3}%
-\contentsline {subsection}{\numberline {4.3.1}Service Architecture}{59}{subsection.4.3.1}%
-\contentsline {subsection}{\numberline {4.3.2}Model and Inference Pipeline}{59}{subsection.4.3.2}%
-\contentsline {subsection}{\numberline {4.3.3}Camera Source Abstraction}{60}{subsection.4.3.3}%
-\contentsline {subsection}{\numberline {4.3.4}Camera Lifecycle Management}{60}{subsection.4.3.4}%
+\contentsline {section}{\numberline {4.3}Python AI Service Design}{58}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}Service Architecture}{58}{subsection.4.3.1}%
+\contentsline {subsection}{\numberline {4.3.2}Model and Inference Pipeline}{58}{subsection.4.3.2}%
+\contentsline {subsection}{\numberline {4.3.3}Camera Source Abstraction}{59}{subsection.4.3.3}%
+\contentsline {subsection}{\numberline {4.3.4}Camera Lifecycle Management}{59}{subsection.4.3.4}%
 \contentsline {subsection}{\numberline {4.3.5}Backend Integration Contract}{60}{subsection.4.3.5}%
-\contentsline {section}{\numberline {4.4}Database Design}{61}{section.4.4}%
-\contentsline {subsection}{\numberline {4.4.1}Schema Overview}{61}{subsection.4.4.1}%
+\contentsline {section}{\numberline {4.4}Database Design}{60}{section.4.4}%
+\contentsline {subsection}{\numberline {4.4.1}Schema Overview}{60}{subsection.4.4.1}%
 \contentsline {subsection}{\numberline {4.4.2}Table Specifications}{61}{subsection.4.4.2}%
-\contentsline {section}{\numberline {4.5}Automation Engine Design}{63}{section.4.5}%
-\contentsline {subsection}{\numberline {4.5.1}Occupancy Classification}{63}{subsection.4.5.1}%
-\contentsline {subsection}{\numberline {4.5.2}Lighting Decision Matrix}{63}{subsection.4.5.2}%
-\contentsline {subsection}{\numberline {4.5.3}Fan Activation Table}{64}{subsection.4.5.3}%
-\contentsline {section}{\numberline {4.6}REST API Design}{65}{section.4.6}%
-\contentsline {subsection}{\numberline {4.6.1}API Structure}{65}{subsection.4.6.1}%
-\contentsline {subsection}{\numberline {4.6.2}Complete Endpoint Catalogue}{65}{subsection.4.6.2}%
-\contentsline {subsection}{\numberline {4.6.3}Sensor Event Request and Response Contract}{66}{subsection.4.6.3}%
-\contentsline {section}{\numberline {4.7}Security Design}{67}{section.4.7}%
-\contentsline {subsection}{\numberline {4.7.1}Authentication Architecture}{67}{subsection.4.7.1}%
-\contentsline {subsection}{\numberline {4.7.2}Role-Based Access Control}{68}{subsection.4.7.2}%
-\contentsline {subsection}{\numberline {4.7.3}Audit Logging Design}{68}{subsection.4.7.3}%
-\contentsline {section}{\numberline {4.8}Angular Dashboard Design}{68}{section.4.8}%
-\contentsline {subsection}{\numberline {4.8.1}View Architecture}{68}{subsection.4.8.1}%
-\contentsline {subsection}{\numberline {4.8.2}View Inventory}{69}{subsection.4.8.2}%
-\contentsline {subsection}{\numberline {4.8.3}Real-Time Update Strategy}{70}{subsection.4.8.3}%
-\contentsline {section}{\numberline {4.9}Chapter Summary}{70}{section.4.9}%
+\contentsline {section}{\numberline {4.5}Class Diagram}{63}{section.4.5}%
+\contentsline {section}{\numberline {4.6}Automation Engine Design}{65}{section.4.6}%
+\contentsline {subsection}{\numberline {4.6.1}Occupancy Classification}{65}{subsection.4.6.1}%
+\contentsline {subsection}{\numberline {4.6.2}Lighting Decision Matrix}{65}{subsection.4.6.2}%
+\contentsline {subsection}{\numberline {4.6.3}Fan Activation Table}{66}{subsection.4.6.3}%
+\contentsline {section}{\numberline {4.7}REST API Design}{66}{section.4.7}%
+\contentsline {subsection}{\numberline {4.7.1}API Structure}{66}{subsection.4.7.1}%
+\contentsline {subsection}{\numberline {4.7.2}Complete Endpoint Catalogue}{66}{subsection.4.7.2}%
+\contentsline {subsection}{\numberline {4.7.3}Sensor Event Request and Response Contract}{68}{subsection.4.7.3}%
+\contentsline {section}{\numberline {4.8}Security Design}{69}{section.4.8}%
+\contentsline {subsection}{\numberline {4.8.1}Authentication Architecture}{69}{subsection.4.8.1}%
+\contentsline {subsection}{\numberline {4.8.2}Role-Based Access Control}{69}{subsection.4.8.2}%
+\contentsline {subsection}{\numberline {4.8.3}Audit Logging Design}{70}{subsection.4.8.3}%
+\contentsline {section}{\numberline {4.9}Angular Dashboard Design}{70}{section.4.9}%
+\contentsline {subsection}{\numberline {4.9.1}View Architecture}{70}{subsection.4.9.1}%
+\contentsline {subsection}{\numberline {4.9.2}View Inventory}{70}{subsection.4.9.2}%
+\contentsline {subsection}{\numberline {4.9.3}Real-Time Update Strategy}{71}{subsection.4.9.3}%
+\contentsline {section}{\numberline {4.10}Chapter Summary}{72}{section.4.10}%
 \contentsline {chapter}{\numberline {5}Implementation}{73}{chapter.5}%
 \contentsline {section}{\numberline {5.1}Introduction}{73}{section.5.1}%
 \contentsline {section}{\numberline {5.2}Hardware Layer Implementation ESP32 Firmware}{74}{section.5.2}%
@@ -100,35 +101,31 @@
 \contentsline {subsection}{\numberline {5.2.4}Device Authentication JWT Token Lifecycle}{82}{subsection.5.2.4}%
 \contentsline {subsection}{\numberline {5.2.5}Motion-Triggered Sensor Reporting sendMotionRequest()}{85}{subsection.5.2.5}%
 \contentsline {subsection}{\numberline {5.2.6}Main Firmware Logic setup() and loop()}{88}{subsection.5.2.6}%
-\contentsline {section}{\numberline {5.3}Python AI Processing Service Implementation}{95}{section.5.3}%
+\contentsline {section}{\numberline {5.3}Python AI Processing Service Implementation}{96}{section.5.3}%
 \contentsline {subsection}{\numberline {5.3.1}Stage 1: Single-Camera Prototype (cout\_code.txt)}{96}{subsection.5.3.1}%
 \contentsline {subsection}{\numberline {5.3.2}Camera Source Abstraction Module (camera\_sources.py)}{103}{subsection.5.3.2}%
 \contentsline {subsection}{\numberline {5.3.3}Stage 2: Production Multi-Camera Tracking API (droidip.py)}{110}{subsection.5.3.3}%
 \contentsline {section}{\numberline {5.4}Administration and Conguration Interface}{124}{section.5.4}%
 \contentsline {subsection}{\numberline {5.4.1}Add Lab Laboratory Provisioning Form}{124}{subsection.5.4.1}%
-\contentsline {subsection}{\numberline {5.4.2}Devices Hardware Registry}{126}{subsection.5.4.2}%
-\contentsline {subsection}{\numberline {5.4.3}Users Account List}{127}{subsection.5.4.3}%
-\contentsline {subsection}{\numberline {5.4.4}Add User Account Creation Form}{127}{subsection.5.4.4}%
-\contentsline {section}{\numberline {5.5}Monitoring Dashboard Implementation}{129}{section.5.5}%
-\contentsline {subsection}{\numberline {5.5.1}Login Screen}{129}{subsection.5.5.1}%
-\contentsline {subsection}{\numberline {5.5.2}System Dashboard}{130}{subsection.5.5.2}%
-\contentsline {subsection}{\numberline {5.5.3}All Labs Per-Laboratory View}{132}{subsection.5.5.3}%
-\contentsline {section}{\numberline {5.6}Implementation Traceability Matrix}{133}{section.5.6}%
-\contentsline {section}{\numberline {5.7}Worked End-to-End Example: One Motion Event Across All}{136}{section.5.7}%
-\contentsline {subsection}{\numberline {5.7.1}Tier 1 ESP32 Sensor Reads (loop() iteration N)}{137}{subsection.5.7.1}%
-\contentsline {subsection}{\numberline {5.7.2}Tier 1 -> Tier 2: HTTP POST to the ASP.NET Core Backend}{137}{subsection.5.7.2}%
-\contentsline {subsection}{\numberline {5.7.3}Tier 2 -> Tier 3: AI Service Poll (concurrent with backend evaluation)}{138}{subsection.5.7.3}%
-\contentsline {subsection}{\numberline {5.7.4}Tier 2 -> Tier 1: Backend Response}{138}{subsection.5.7.4}%
-\contentsline {subsection}{\numberline {5.7.5}Tier 1 Relay Actuation}{139}{subsection.5.7.5}%
-\contentsline {subsection}{\numberline {5.7.6}Tier 4 Dashboard Update}{139}{subsection.5.7.6}%
-\contentsline {section}{\numberline {5.8}Known Limitations and Technical Debt}{139}{section.5.8}%
-\contentsline {section}{\numberline {5.9}Chapter Summary}{141}{section.5.9}%
-\contentsline {chapter}{\numberline {6}Conclusions, Limitations, and Future}{143}{chapter.6}%
-\contentsline {section}{\numberline {6.1}Introduction to the Chapter}{143}{section.6.1}%
-\contentsline {section}{\numberline {6.2}Achievement of Project Objectives}{143}{section.6.2}%
-\contentsline {section}{\numberline {6.3}Summary of Project Contribution}{144}{section.6.3}%
-\contentsline {section}{\numberline {6.4}Limitations}{145}{section.6.4}%
-\contentsline {subsection}{\numberline {6.4.1}Implementation Deviations}{145}{subsection.6.4.1}%
-\contentsline {subsection}{\numberline {6.4.2}Project-Level Limitations}{146}{subsection.6.4.2}%
-\contentsline {section}{\numberline {6.5}Future Work}{146}{section.6.5}%
-\contentsline {section}{\numberline {6.6}Concluding Remarks}{147}{section.6.6}%
+\contentsline {subsection}{\numberline {5.4.2}Devices Hardware Registry}{125}{subsection.5.4.2}%
+\contentsline {subsection}{\numberline {5.4.3}Users Account List}{125}{subsection.5.4.3}%
+\contentsline {subsection}{\numberline {5.4.4}Add User Account Creation Form}{126}{subsection.5.4.4}%
+\contentsline {section}{\numberline {5.5}Monitoring Dashboard Implementation}{126}{section.5.5}%
+\contentsline {subsection}{\numberline {5.5.1}Login Screen}{127}{subsection.5.5.1}%
+\contentsline {section}{\numberline {5.6}Implementation Traceability Matrix}{129}{section.5.6}%
+\contentsline {section}{\numberline {5.7}Worked End-to-End Example: One Motion Event Across All}{130}{section.5.7}%
+\contentsline {subsection}{\numberline {5.7.1}Tier 1 ESP32 Sensor Reads (loop() iteration N)}{130}{subsection.5.7.1}%
+\contentsline {subsection}{\numberline {5.7.2}Tier 1 -> Tier 2: HTTP POST to the ASP.NET Core Backend}{131}{subsection.5.7.2}%
+\contentsline {subsection}{\numberline {5.7.3}Tier 2 -> Tier 3: AI Service Poll (concurrent with backend evaluation)}{131}{subsection.5.7.3}%
+\contentsline {subsection}{\numberline {5.7.4}Tier 2 -> Tier 1: Backend Response}{132}{subsection.5.7.4}%
+\contentsline {subsection}{\numberline {5.7.5}Tier 1 Relay Actuation}{133}{subsection.5.7.5}%
+\contentsline {subsection}{\numberline {5.7.6}Tier 4 Dashboard Update}{133}{subsection.5.7.6}%
+\contentsline {section}{\numberline {5.8}Chapter Summary}{133}{section.5.8}%
+\contentsline {chapter}{\numberline {6}Conclusions, Limitations, and Future}{135}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Introduction to the Chapter}{135}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Achievement of Project Objectives}{135}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Summary of Project Contribution}{136}{section.6.3}%
+\contentsline {section}{\numberline {6.4}Limitations}{137}{section.6.4}%
+\contentsline {subsection}{\numberline {6.4.1}Implementation Deviations}{137}{subsection.6.4.1}%
+\contentsline {subsection}{\numberline {6.4.2}Project-Level Limitations}{137}{subsection.6.4.2}%
+\contentsline {section}{\numberline {6.5}Future Work}{138}{section.6.5}%
